@@ -9,7 +9,18 @@ const host = $("screen");
 const ui = $("ui");
 const scene = new THREE.Scene();
 const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
-let renderScale=Math.min(window.devicePixelRatio||1,1.35);
+const qualityModes=[
+  {id:"low",name:"НИЗКОЕ",scale:.9,shadows:false,view:98,pointLights:2},
+  {id:"medium",name:"СРЕДНЕЕ",scale:1.15,shadows:true,view:140,pointLights:3},
+  {id:"high",name:"ВЫСОКОЕ",scale:1.55,shadows:true,view:160,pointLights:4}
+];
+let qualityIndex=1;
+try{
+  const stored=localStorage.getItem("mini-city-quality");
+  const found=qualityModes.findIndex(mode=>mode.id===stored);
+  if(found>=0)qualityIndex=found;
+}catch(_){}
+let renderScale=Math.min(window.devicePixelRatio||1,qualityModes[qualityIndex].scale);
 renderer.setPixelRatio(renderScale);
 renderer.setSize(innerWidth, innerHeight);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -442,10 +453,10 @@ function lookForPlaces() {
   }
 }
 const timeModes=[
-  {name:"☀️ ДЕНЬ",sky:0xbdd9e3,ambient:2.2,sun:2.8,night:0, tint:0xffe2b5,fog:0xbdd9e3, exposure:1.22},
-  {name:"🌇 ВЕЧЕР",sky:0xcb8e82,ambient:1.4,sun:1.9,night:.6,tint:0xffa36d,fog:0xd49e91, exposure:1.2},
-  {name:"🌙 НОЧЬ",sky:0x172638,ambient:.6,sun:.42,night:1.8,tint:0x779ac7,fog:0x233850, exposure:1.4},
-  {name:"🌅 УТРО",sky:0xbcc8dd,ambient:1.7,sun:2.0,night:.25,tint:0xffc99a,fog:0xb9c8d4, exposure:1.24}
+  {name:"☁️ ДЕНЬ",sky:0xaeb9bc,ambient:1.8,sun:1.9,night:0, tint:0xe0e4e3,fog:0xb3bdc0, exposure:1.04},
+  {name:"🌆 ВЕЧЕР",sky:0x888e95,ambient:1.22,sun:1.35,night:.5,tint:0xd2b7a4,fog:0x99999d, exposure:1.08},
+  {name:"🌙 НОЧЬ",sky:0x202932,ambient:.68,sun:.32,night:1.6,tint:0x8ca0ad,fog:0x29353d, exposure:1.18},
+  {name:"🌫️ УТРО",sky:0xb6bdba,ambient:1.5,sun:1.4,night:.16,tint:0xcdd1c9,fog:0xbdc5c2, exposure:1.09}
 ];
 let timeIndex=0;
 // Limit expensive dynamic point lights to the four closest lamps.
@@ -462,7 +473,7 @@ function refreshStreetLights(){
     light,
     distance:(light.position.x-avatar.x)**2+(light.position.z-avatar.z)**2
   })).filter(item=>item.distance<43*43).sort((a,b)=>a.distance-b.distance);
-  const selected=new Set(closest.slice(0,4).map(item=>item.light));
+  const selected=new Set(closest.slice(0,qualityModes[qualityIndex].pointLights).map(item=>item.light));
   for(const light of nightLights){
     light.visible=selected.has(light);
     light.intensity=light.visible?intensity:0;
@@ -483,6 +494,22 @@ function setTime(index){
   $("btn-time").textContent=t.name;
 }
 setTime(0);
+function setQuality(i,save=true){
+  qualityIndex=(i+qualityModes.length)%qualityModes.length;
+  const mode=qualityModes[qualityIndex];
+  $("btn-quality").textContent="⚙ "+mode.name;
+  renderer.shadowMap.enabled=mode.shadows;
+  sun.castShadow=mode.shadows;
+  renderScale=Math.min(window.devicePixelRatio||1,mode.scale);
+  renderer.setPixelRatio(renderScale);
+  qualityCooldown=performance.now()+5000;
+  refreshStreetLights();
+  if(save){try{localStorage.setItem("mini-city-quality",mode.id)}catch(_){}}
+}
+$("btn-quality").addEventListener("click",()=>{setQuality(qualityIndex+1);notice("Графика: "+qualityModes[qualityIndex].name,1700);});
+$("btn-quality").textContent="⚙ "+qualityModes[qualityIndex].name;
+renderer.shadowMap.enabled=qualityModes[qualityIndex].shadows;
+sun.castShadow=qualityModes[qualityIndex].shadows;
 
 const joystick=$("joystick"),stick=$("stick");
 const joy={x:0,y:0,id:null};
@@ -933,9 +960,10 @@ function update(dt) {
   for(const p of pois){p.dot.position.y=2.2+Math.sin(elapsed*2.1+p.x)*.19;p.ring.rotation.z=elapsed*.15;}
   if(elapsed-lightUpdateAt>.6){
     lightUpdateAt=elapsed;
-    for(const o of treeGroups)o.g.visible=(o.x-avatar.x)**2+(o.z-avatar.z)**2<140*140;
-    for(const o of streetProps)o.g.visible=(o.x-avatar.x)**2+(o.z-avatar.z)**2<140*140;
-    for(const c of cars)c.g.visible=!!avatar.inCar&&avatar.inCar===c || (c.x-avatar.x)**2+(c.z-avatar.z)**2<145*145;
+    const view=qualityModes[qualityIndex].view;
+    for(const o of treeGroups)o.g.visible=(o.x-avatar.x)**2+(o.z-avatar.z)**2<view*view;
+    for(const o of streetProps)o.g.visible=(o.x-avatar.x)**2+(o.z-avatar.z)**2<view*view;
+    for(const c of cars)c.g.visible=!!avatar.inCar&&avatar.inCar===c || (c.x-avatar.x)**2+(c.z-avatar.z)**2<(view+5)*(view+5);
     refreshStreetLights();
     // Keep the sun/shadow box anchored near the moving player.
     if(Math.abs(sun.target.position.x-avatar.x)>24||Math.abs(sun.target.position.z-avatar.z)>24){
@@ -965,7 +993,7 @@ function animate(){
     const draws=renderer.info.render.calls;
     const tris=renderer.info.render.triangles;
     $("perf-info").textContent=draws+" рис. · "+Math.round(tris/1000)+"k трис · "+renderScale.toFixed(2)+"×";
-    const maxScale=Math.min(window.devicePixelRatio||1,1.35);
+    const maxScale=Math.min(window.devicePixelRatio||1,qualityModes[qualityIndex].scale);
     // Slowly lower framebuffer cost only when genuinely needed.
     // Never go below 0.9 device pixels per CSS pixel.
     if(now>qualityCooldown){
@@ -979,7 +1007,7 @@ window.addEventListener("resize",()=>{
   const w=innerWidth,h=innerHeight;
   camera.aspect=w/h;camera.fov=w<h?63:59;camera.updateProjectionMatrix();
   renderer.setSize(w,h);
-  renderScale=Math.min(renderScale,devicePixelRatio||1);
+  renderScale=Math.min(renderScale,devicePixelRatio||1,qualityModes[qualityIndex].scale);
   renderer.setPixelRatio(renderScale);
 });
 renderer.domElement.addEventListener("contextmenu",e=>e.preventDefault());
