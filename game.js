@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { buildDistrictBuildings, buildDistrictProps, decorateCentralBlocks } from "./district.js";
+import { ENTRANCES, indoorBlocked, nearIndoorObject, buildInteriors } from "./interiors.js";
 
 const $ = (id) => document.getElementById(id);
 const host = $("screen");
@@ -268,9 +269,11 @@ const treePositions = [
 ];
 treePositions.forEach(([x, z], i) => tree(x, z, i));
 
+const benches=[];
 function bench(x, z, rotation = 0) {
   const group = new THREE.Group(); group.position.set(x, 0, z); group.rotation.y = rotation; world.add(group);
   streetProps.push({g:group,x,z});
+  benches.push({group,x,z,rotation});
   box(2.5, .2, .65, mat(0x886d54), 0, .78, 0, group);
   box(2.5, .75, .15, mat(0x886d54), 0, 1.19, .3, group);
   for (const s of [-1, 1]) box(.13, .7, .6, M.metal, s, .38, 0, group);
@@ -353,6 +356,7 @@ car(-41,-5.1,carColors[1],Math.PI/2);
 buildDistrictProps({tree,bench,lamp,car,roadSign,box:decorationBox,flat,mat});
 flushDecorationBoxes();
 flushFlats();
+const lobbies=buildInteriors({THREE,scene,world,box,mat,label,orb});
 
 function human(palette = 0) {
   // Low-poly block character with proportionate head and articulated limbs.
@@ -395,7 +399,7 @@ function human(palette = 0) {
 const player = human(0);
 player.g.position.set(0,0,15);
 scene.add(player.g);
-const avatar = {x:0,y:0,z:15,vy:0,angle:0,inCar:null};
+const avatar = {x:0,y:0,z:15,vy:0,angle:0,inCar:null,inLobby:null,sitting:null};
 const smoothVelocity=new THREE.Vector2(0,0);
 function animateHuman(h,velocity,t) {
   const amt=Math.min(1,velocity/4);
@@ -428,6 +432,19 @@ for(let i=0;i<12;i++){
   person.g.position.set(vertical?fixed:from,0,vertical?from:fixed);
   scene.add(person.g);
   npcs.push({person,vertical,fixed,from,to,progress:rand(),dir:i%2?1:-1,speed:.7+rand()*.6,pause:rand()*2});
+}
+
+// Two citizens prefer to rest on courtyard benches rather than patrol.
+const benchResidents=[{index:6,x:52,z:53,rotation:0},{index:11,x:-18,z:-52,rotation:Math.PI/2}];
+for(const rest of benchResidents){
+  const n=npcs[rest.index];
+  if(!n)continue;
+  n.role="rest";
+  n.restAt=rest;
+  n.person.g.position.set(rest.x,-.26,rest.z);
+  n.person.g.rotation.y=rest.rotation;
+  n.person.leftLeg.rotation.x=-1.15;n.person.rightLeg.rotation.x=-1.15;
+  n.person.leftArm.rotation.x=-.15;n.person.rightArm.rotation.x=-.15;
 }
 
 const poiDefs=[
@@ -610,41 +627,163 @@ function footstep(){
   g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.085);
   osc.connect(g);g.connect(master);osc.start();osc.stop(audioCtx.currentTime+.09);
 }
-function jump(){if(!running||avatar.inCar)return;if(avatar.y<=.015){avatar.vy=8.2;}}
+// The same ACTION key drives car entry, benches and stairwell doors.
+// A room has its own bounded coordinates while the outside world is suspended.
+let nearby=null;
+let savedCamera=null;
+const visitStorageKey="mini-city-v03-lobbies";
+try{
+  const visited=JSON.parse(localStorage.getItem(visitStorageKey)||"[]");
+  if(Array.isArray(visited))for(const room of lobbies)room.visited=visited.includes(room.id);
+}catch(_){/* In private browsing the game still works without persistence. */}
+function updateEntranceProgress(){
+  const count=lobbies.filter(r=>r.visited).length;
+  $("entrance-progress").textContent="Подъезды: "+count+" / "+lobbies.length;
+}
+function setZoneLabel(text){
+  $("zone-name").textContent=text;
+}
+updateEntranceProgress();
+function standUp(){
+  if(!avatar.sitting)return;
+  const seat=avatar.sitting;
+  avatar.sitting=null;
+  const candidates=[
+    [seat.x+1.7,seat.z],
+    [seat.x-1.7,seat.z],
+    [seat.x,seat.z+1.7],
+    [seat.x,seat.z-1.7]
+  ];
+  const exit=candidates.find(([x,z])=>!blocked(x,z))||[seat.x,seat.z];
+  avatar.x=exit[0];avatar.z=exit[1];
+  smoothVelocity.set(0,0);
+  notice("Встал со скамейки",1400);
+}
+function jump(){
+  if(!running||avatar.inCar)return;
+  if(avatar.sitting){standUp();return;}
+  if(avatar.y<=.015)avatar.vy=8.2;
+}
 function blocked(x,z){
+  if(avatar.inLobby)return indoorBlocked(x-avatar.inLobby.centerX,z);
   if(Math.abs(x)>153||Math.abs(z)>153)return true;
   const r=.49;
-  for(const c of colliders){if(x+r>c.x1 && x-r<c.x2 && z+r>c.z1 && z-r<c.z2)return true;}
+  for(const c of colliders){
+    if(x+r>c.x1&&x-r<c.x2&&z+r>c.z1&&z-r<c.z2)return true;
+  }
   return false;
 }
-let nearby=null;
+function enterLobby(room){
+  if(avatar.inLobby||avatar.inCar||avatar.sitting)return;
+  savedCamera={yaw,pitch,zoom};
+  for(const r of lobbies)r.root.visible=r===room;
+  world.visible=false;
+  for(const n of npcs)n.person.g.visible=false;
+  avatar.inLobby=room;
+  avatar.x=room.centerX;avatar.z=4.25;avatar.y=0;avatar.vy=0;
+  avatar.angle=0;
+  smoothVelocity.set(0,0);
+  player.g.position.set(avatar.x,0,avatar.z);
+  yaw=0;pitch=.25;zoom=6.9;
+  setZoneLabel(room.name.toUpperCase());
+  if(!room.visited){
+    room.visited=true;
+    updateEntranceProgress();
+    try{localStorage.setItem(visitStorageKey,JSON.stringify(lobbies.filter(r=>r.visited).map(r=>r.id)))}catch(_){}
+    notice("🚪 "+room.name+" исследован! Осмотри почтовые ящики.",3500);
+  }else notice("🚪 "+room.name+" — первый этаж",2500);
+  followCamera(1);
+}
+function exitLobby(){
+  if(!avatar.inLobby)return;
+  const room=avatar.inLobby;
+  avatar.inLobby=null;
+  room.root.visible=false;
+  world.visible=true;
+  avatar.x=room.x;avatar.z=room.z-.6;avatar.y=0;avatar.vy=0;
+  avatar.angle=0;
+  smoothVelocity.set(0,0);
+  player.g.position.set(avatar.x,0,avatar.z);
+  if(savedCamera){
+    yaw=savedCamera.yaw;pitch=savedCamera.pitch;zoom=savedCamera.zoom;
+    savedCamera=null;
+  }
+  setZoneLabel("НА УЛИЦЕ");
+  followCamera(1);
+  notice("Ты вернулся во двор",1700);
+}
 function detectInteract(){
   nearby=null;
-  if(avatar.inCar){nearby={type:"exit",title:"Выйти из машины"};}
-  else{
-    for (const c of cars){if(Math.hypot(c.x-avatar.x,c.z-avatar.z)<4.0){nearby={type:"car",obj:c,title:"Сесть в машину"};break;}}
-    if(!nearby)for(const d of doors){if(Math.hypot(d.x-avatar.x,d.z-avatar.z)<4.4){nearby={type:"door",obj:d,title:"Открыть дверь магазина"};break;}}
+  if(avatar.inLobby){
+    const r=nearIndoorObject(avatar.x-avatar.inLobby.centerX,avatar.z);
+    if(r)nearby=r;
+  }else if(avatar.inCar){
+    nearby={type:"exit-car",title:"Выйти из машины"};
+  }else if(avatar.sitting){
+    nearby={type:"stand",title:"Встать со скамейки"};
+  }else{
+    // Keep the closest interactable item. Do not enter through walls by accident:
+    // street entrances are outside the building collision rectangles.
+    const available=[];
+    for(const room of lobbies){
+      const distance=Math.hypot(room.x-avatar.x,room.z-avatar.z);
+      if(distance<3)available.push({type:"entrance",obj:room,title:"Войти: "+room.name,distance});
+    }
+    for(const c of cars){
+      const distance=Math.hypot(c.x-avatar.x,c.z-avatar.z);
+      if(distance<3.45)available.push({type:"car",obj:c,title:"Сесть в машину",distance});
+    }
+    for(const b of benches){
+      const distance=Math.hypot(b.x-avatar.x,b.z-avatar.z);
+      if(distance<2.45)available.push({type:"sit",obj:b,title:"Сесть на скамейку",distance});
+    }
+    for(const d of doors){
+      const distance=Math.hypot(d.x-avatar.x,d.z-avatar.z);
+      if(distance<3.5)available.push({type:"shop-door",obj:d,title:"Открыть дверь магазина",distance});
+    }
+    available.sort((a,b)=>a.distance-b.distance);
+    nearby=available[0]||null;
   }
-  $("btn-action").classList.toggle("available",!!nearby);
-  $("interact-hint").textContent=nearby?nearby.title:"";
+  $("btn-action").classList.toggle("available",Boolean(nearby));
+  $("interact-hint").textContent=nearby?.title||"";
 }
 function interact(){
   if(!running||!nearby)return;
-  if(nearby.type==="car"){
-    avatar.inCar=nearby.obj;player.g.visible=false;smoothVelocity.set(0,0);
-    avatar.x=nearby.obj.x;avatar.z=nearby.obj.z;avatar.y=0;
-    notice("🚙 Ты сел в припаркованную машину. Вождение пока недоступно.");
-  } else if(nearby.type==="exit"){
-    const c=avatar.inCar;avatar.inCar=null;
-    avatar.x=c.x+(c.rot===0?3.15:0);
-    avatar.z=c.z+(c.rot===0?0:3.15);
-    player.g.visible=true;player.g.position.set(avatar.x,0,avatar.z);
-    notice("Ты вышел из машины");
-  }else if(nearby.type==="door"){
-    nearby.obj.opened=3.5;notice("🚪 Дверь магазина открыта");
+  switch(nearby.type){
+    case "entrance":enterLobby(nearby.obj);break;
+    case "lobby-exit":exitLobby();break;
+    case "mailboxes":notice("📬 Почтовые ящики. Пока здесь ничего нет.",3000);break;
+    case "sit":{
+      const seat=nearby.obj;
+      avatar.sitting=seat;
+      avatar.x=seat.x;avatar.z=seat.z;avatar.y=0;avatar.vy=0;
+      avatar.angle=seat.rotation;
+      smoothVelocity.set(0,0);
+      notice("🪑 Ты сел. Нажми «Действие», чтобы встать.",3200);
+      break;
+    }
+    case "stand":standUp();break;
+    case "car":{
+      avatar.inCar=nearby.obj;player.g.visible=false;smoothVelocity.set(0,0);
+      avatar.x=nearby.obj.x;avatar.z=nearby.obj.z;avatar.y=0;
+      notice("🚙 Машина припаркована. Вождение появится позже.",2500);
+      break;
+    }
+    case "exit-car":{
+      const c=avatar.inCar;avatar.inCar=null;
+      avatar.x=c.x+(c.rot===0?3.15:0);
+      avatar.z=c.z+(c.rot===0?0:3.15);
+      player.g.visible=true;player.g.position.set(avatar.x,0,avatar.z);
+      notice("Ты вышел из машины",1500);
+      break;
+    }
+    case "shop-door":
+      nearby.obj.opened=3.5;notice("🚪 Дверь магазина открыта",2000);
+      break;
   }
   detectInteract();
 }
+
 const raycaster = new THREE.Raycaster(), camTarget=new THREE.Vector3(),camDest=new THREE.Vector3(),rayDir=new THREE.Vector3();
 function followCamera(dt){
   const base=avatar.inCar?avatar.inCar.g.position:player.g.position;
@@ -655,11 +794,32 @@ function followCamera(dt){
   const dist=rayDir.length();rayDir.normalize();
   raycaster.set(camTarget,rayDir);raycaster.far=dist;
   const hits=raycaster.intersectObjects(cameraObstacles,false);
-  if(hits.length){const d=Math.max(.85,hits[0].distance-.55);camDest.copy(camTarget).addScaledVector(rayDir,d);}
+  if(!avatar.inLobby && hits.length){const d=Math.max(.85,hits[0].distance-.55);camDest.copy(camTarget).addScaledVector(rayDir,d);}
+  if(avatar.inLobby){
+    // Never allow the camera through walls/ceiling in a compact room.
+    const x=avatar.inLobby.centerX;
+    camDest.x=THREE.MathUtils.clamp(camDest.x,x-5.25,x+5.25);
+    camDest.z=THREE.MathUtils.clamp(camDest.z,-6.1,6.1);
+    camDest.y=THREE.MathUtils.clamp(camDest.y,1.25,3.58);
+  }
   camera.position.lerp(camDest,Math.min(1,dt*8));camera.lookAt(camTarget);
 }
 function minimap(){
   const cv=$("minimap"),g=cv.getContext("2d"),sz=240,range=94;
+  if(avatar.inLobby){
+    const x=avatar.x-avatar.inLobby.centerX,z=avatar.z;
+    g.clearRect(0,0,sz,sz);
+    g.fillStyle="#3b5360";g.fillRect(0,0,sz,sz);
+    g.fillStyle="#a4aca6";g.fillRect(22,18,196,204);
+    g.fillStyle="#65757b";g.fillRect(22,18,196,16);g.fillRect(22,18,15,204);
+    g.fillRect(203,18,15,204);g.fillRect(22,206,196,16);
+    g.fillStyle="#77878d";g.fillRect(42,39,64,72);
+    g.fillStyle="#d9be80";g.fillRect(173,97,23,60);
+    g.fillStyle="#76d4a9";g.fillRect(100,205,40,7);
+    g.fillStyle="#fff";g.beginPath();
+    g.arc(120+x/12*180,120+z/14*180,6,0,Math.PI*2);g.fill();
+    return;
+  }
   const centerX=THREE.MathUtils.clamp(avatar.x,-160+range,160-range);
   const centerZ=THREE.MathUtils.clamp(avatar.z,-160+range,160-range);
   const px=x=>(x-centerX+range)/(2*range)*sz;
@@ -686,6 +846,15 @@ function minimap(){
     if(x<0||x>sz||z<0||z>sz)continue;
     g.fillStyle=p.found?"#8bdfbb":"#ffdd85";g.beginPath();g.arc(x,z,5,0,Math.PI*2);g.fill();
   }
+  // Cyan squares are explorable stairwell entrances. Mint means visited.
+  for(const room of lobbies){
+    const bx=px(room.x),bz=pz(room.z);
+    if(bx<0||bx>sz||bz<0||bz>sz)continue;
+    g.fillStyle=room.visited?"#7ad7ad":"#8ae8fa";
+    g.fillRect(bx-5,bz-5,10,10);
+    g.strokeStyle="#1e4e56";g.lineWidth=1.5;
+    g.strokeRect(bx-5,bz-5,10,10);
+  }
   const x=px(avatar.x),z=pz(avatar.z),a=avatar.angle;
   g.fillStyle="#ffffff";g.beginPath();g.arc(x,z,6,0,Math.PI*2);g.fill();
   g.strokeStyle="#142b3f";g.lineWidth=3;g.beginPath();g.moveTo(x,z);g.lineTo(x-Math.sin(a)*14,z-Math.cos(a)*14);g.stroke();
@@ -703,12 +872,13 @@ function update(dt) {
   const isRunning=(holdRun||pressed.has("ShiftLeft")||pressed.has("ShiftRight"))&&mag>.05;
   const speed=isRunning?7.3:4.15;
   const input=avatar.inCar?0:Math.min(1,mag);
-  const desiredX=(Math.cos(yaw)*mx+Math.sin(yaw)*my)*speed*(avatar.inCar?0:1);
-  const desiredZ=(-Math.sin(yaw)*mx+Math.cos(yaw)*my)*speed*(avatar.inCar?0:1);
+  const immobilized=avatar.inCar||avatar.sitting;
+  const desiredX=(Math.cos(yaw)*mx+Math.sin(yaw)*my)*speed*(immobilized?0:1);
+  const desiredZ=(-Math.sin(yaw)*mx+Math.cos(yaw)*my)*speed*(immobilized?0:1);
   const blend=1-Math.exp(-dt*(input>.04?9.4:13.5));
   smoothVelocity.x+=(desiredX-smoothVelocity.x)*blend;
   smoothVelocity.y+=(desiredZ-smoothVelocity.y)*blend;
-  if(avatar.inCar)smoothVelocity.set(0,0);
+  if(immobilized)smoothVelocity.set(0,0);
   const movingSpeed=smoothVelocity.length();
   if(movingSpeed>.07){
     const vx=smoothVelocity.x,vz=smoothVelocity.y;
@@ -721,23 +891,49 @@ function update(dt) {
   if(!avatar.inCar){
     avatar.vy-=19*dt;avatar.y+=avatar.vy*dt;
     if(avatar.y<0){avatar.y=0;avatar.vy=0;}
-    player.g.position.set(avatar.x,avatar.y,avatar.z);
+    player.g.position.set(avatar.x,avatar.y+(avatar.sitting?-.26:0),avatar.z);
     player.g.rotation.y=avatar.angle;
     animateHuman(player,movingSpeed,elapsed);
+    if(avatar.sitting){
+      player.leftLeg.rotation.x=-1.12;player.rightLeg.rotation.x=-1.12;
+      player.leftArm.rotation.x=-.14;player.rightArm.rotation.x=-.14;
+      player.torso.position.y=1.71;
+    }
     if(movingSpeed>1&&avatar.y===0&&elapsed-stepAt>(isRunning?.24:.39)){footstep();stepAt=elapsed;}
   }
   for(const n of npcs){
-    const far=Math.hypot(n.person.g.position.x-avatar.x,n.person.g.position.z-avatar.z)>90;
+    const distance=Math.hypot(n.person.g.position.x-avatar.x,n.person.g.position.z-avatar.z);
+    const far=distance>86||Boolean(avatar.inLobby);
     n.person.g.visible=!far;
     if(far)continue;
-    if(n.pause>0){n.pause-=dt;animateHuman(n.person,0,elapsed);continue;}
-    n.progress+=n.dir*n.speed*dt/Math.abs(n.to-n.from);
-    if(n.progress>1){n.progress=1;n.dir=-1;n.pause=.7+rand()*1.8;}else if(n.progress<0){n.progress=0;n.dir=1;n.pause=.7+rand()*1.8;}
+    if(n.role==="rest"){
+      // A seated local looks toward a nearby visitor.
+      if(distance<5){
+        const target=Math.atan2(n.person.g.position.x-avatar.x,n.person.g.position.z-avatar.z);
+        const rot=n.person.g.rotation.y;
+        n.person.g.rotation.y=rot+Math.atan2(Math.sin(target-rot),Math.cos(target-rot))*Math.min(1,dt*1.5);
+      }else n.person.g.rotation.y=THREE.MathUtils.damp(n.person.g.rotation.y,n.restAt.rotation,1,dt);
+      continue;
+    }
+    if(n.pause>0){
+      n.pause-=dt;
+      animateHuman(n.person,0,elapsed);
+      if(distance<5){
+        // Not a suspicion mechanic yet: simply observe the passerby.
+        const a=Math.atan2(n.person.g.position.x-avatar.x,n.person.g.position.z-avatar.z);
+        const rot=n.person.g.rotation.y;
+        n.person.g.rotation.y=rot+Math.atan2(Math.sin(a-rot),Math.cos(a-rot))*Math.min(1,dt*1.7);
+      }
+      continue;
+    }
+    n.progress+=n.dir*n.speed*dt/Math.max(1,Math.abs(n.to-n.from));
+    if(n.progress>1){n.progress=1;n.dir=-1;n.pause=.8+rand()*4;}
+    else if(n.progress<0){n.progress=0;n.dir=1;n.pause=.8+rand()*4;}
     const pos=n.from+(n.to-n.from)*n.progress;
     n.person.g.position.set(n.vertical?n.fixed:pos,0,n.vertical?pos:n.fixed);
     const direction=(n.to-n.from)*n.dir;
     n.person.g.rotation.y=n.vertical?(direction>0?Math.PI:0):(direction>0?-Math.PI/2:Math.PI/2);
-    animateHuman(n.person,n.speed,elapsed+(n.fixed*.4));
+    animateHuman(n.person,n.speed,elapsed+n.fixed*.4);
   }
   for(const d of doors){if(d.opened>0)d.opened-=dt;d.pivot.rotation.y=THREE.MathUtils.damp(d.pivot.rotation.y,d.opened>0?-1.1:0,7,dt);}
   for(const p of pois){p.dot.position.y=2.2+Math.sin(elapsed*2.1+p.x)*.19;p.ring.rotation.z=elapsed*.15;}
@@ -756,7 +952,7 @@ function update(dt) {
     }
   }
   followCamera(dt);
-  lookForPlaces();
+  if(!avatar.inLobby)lookForPlaces();
   if(elapsed-lastMap>.13){minimap();lastMap=elapsed;}
   detectInteract();
 }
@@ -797,7 +993,7 @@ $("start").disabled=false;$("start").textContent="НАЧАТЬ ПРОГУЛКУ 
 window.cityReady=true;
 $("start").addEventListener("click",()=>{
   $("welcome").style.display="none";ui.hidden=false;running=true;clock.getDelta();
-  startAudio();notice("Исследуй район. Найди 3 места!",4000);
+  startAudio();notice("Голубые квадраты на карте — входы в подъезды!",4300);
 });
 followCamera(1);
 animate();
