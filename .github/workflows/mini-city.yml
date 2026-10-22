@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - feat/mini-city-v1
+      - feat/mini-city-v02
   pull_request:
     paths:
       - 'index.html'
@@ -24,5 +25,7 @@ jobs:
           node-version: '22'
       - name: Check JavaScript syntax
         run: node --check game.js
+      - name: Check district module syntax
+        run: node --check district.js
       - name: Run static smoke test
         run: node test/smoke.mjs
