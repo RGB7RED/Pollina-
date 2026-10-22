@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { buildDistrictBuildings, buildDistrictProps, decorateCentralBlocks } from "./district.js";
+import { buildDistrictBuildings, buildDistrictProps, decorateCentralBlocks, decorateResidentialYards } from "./district.js";
 import { ENTRANCES, FLOOR_HEIGHT, indoorBlocked, indoorFloorHeight, nearIndoorObject, buildInteriors } from "./interiors.js";
 import { createCharacterFactory } from "./characters.js";
 import { createDistrictMaterials } from "./visuals.js";
@@ -372,6 +372,7 @@ car(5.2,-53,carColors[1],0);
 car(28,5.1,carColors[3],Math.PI/2);
 car(-41,-5.1,carColors[1],Math.PI/2);
 buildDistrictProps({tree,bench,lamp,car,roadSign,box:decorationBox,flat,mat});
+decorateResidentialYards({box:decorationBox,solidBox:(w,h,d,m,x,y,z)=>box(w,h,d,m,x,y,z,world,true),mat,flat});
 flushDecorationBoxes();
 flushFlats();
 const lobbies=buildInteriors({THREE,scene,world,box,mat,label,orb});
