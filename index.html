@@ -47,16 +47,73 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 @media (orientation:portrait) and (max-width:650px){#rotate{display:block}.topbar{top:max(12px,env(safe-area-inset-top))}#joystick{bottom:max(39px,env(safe-area-inset-bottom))}.actions{bottom:max(44px,env(safe-area-inset-bottom))}}
 @media (pointer:fine){#joystick,.actions{opacity:.65}.bottom-hint{display:block}#rotate{display:none}}
 @media (max-height:420px){.intro{padding:15px 24px}.intro h1{font-size:46px}.intro p{margin:9px 0}.intro .features{margin:9px 0}.intro .note{margin-top:8px}#joystick{width:105px;height:105px;bottom:12px}.actions{bottom:10px}.bottom-hint{display:none}#minimap{width:88px;height:88px}#quest{max-width:160px}.brand small{display:none}}
+
+/* 0.2 — iPhone-safe responsive HUD: keep the right-side action area unobstructed. */
+.rightbar{flex-direction:column;align-items:flex-end}
+.right-buttons{display:flex;flex-direction:column;align-items:flex-end;gap:7px}
+#ui{overscroll-behavior:none}
+#ui[hidden]{display:none}
+#rotate{pointer-events:none;animation:rotateTip 5s ease-out forwards;z-index:1}
+@keyframes rotateTip{0%,65%{opacity:1;visibility:visible}100%{opacity:0;visibility:hidden}}
+#minimap{flex-shrink:0}
+.action{transition:transform .1s,background .16s}
+#joystick{bottom:max(24px,calc(env(safe-area-inset-bottom) + 16px))}
+.actions{bottom:max(20px,calc(env(safe-area-inset-bottom) + 15px))}
+#interact-hint{bottom:max(145px,calc(env(safe-area-inset-bottom) + 128px));right:18px}
+@media(orientation:portrait) and (max-width:650px){
+  .brand{padding:8px 10px}
+  .topbar{max-width:calc(100% - 118px)}
+  #quest{max-width:min(144px,calc(100vw - 294px))}
+  #minimap{width:82px;height:82px}
+  .rightbar{right:max(9px,env(safe-area-inset-right))}
+  .right-buttons{gap:5px}
+  .right-buttons .pill{padding:7px 8px;font-size:9px}
+  #joystick{width:116px;height:116px;left:max(18px,env(safe-area-inset-left))}
+  #stick{width:53px;height:53px}
+  .actions{grid-template-columns:repeat(2,51px);gap:9px;right:max(13px,env(safe-area-inset-right))}
+  .action{width:51px;height:51px}
+  .action span{font-size:9px}
+  #rotate{top:29%;max-width:190px;font-size:10px}
+}
+@media(orientation:landscape) and (max-height:540px){
+  .topbar{left:max(12px,env(safe-area-inset-left));top:max(6px,env(safe-area-inset-top));gap:7px}
+  .brand{padding:7px 11px}
+  .brand b{font-size:12px}
+  .brand small{font-size:8px}
+  #quest{width:178px;min-width:0;padding:7px 10px}
+  #quest .line{font-size:10px}
+  #quest .progress{margin-top:4px}
+  .rightbar{top:max(6px,env(safe-area-inset-top));right:max(12px,env(safe-area-inset-right));flex-direction:row;align-items:flex-start;gap:6px}
+  #minimap{width:77px;height:77px;border-radius:12px}
+  .right-buttons{gap:5px}
+  .right-buttons .pill{padding:6px 7px;font-size:9px}
+  #joystick{width:101px;height:101px;left:max(17px,env(safe-area-inset-left));bottom:max(8px,env(safe-area-inset-bottom))}
+  #stick{width:48px;height:48px}
+  .actions{grid-template-columns:repeat(2,49px);gap:8px;right:max(18px,env(safe-area-inset-right));bottom:max(8px,env(safe-area-inset-bottom))}
+  .action{width:49px;height:49px;font-size:17px}
+  .action span{font-size:8px}
+  #interact-hint{bottom:125px;right:max(17px,env(safe-area-inset-right))}
+  #rotate{display:none}
+  .bottom-hint{display:none}
+}
+@media(orientation:landscape) and (max-height:380px){
+  #quest{width:145px}#minimap{width:65px;height:65px}
+  .right-buttons .pill{font-size:8px;padding:4px 5px}
+  #joystick{width:89px;height:89px}
+  .actions{grid-template-columns:repeat(2,43px);gap:6px}
+  .action{width:43px;height:43px}
+}
+
 </style>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js"}}</script>
 </head>
 <body>
 <div id="screen"></div>
 <div id="ui" hidden>
-  <div class="topbar"><div class="brand"><b>РАЙОН</b><small>MINI CITY · 0.1</small></div><div id="quest"><div class="kicker">ИССЛЕДУЙ РАЙОН</div><div class="line" id="quest-line">Найдено мест: 0 / 3</div><div class="progress"><div id="quest-fill" class="fill"></div></div></div></div>
-  <div class="rightbar"><canvas id="minimap" width="240" height="240" aria-label="Карта района"></canvas><button id="btn-time" class="pill">☀️ ДЕНЬ</button><button id="btn-sound" class="pill">♫ ЗВУК: ВКЛ</button></div>
+  <div class="topbar"><div class="brand"><b>РАЙОН</b><small>MINI CITY · 0.2</small></div><div id="quest"><div class="kicker">ИССЛЕДУЙ РАЙОН</div><div class="line" id="quest-line">Найдено мест: 0 / 3</div><div class="progress"><div id="quest-fill" class="fill"></div></div></div></div>
+  <div class="rightbar"><canvas id="minimap" width="240" height="240" aria-label="Карта района"></canvas><div class="right-buttons"><button id="btn-time" class="pill">☀️ ДЕНЬ</button><button id="btn-sound" class="pill">♫ ЗВУК: ВКЛ</button></div></div>
   <div id="toast" role="status" aria-live="polite"></div>
-  <div id="rotate">↻ Поверни телефон горизонтально для большего обзора</div>
+  <div id="rotate">↻ В горизонтальном режиме больше обзор</div>
   <div class="touch" id="joystick" aria-label="Джойстик"><div id="stick"></div></div>
   <div class="actions"><button id="btn-action" class="action" aria-label="Взаимодействие"><span>ДЕЙСТВИЕ</span></button><button id="btn-jump" class="action" aria-label="Прыжок"><span>ПРЫЖОК</span></button><button id="btn-run" class="action" aria-label="Бег"><span>БЕГ</span></button></div>
   <div id="interact-hint"></div>
@@ -66,9 +123,9 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
   <div class="badge">ОТКРЫТЫЙ МИР · БРАУЗЕРНАЯ 3D-ИГРА</div>
   <h1>ТВОЙ<br><em>РАЙОН.</em></h1>
   <p>Два квартала. Знакомые дворы. Вечерние фонари. Прогуляйся по маленькому живому городу и найди три интересных места.</p>
-  <div class="features"><span>СВОБОДНАЯ КАМЕРА</span><span>ПРОГУЛКИ</span><span>СМЕНА ВРЕМЕНИ СУТОК</span><span>ИССЛЕДОВАНИЕ</span></div>
+  <div class="features"><span>СВОБОДНАЯ КАМЕРА</span><span>LOW POLY ПЕТЕРБУРГ</span><span>ПРОГУЛКИ</span><span>СМЕНА ВРЕМЕНИ СУТОК</span><span>ИССЛЕДОВАНИЕ</span></div>
   <button id="start" disabled>ЗАГРУЗКА МИРА...</button>
-  <div class="note">Для iPhone: левый стик — движение, свайп справа — камера.</div>
+  <div class="note">Для iPhone: левый стик — движение, свайп по миру — камера, щипок — масштаб.</div>
   <div id="fatal"></div>
 </div></div>
 <script>window.addEventListener("error",function(e){if(!window.cityReady){document.getElementById("fatal").textContent="Не удалось загрузить игру. Проверь соединение с интернетом и обнови страницу.";}});window.addEventListener("unhandledrejection",function(){if(!window.cityReady){document.getElementById("fatal").textContent="Ошибка загрузки игрового движка. Попробуй обновить страницу.";}});</script>
