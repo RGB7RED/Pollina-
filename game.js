@@ -1,11 +1,12 @@
 import * as THREE from "three";
+import { buildDistrictBuildings, buildDistrictProps } from "./district.js";
 
 const $ = (id) => document.getElementById(id);
 const host = $("screen");
 const ui = $("ui");
 const scene = new THREE.Scene();
 const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.25));
 renderer.setSize(innerWidth, innerHeight);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -20,7 +21,7 @@ scene.add(hemi);
 const sun = new THREE.DirectionalLight(0xffe2b5, 2.8);
 sun.position.set(45, 84, 28);
 sun.castShadow = true;
-sun.shadow.mapSize.set(1024, 1024);
+sun.shadow.mapSize.set(768, 768);
 sun.shadow.camera.left = -85; sun.shadow.camera.right = 85;
 sun.shadow.camera.top = 85; sun.shadow.camera.bottom = -85;
 sun.shadow.camera.near = 1; sun.shadow.camera.far = 190;
@@ -80,37 +81,45 @@ function label(text, color = "#f9eed5", bg = "#1b3543", width = 4.6, height = .9
 }
 
 function street() {
-  flat(168, 168, M.grass, 0, 0, -.07);
-  flat(14, 158, M.asphalt, 0, 0);
-  flat(158, 14, M.asphalt, 0, 0);
-  for (const s of [-1, 1]) {
-    for (const k of [-1, 1]) {
-      flat(4, 65, M.pavement, s * 9.2, k * 43.8, .07);
-      flat(65, 4, M.pavement, k * 43.8, s * 9.2, .07);
+  // Nine junctions, three north–south and three east–west roads.
+  // Approximately 3.6x the land area of the 0.1 prototype.
+  flat(328, 328, M.grass, 0, 0, -.08);
+  const avenues=[-91,0,91];
+  const segments=[[-126,56],[-45.5,76],[45.5,76],[126,56]];
+  for(const road of avenues){
+    flat(14,310,M.asphalt,road,0,.012);
+    flat(310,14,M.asphalt,0,road,.013);
+    for(const side of [-1,1]){
+      for(const [center,len] of segments){
+        flat(4,len,M.pavement,road+side*9.2,center,.073);
+        flat(len,4,M.pavement,center,road+side*9.2,.074);
+        flat(.22,len,M.curb,road+side*7.15,center,.112);
+        flat(len,.22,M.curb,center,road+side*7.15,.112);
+      }
     }
-    for (const k of [-1, 1]) {
-      flat(.25, 66, M.curb, s * 7.18, k * 43.7, .11);
-      flat(66, .25, M.curb, k * 43.7, s * 7.18, .11);
+    for(let v=-149;v<150;v+=10){
+      if(avenues.some(c=>Math.abs(v-c)<12))continue;
+      flat(.18,4.3,M.white,road,v,.065);
+      flat(4.3,.18,M.white,v,road,.065);
     }
   }
-  for (let j = -70; j <= 70; j += 10) {
-    if (Math.abs(j) < 12) continue;
-    flat(.18, 4.2, M.white, 0, j, .077);
-    flat(4.2, .18, M.white, j, 0, .077);
+  // Crossing stripes at intersections; finite parts stay clear of the carriageway.
+  for(const cx of avenues)for(const cz of avenues){
+    for(let t=-5;t<=5;t+=2){
+      flat(1.05,.49,M.white,cx+t,cz-8.3,.09);
+      flat(1.05,.49,M.white,cx+t,cz+8.3,.09);
+      flat(.49,1.05,M.white,cx-8.3,cz+t,.09);
+      flat(.49,1.05,M.white,cx+8.3,cz+t,.09);
+    }
   }
-  for (let t = -5; t <= 5; t += 1.8) {
-    flat(1.02, .42, M.white, t, -7.9, .12);
-    flat(1.02, .42, M.white, t, 7.9, .12);
-    flat(.42, 1.02, M.white, -7.9, t, .12);
-    flat(.42, 1.02, M.white, 7.9, t, .12);
-  }
-  for (let q of [-1, 1]) {
-    flat(62, .13, M.sidewalkLine, q * 42, q * 14, .10);
+  const paving=mat(0x9b9c90);
+  for(const [x,z] of [[-47,77],[48,-77],[121,-77],[-121,77]]){
+    flat(21,12,paving,x,z,.025);
   }
 }
 street();
 
-const walls = [mat(0xaaa79b), mat(0xb4a891), mat(0x989e96), mat(0xc2b5a2), mat(0xa89a8b), mat(0x968b7c)];
+const walls = [mat(0xaaa99c), mat(0xc1b29d), mat(0x94a8a0), mat(0xd2b6a7), mat(0xb4ab99), mat(0xc0bfaa)];
 const brick = mat(0x7b6259);
 const litWindows = [];
 const darkWindows = [];
@@ -152,7 +161,7 @@ function building(x, z, w, d, floors, style, shop = false) {
   if (shop) {
     box(w - .2, 3.1, .18, M.dark, x, 1.52, frontZ - .17);
     const sign = label("ПРОДУКТЫ 24", "#ffe9ae", "#354e59", 6.5, 1);
-    sign.position.set(x, 2.65, frontZ - .33); world.add(sign);
+    sign.position.set(x, 2.65, frontZ - .33); sign.rotation.y=Math.PI; world.add(sign);
     const dPivot = new THREE.Group();
     dPivot.position.set(x - 1.05, 0, frontZ - .33); world.add(dPivot);
     box(2, 2.25, .13, M.window, 1, 1.14, 0, dPivot);
@@ -174,6 +183,7 @@ building(59, -33, 17, 17, 4, 2);
 building(34, 37, 18, 22, 5, 5);
 building(60, 37, 18, 22, 3, 1);
 building(50, 68, 18, 11, 3, 0);
+const additionalBuildings=buildDistrictBuildings({building,box,flat,mat,world,walls});
 function windows(list, material) {
   const mesh = new THREE.InstancedMesh(geomBox, material, list.length);
   list.forEach((matrix, i) => mesh.setMatrixAt(i, matrix));
@@ -278,6 +288,7 @@ car(-5.3,58,carColors[4],0);
 car(5.2,-53,carColors[1],0);
 car(28,5.1,carColors[3],Math.PI/2);
 car(-41,-5.1,carColors[1],Math.PI/2);
+buildDistrictProps({tree,bench,lamp,car,roadSign,box,flat,mat});
 
 function human(palette = 0) {
   const g=new THREE.Group();
@@ -451,7 +462,7 @@ function footstep(){
 }
 function jump(){if(!running||avatar.inCar)return;if(avatar.y<=.015){avatar.vy=8.2;}}
 function blocked(x,z){
-  if(Math.abs(x)>76||Math.abs(z)>76)return true;
+  if(Math.abs(x)>153||Math.abs(z)>153)return true;
   const r=.49;
   for(const c of colliders){if(x+r>c.x1 && x-r<c.x2 && z+r>c.z1 && z-r<c.z2)return true;}
   return false;
