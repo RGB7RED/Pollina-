@@ -1,0 +1,24 @@
+name: Character Lab Asset Gate
+on:
+  push:
+    branches: [feat/mini-city-v033-character-lab]
+    paths:
+      - "character-lab/**"
+      - ".github/workflows/character-lab.yml"
+  workflow_dispatch:
+jobs:
+  character-asset:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Check viewer JavaScript
+        run: node --check character-lab/lab.js
+      - name: Verify binary GLB and skinned rig
+        run: node character-lab/test-model.mjs
+      - name: Verify lab UI contracts
+        run: node character-lab/test-ui.mjs
