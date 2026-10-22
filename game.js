@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { buildDistrictBuildings, buildDistrictProps, decorateCentralBlocks } from "./district.js";
-import { ENTRANCES, indoorBlocked, nearIndoorObject, buildInteriors } from "./interiors.js";
+import { ENTRANCES, FLOOR_HEIGHT, indoorBlocked, indoorFloorHeight, nearIndoorObject, buildInteriors } from "./interiors.js";
+import { createCharacterFactory } from "./characters.js";
 
 const $ = (id) => document.getElementById(id);
 const host = $("screen");
@@ -358,55 +359,14 @@ flushDecorationBoxes();
 flushFlats();
 const lobbies=buildInteriors({THREE,scene,world,box,mat,label,orb});
 
-function human(palette = 0) {
-  // Low-poly block character with proportionate head and articulated limbs.
-  const g=new THREE.Group();
-  const shirts=[0x4c719a,0xbd805e,0x668570,0x906a8b,0xc0a36b,0x6a8b96,0xb46d75];
-  const pants=[0x28354a,0x35313b,0x454e60,0x48525b,0x3a404f];
-  const top=mat(shirts[palette%shirts.length]),bottom=mat(pants[palette%pants.length]);
-  const darkDetail=mat(0x243044),face=mat(palette%3===0?0xe5b18e:palette%3===1?0xca9579:0xedc0a1);
-  const torso=box(.90,1.03,.45,top,0,1.68,0,g);
-  box(.90,.25,.46,bottom,0,1.03,0,g);
-  box(.28,.18,.28,face,0,2.34,0,g);
-  const head=box(.65,.67,.58,face,0,2.65,0,g);
-  // Slight hair cap, fringe, eyes, nose and a small shirt collar.
-  box(.68,.14,.62,M.hair,0,3.05,0,g);
-  box(.66,.16,.12,M.hair,0,2.92,-.26,g);
-  box(.20,.085,.06,darkDetail,-.15,2.69,-.301,g);
-  box(.20,.085,.06,darkDetail,.15,2.69,-.301,g);
-  box(.10,.12,.08,face,0,2.54,-.33,g);
-  box(.20,.13,.47,mat(0xc7ced0),0,2.21,0,g);
-  const leftArm=new THREE.Group();leftArm.position.set(-.57,2.12,0);g.add(leftArm);
-  const rightArm=new THREE.Group();rightArm.position.set(.57,2.12,0);g.add(rightArm);
-  box(.34,.85,.38,top,0,-.39,0,leftArm);
-  box(.29,.23,.29,face,0,-.91,0,leftArm);
-  box(.34,.85,.38,top,0,-.39,0,rightArm);
-  box(.29,.23,.29,face,0,-.91,0,rightArm);
-  const leftLeg=new THREE.Group();leftLeg.position.set(-.24,.97,0);g.add(leftLeg);
-  const rightLeg=new THREE.Group();rightLeg.position.set(.24,.97,0);g.add(rightLeg);
-  box(.39,.92,.40,bottom,0,-.45,0,leftLeg);
-  box(.39,.92,.40,bottom,0,-.45,0,rightLeg);
-  box(.43,.18,.62,M.shoes,0,-.95,-.14,leftLeg);
-  box(.43,.18,.62,M.shoes,0,-.95,-.14,rightLeg);
-  if(palette===0) {
-    // Backpack distinguishes the player from city residents.
-    box(.66,.82,.23,mat(0x374f5c),0,1.64,.35,g);
-    box(.10,.83,.06,mat(0xdfbb7b),-.37,1.64,.26,g);
-    box(.10,.83,.06,mat(0xdfbb7b),.37,1.64,.26,g);
-  }
-  return {g,torso,head,leftArm,rightArm,leftLeg,rightLeg};
-}
+const human=createCharacterFactory(THREE);
 const player = human(0);
 player.g.position.set(0,0,15);
 scene.add(player.g);
 const avatar = {x:0,y:0,z:15,vy:0,angle:0,inCar:null,inLobby:null,sitting:null};
 const smoothVelocity=new THREE.Vector2(0,0);
-function animateHuman(h,velocity,t) {
-  const amt=Math.min(1,velocity/4);
-  const swing=Math.sin(t*(velocity>4.5?13:9))*amt*.52;
-  h.leftLeg.rotation.x=swing;h.rightLeg.rotation.x=-swing;
-  h.leftArm.rotation.x=-swing*.85;h.rightArm.rotation.x=swing*.85;
-  h.torso.position.y=1.71+Math.abs(Math.sin(t*10))*amt*.035;
+function animateHuman(h,velocity,t,seated=false,dt=.016) {
+  h.setPose(velocity,t,seated,dt);
 }
 const npcs = [];
 for (let i=0;i<5;i++) {
@@ -441,10 +401,9 @@ for(const rest of benchResidents){
   if(!n)continue;
   n.role="rest";
   n.restAt=rest;
-  n.person.g.position.set(rest.x,-.26,rest.z);
+  n.person.g.position.set(rest.x,-.16,rest.z);
   n.person.g.rotation.y=rest.rotation;
-  n.person.leftLeg.rotation.x=-1.15;n.person.rightLeg.rotation.x=-1.15;
-  n.person.leftArm.rotation.x=-.15;n.person.rightArm.rotation.x=-.15;
+  n.person.setPose(0,0,true,1);
 }
 
 const poiDefs=[
@@ -647,7 +606,7 @@ updateEntranceProgress();
 function standUp(){
   if(!avatar.sitting)return;
   const seat=avatar.sitting;
-  avatar.sitting=null;
+  avatar.sitting=null;avatar.seatTween=null;
   const candidates=[
     [seat.x+1.7,seat.z],
     [seat.x-1.7,seat.z],
@@ -756,7 +715,8 @@ function interact(){
     case "sit":{
       const seat=nearby.obj;
       avatar.sitting=seat;
-      avatar.x=seat.x;avatar.z=seat.z;avatar.y=0;avatar.vy=0;
+      avatar.seatTween={fromX:avatar.x,fromZ:avatar.z,start:elapsed,duration:.68};
+      avatar.y=0;avatar.vy=0;
       avatar.angle=seat.rotation;
       smoothVelocity.set(0,0);
       notice("🪑 Ты сел. Нажми «Действие», чтобы встать.",3200);
@@ -880,6 +840,18 @@ function update(dt) {
   smoothVelocity.y+=(desiredZ-smoothVelocity.y)*blend;
   if(immobilized)smoothVelocity.set(0,0);
   const movingSpeed=smoothVelocity.length();
+  if(avatar.sitting){
+    const seat=avatar.sitting,tween=avatar.seatTween;
+    if(tween){
+      const u=Math.min(1,(elapsed-tween.start)/tween.duration);
+      const eased=u*u*(3-2*u);
+      avatar.x=tween.fromX+(seat.x-tween.fromX)*eased;
+      avatar.z=tween.fromZ+(seat.z-tween.fromZ)*eased;
+      const target=seat.rotation;
+      avatar.angle+=Math.atan2(Math.sin(target-avatar.angle),Math.cos(target-avatar.angle))*Math.min(1,dt*12);
+      if(u>=1)avatar.seatTween=null;
+    }
+  }
   if(movingSpeed>.07){
     const vx=smoothVelocity.x,vz=smoothVelocity.y;
     const nx=avatar.x+vx*dt,nz=avatar.z+vz*dt;
@@ -891,14 +863,10 @@ function update(dt) {
   if(!avatar.inCar){
     avatar.vy-=19*dt;avatar.y+=avatar.vy*dt;
     if(avatar.y<0){avatar.y=0;avatar.vy=0;}
-    player.g.position.set(avatar.x,avatar.y+(avatar.sitting?-.26:0),avatar.z);
+    player.g.position.set(avatar.x,avatar.y-(avatar.sitting?.16*player.sitBlend:0),avatar.z);
     player.g.rotation.y=avatar.angle;
-    animateHuman(player,movingSpeed,elapsed);
-    if(avatar.sitting){
-      player.leftLeg.rotation.x=-1.12;player.rightLeg.rotation.x=-1.12;
-      player.leftArm.rotation.x=-.14;player.rightArm.rotation.x=-.14;
-      player.torso.position.y=1.71;
-    }
+    animateHuman(player,movingSpeed,elapsed,Boolean(avatar.sitting),dt);
+
     if(movingSpeed>1&&avatar.y===0&&elapsed-stepAt>(isRunning?.24:.39)){footstep();stepAt=elapsed;}
   }
   for(const n of npcs){
