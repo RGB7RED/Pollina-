@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { buildDistrictBuildings, buildDistrictProps } from "./district.js";
+import { buildDistrictBuildings, buildDistrictProps, decorateCentralBlocks } from "./district.js";
 
 const $ = (id) => document.getElementById(id);
 const host = $("screen");
@@ -185,6 +185,7 @@ building(59, -33, 17, 17, 4, 2);
 building(34, 37, 18, 22, 5, 5);
 building(60, 37, 18, 22, 3, 1);
 building(50, 68, 18, 11, 3, 0);
+decorateCentralBlocks({box,mat});
 const additionalBuildings=buildDistrictBuildings({building,box,flat,mat,world,walls});
 function windows(list, material) {
   const mesh = new THREE.InstancedMesh(geomBox, material, list.length);
