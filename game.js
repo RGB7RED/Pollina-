@@ -291,27 +291,41 @@ car(-41,-5.1,carColors[1],Math.PI/2);
 buildDistrictProps({tree,bench,lamp,car,roadSign,box,flat,mat});
 
 function human(palette = 0) {
+  // Low-poly block character with proportionate head and articulated limbs.
   const g=new THREE.Group();
-  const shirts=[0x506c94,0xbd805e,0x5d846e,0x8d6785,0xc2a35a];
-  const pants=[0x253147,0x343039,0x444a5d,0x47505a,0x343a4a];
-  const torso=box(.88,1.12,.44,mat(shirts[palette%shirts.length]),0,1.71,0,g);
-  const hip=box(.82,.35,.4,mat(pants[palette%pants.length]),0,1.02,0,g);
-  const neck=box(.28,.25,.26,M.skin,0,2.36,0,g);
-  const head=orb(.37,M.skin,0,2.63,0,g);
-  head.scale.set(.93,1.1,.92);
-  box(.73,.16,.72,M.hair,0,2.97,-.03,g);
-  const eyes=mat(0x283340);
-  orb(.038,eyes,-.14,2.67,-.337,g);orb(.038,eyes,.14,2.67,-.337,g);
-  const leftArm = new THREE.Group(); leftArm.position.set(-.56,2.19,0);g.add(leftArm);
-  const rightArm = new THREE.Group();rightArm.position.set(.56,2.19,0);g.add(rightArm);
-  box(.27,.96,.30,mat(shirts[palette%shirts.length]),0,-.44,0,leftArm);
-  const leftLeg = new THREE.Group();leftLeg.position.set(-.24,.96,0);g.add(leftLeg);
-  const rightLeg = new THREE.Group();rightLeg.position.set(.24,.96,0);g.add(rightLeg);
-  const pantsMat=mat(pants[palette%pants.length]);
-  box(.31,.94,.34,pantsMat,0,-.45,0,leftLeg);
-  box(.31,.94,.34,pantsMat,0,-.45,0,rightLeg);
-  box(.38,.20,.62,M.shoes,0,-.91,-.13,leftLeg);
-  box(.38,.20,.62,M.shoes,0,-.91,-.13,rightLeg);
+  const shirts=[0x4c719a,0xbd805e,0x668570,0x906a8b,0xc0a36b,0x6a8b96,0xb46d75];
+  const pants=[0x28354a,0x35313b,0x454e60,0x48525b,0x3a404f];
+  const top=mat(shirts[palette%shirts.length]),bottom=mat(pants[palette%pants.length]);
+  const darkDetail=mat(0x243044),face=mat(palette%3===0?0xe5b18e:palette%3===1?0xca9579:0xedc0a1);
+  const torso=box(.90,1.03,.45,top,0,1.68,0,g);
+  box(.90,.25,.46,bottom,0,1.03,0,g);
+  box(.28,.18,.28,face,0,2.34,0,g);
+  const head=box(.65,.67,.58,face,0,2.65,0,g);
+  // Slight hair cap, fringe, eyes, nose and a small shirt collar.
+  box(.68,.14,.62,M.hair,0,3.05,0,g);
+  box(.66,.16,.12,M.hair,0,2.92,-.26,g);
+  box(.20,.085,.06,darkDetail,-.15,2.69,-.301,g);
+  box(.20,.085,.06,darkDetail,.15,2.69,-.301,g);
+  box(.10,.12,.08,face,0,2.54,-.33,g);
+  box(.20,.13,.47,mat(0xc7ced0),0,2.21,0,g);
+  const leftArm=new THREE.Group();leftArm.position.set(-.57,2.12,0);g.add(leftArm);
+  const rightArm=new THREE.Group();rightArm.position.set(.57,2.12,0);g.add(rightArm);
+  box(.34,.85,.38,top,0,-.39,0,leftArm);
+  box(.29,.23,.29,face,0,-.91,0,leftArm);
+  box(.34,.85,.38,top,0,-.39,0,rightArm);
+  box(.29,.23,.29,face,0,-.91,0,rightArm);
+  const leftLeg=new THREE.Group();leftLeg.position.set(-.24,.97,0);g.add(leftLeg);
+  const rightLeg=new THREE.Group();rightLeg.position.set(.24,.97,0);g.add(rightLeg);
+  box(.39,.92,.40,bottom,0,-.45,0,leftLeg);
+  box(.39,.92,.40,bottom,0,-.45,0,rightLeg);
+  box(.43,.18,.62,M.shoes,0,-.95,-.14,leftLeg);
+  box(.43,.18,.62,M.shoes,0,-.95,-.14,rightLeg);
+  if(palette===0) {
+    // Backpack distinguishes the player from city residents.
+    box(.66,.82,.23,mat(0x374f5c),0,1.64,.35,g);
+    box(.10,.83,.06,mat(0xdfbb7b),-.37,1.64,.26,g);
+    box(.10,.83,.06,mat(0xdfbb7b),.37,1.64,.26,g);
+  }
   return {g,torso,head,leftArm,rightArm,leftLeg,rightLeg};
 }
 const player = human(0);
@@ -336,6 +350,19 @@ for (let i=0;i<5;i++) {
   person.g.position.set(vertical?fixed:from,0,vertical?from:fixed);
   scene.add(person.g);
   npcs.push({person, vertical, fixed, from, to, progress:rand(), dir:i%2?1:-1, speed:.65+rand()*.45});
+}
+
+// Additional small groups of residents, distributed across outer districts.
+// Update budget is distance-aware; more complex schedules arrive in 0.3.
+for(let i=0;i<12;i++){
+  const person=human(i+2);
+  const vertical=(i%2===0);
+  const fixed=([-103,-12.3,12.3,103][i%4]);
+  const from=[-134,-118,-58,-41,39,58,118,135][i%8];
+  const to=from+(i%3===0?20:-23);
+  person.g.position.set(vertical?fixed:from,0,vertical?from:fixed);
+  scene.add(person.g);
+  npcs.push({person,vertical,fixed,from,to,progress:rand(),dir:i%2?1:-1,speed:.7+rand()*.6,pause:rand()*2});
 }
 
 const poiDefs=[
@@ -551,8 +578,12 @@ function update(dt) {
     if(input>.2&&avatar.y===0&&elapsed-stepAt>(isRunning?.24:.39)){footstep();stepAt=elapsed;}
   }
   for(const n of npcs){
+    const far=Math.hypot(n.person.g.position.x-avatar.x,n.person.g.position.z-avatar.z)>90;
+    n.person.g.visible=!far;
+    if(far)continue;
+    if(n.pause>0){n.pause-=dt;animateHuman(n.person,0,elapsed);continue;}
     n.progress+=n.dir*n.speed*dt/Math.abs(n.to-n.from);
-    if(n.progress>1){n.progress=1;n.dir=-1;}else if(n.progress<0){n.progress=0;n.dir=1;}
+    if(n.progress>1){n.progress=1;n.dir=-1;n.pause=.7+rand()*1.8;}else if(n.progress<0){n.progress=0;n.dir=1;n.pause=.7+rand()*1.8;}
     const pos=n.from+(n.to-n.from)*n.progress;
     n.person.g.position.set(n.vertical?n.fixed:pos,0,n.vertical?pos:n.fixed);
     const direction=(n.to-n.from)*n.dir;
