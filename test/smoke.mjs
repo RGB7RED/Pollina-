@@ -52,7 +52,7 @@ assert.match(interiors, /export const ENTRANCES/);
 assert.match(interiors, /export function nearIndoorObject/);
 assert.match(interiors, /export function indoorBlocked/);
 assert.match(interiors, /export function buildInteriors/);
-assert.match(html,/MINI CITY · 0\.2\.1/);
+// 0.2.1 version guard replaced by the 0.3 assertion above.
 assert.match(html,/id="perf-info"/);
 assert.doesNotMatch(html,/<div id="rotate">/);
 assert.match(js,/const flatBatches=new Map\(\)/);
