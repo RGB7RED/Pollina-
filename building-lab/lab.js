@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import {OrbitControls} from "three/addons/controls/OrbitControls.js";
 import {BUILDING,buildApartmentHouse} from "./building.js";
+import {FreeCamera,normalizedStick} from "./free-camera.js";
 const $=id=>document.getElementById(id);
 const scene=new THREE.Scene();
 scene.background=new THREE.Color(0x8e9ca9);
@@ -95,6 +96,143 @@ $("time").addEventListener("click",()=>{timeIndex=(timeIndex+1)%lighting.length;
 $("quality").addEventListener("click",()=>{qualityIndex=(qualityIndex+1)%modes.length;applyQuality();});
 $("reset").addEventListener("click",()=>{controls.target.set(0,8,0);setView("threequarter");});
 $("building-info").textContent=config.floors+" этажей · "+stats.entrances+" подъезда · "+stats.balconies+" балконов";
+
+/* 3.1.1: ORBIT is retained, FREE is a separate explicit XYZ inspection mode.
+   No change to the building geometry, materials or baseline render budget. */
+const free=new FreeCamera(camera,{speed:9,sprint:2.4});
+let lookPointer=null,stickPointer=null;
+let lookX=0,lookY=0;
+const stick=$("stick-zone"),knob=$("stick-knob");
+const verticalPressed=new Set();
+const activeFly=()=>free.active;
+function centerStick(){
+  stickPointer=null;
+  free.setStick(0,0);
+  knob.style.left="50%";knob.style.top="50%";
+}
+function releaseInputs(){
+  lookPointer=null;
+  verticalPressed.clear();
+  free.setVertical(0);
+  free.clearInputs();
+  centerStick();
+  for(const id of ["fly-up","fly-down"])$(id).classList.remove("held");
+}
+function toggleFreeCamera(enabled=!activeFly()){
+  if(enabled===activeFly())return;
+  releaseInputs();
+  if(enabled){
+    free.start(controls.target);
+    controls.enabled=false;
+    document.body.classList.add("fly-mode");
+    $("freecam-toggle").classList.add("active");
+    $("freecam-toggle").setAttribute("aria-pressed","true");
+    $("freecam-toggle").textContent="◉ Свободная: ВКЛ";
+    $("view-label").textContent="Ракурс: свободный";
+    $("telemetry").classList.add("collapsed");
+    $("hide-hud").textContent="▸ Показать";
+  }else{
+    const t=free.targetAt(14);
+    free.stop();controls.enabled=true;
+    controls.target.set(t.x,t.y,t.z);
+    controls.update();
+    document.body.classList.remove("fly-mode");
+    $("freecam-toggle").classList.remove("active");
+    $("freecam-toggle").setAttribute("aria-pressed","false");
+    $("freecam-toggle").textContent="✥ Свободная камера";
+    $("view-label").textContent="Ракурс: осмотр";
+  }
+}
+$("freecam-toggle").addEventListener("click",()=>toggleFreeCamera());
+$("hide-hud").addEventListener("click",()=>{
+  const collapsed=$("telemetry").classList.toggle("collapsed");
+  $("hide-hud").textContent=collapsed?"▸ Показать":"▾ Свернуть";
+});
+$("stick-zone").addEventListener("pointerdown",e=>{
+  if(!activeFly()||stickPointer!==null)return;
+  e.preventDefault();stickPointer=e.pointerId;
+  stick.setPointerCapture?.(e.pointerId);
+  moveStick(e);
+});
+function moveStick(e){
+  if(e.pointerId!==stickPointer)return;
+  const rect=stick.getBoundingClientRect();
+  const p=normalizedStick(e.clientX,e.clientY,rect);
+  free.setStick(p.x,p.z);
+  const r=Math.min(rect.width,rect.height)*.39;
+  knob.style.left=(rect.width/2+p.x*r)+"px";
+  knob.style.top=(rect.height/2-p.z*r)+"px";
+}
+$("stick-zone").addEventListener("pointermove",moveStick);
+for(const event of ["pointerup","pointercancel","lostpointercapture"]){
+  stick.addEventListener(event,e=>{
+    if(e.pointerId===stickPointer)centerStick();
+  });
+}
+// Hold-to-elevate works simultaneously with horizontal joystick and look swipe.
+function refreshVertical(){
+  free.setVertical((verticalPressed.has(1)?1:0)-(verticalPressed.has(-1)?1:0));
+}
+for(const [id,dir] of [["fly-up",1],["fly-down",-1]]){
+  const el=$(id);
+  el.addEventListener("pointerdown",e=>{
+    if(!activeFly())return;
+    e.preventDefault();el.setPointerCapture?.(e.pointerId);
+    verticalPressed.add(dir);
+    refreshVertical();
+    el.classList.add("held");
+  });
+  for(const event of ["pointerup","pointercancel","lostpointercapture"]){
+    el.addEventListener(event,()=>{
+      verticalPressed.delete(dir);
+      refreshVertical();
+      el.classList.remove("held");
+    });
+  }
+}
+$("fly-boost").addEventListener("click",()=>{
+  free.boost=!free.boost;
+  $("fly-boost").classList.toggle("active",free.boost);
+  $("fly-boost").setAttribute("aria-pressed",String(free.boost));
+});
+const stageCanvas=renderer.domElement;
+stageCanvas.addEventListener("pointerdown",e=>{
+  if(!activeFly()||lookPointer!==null)return;
+  e.preventDefault();lookPointer=e.pointerId;
+  lookX=e.clientX;lookY=e.clientY;
+  stageCanvas.setPointerCapture?.(lookPointer);
+});
+stageCanvas.addEventListener("pointermove",e=>{
+  if(!activeFly()||e.pointerId!==lookPointer)return;
+  const dx=e.clientX-lookX,dy=e.clientY-lookY;
+  free.look(dx,dy);
+  lookX=e.clientX;lookY=e.clientY;
+});
+for(const name of ["pointerup","pointercancel","lostpointercapture"]){
+  stageCanvas.addEventListener(name,e=>{
+    if(e.pointerId===lookPointer)lookPointer=null;
+  });
+}
+const movementKeys=new Set(["KeyW","KeyA","KeyS","KeyD","KeyQ","KeyE",
+  "Space","ArrowUp","ArrowLeft","ArrowDown","ArrowRight","ControlLeft",
+  "ShiftLeft","ShiftRight"]);
+window.addEventListener("keydown",e=>{
+  if(!activeFly()||!movementKeys.has(e.code))return;
+  e.preventDefault();free.keys.add(e.code);
+});
+window.addEventListener("keyup",e=>free.keys.delete(e.code));
+window.addEventListener("blur",releaseInputs);
+// Reset is intentionally different by mode: free mode resets to a safe pose
+// and stays free; orbit mode returns to ¾.
+$("reset").addEventListener("click",()=>{
+  if(!activeFly())return;
+  free.stop();controls.enabled=true;
+  controls.target.set(0,8,0);setView("threequarter");
+  free.start(controls.target);controls.enabled=false;
+  $("view-label").textContent="Ракурс: свободный";
+  releaseInputs();
+});
+
 const status=$("status");
 if(stats.entrances!==4||stats.balconies<10||stats.windows<200){
  status.hidden=false;status.textContent="Ошибка геометрического контракта";
@@ -107,10 +245,21 @@ function resize(){
 window.addEventListener("resize",resize);
 window.addEventListener("orientationchange",()=>setTimeout(resize,200));
 applyTime();resize();
-let frameAt=performance.now(),frames=0;
+let frameAt=performance.now(),frames=0,lastTick=performance.now();
 function animate(){
  requestAnimationFrame(animate);
- controls.update();renderer.render(scene,camera);frames++;
+ const current=performance.now();
+ const dt=Math.min(.05,Math.max(0,(current-lastTick)/1000));
+ lastTick=current;
+ if(activeFly()){
+   free.update(dt);
+   $("free-position").textContent="XYZ: "+
+     camera.position.x.toFixed(1)+" / "+camera.position.y.toFixed(1)+" / "+camera.position.z.toFixed(1);
+ }else{
+   controls.update();
+   $("free-position").textContent="";
+ }
+ renderer.render(scene,camera);frames++;
  const now=performance.now();
  if(now-frameAt>1100){
   $("fps").textContent="FPS: "+Math.round(frames*1000/(now-frameAt));
