@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - feat/mini-city-v033-stage3-building-blockout
+      - feat/mini-city-v033-stage311-freecam
     paths:
       - 'building-lab/**'
       - '.github/workflows/building-lab.yml'
@@ -21,7 +22,10 @@ jobs:
         run: |
           node --check building-lab/building.js
           node --check building-lab/lab.js
+          node --check building-lab/free-camera.js
       - name: Check hipped roof, windows and balcony blockout
         run: node building-lab/test-building.mjs
+      - name: Test XYZ free camera and joystick math
+        run: node building-lab/test-free-camera.mjs
       - name: Check browser controls and mobile UI wiring
         run: node building-lab/test-viewer.mjs
