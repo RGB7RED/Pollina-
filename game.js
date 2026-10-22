@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { buildDistrictBuildings, buildDistrictProps, decorateCentralBlocks } from "./district.js";
+import { ENTRANCES, indoorBlocked, nearIndoorObject, buildInteriors } from "./interiors.js";
 
 const $ = (id) => document.getElementById(id);
 const host = $("screen");
@@ -268,9 +269,11 @@ const treePositions = [
 ];
 treePositions.forEach(([x, z], i) => tree(x, z, i));
 
+const benches=[];
 function bench(x, z, rotation = 0) {
   const group = new THREE.Group(); group.position.set(x, 0, z); group.rotation.y = rotation; world.add(group);
   streetProps.push({g:group,x,z});
+  benches.push({group,x,z,rotation});
   box(2.5, .2, .65, mat(0x886d54), 0, .78, 0, group);
   box(2.5, .75, .15, mat(0x886d54), 0, 1.19, .3, group);
   for (const s of [-1, 1]) box(.13, .7, .6, M.metal, s, .38, 0, group);
@@ -353,6 +356,7 @@ car(-41,-5.1,carColors[1],Math.PI/2);
 buildDistrictProps({tree,bench,lamp,car,roadSign,box:decorationBox,flat,mat});
 flushDecorationBoxes();
 flushFlats();
+const lobbies=buildInteriors({THREE,scene,world,box,mat,label,orb});
 
 function human(palette = 0) {
   // Low-poly block character with proportionate head and articulated limbs.
@@ -395,7 +399,7 @@ function human(palette = 0) {
 const player = human(0);
 player.g.position.set(0,0,15);
 scene.add(player.g);
-const avatar = {x:0,y:0,z:15,vy:0,angle:0,inCar:null};
+const avatar = {x:0,y:0,z:15,vy:0,angle:0,inCar:null,inLobby:null,sitting:null};
 const smoothVelocity=new THREE.Vector2(0,0);
 function animateHuman(h,velocity,t) {
   const amt=Math.min(1,velocity/4);
@@ -428,6 +432,19 @@ for(let i=0;i<12;i++){
   person.g.position.set(vertical?fixed:from,0,vertical?from:fixed);
   scene.add(person.g);
   npcs.push({person,vertical,fixed,from,to,progress:rand(),dir:i%2?1:-1,speed:.7+rand()*.6,pause:rand()*2});
+}
+
+// Two citizens prefer to rest on courtyard benches rather than patrol.
+const benchResidents=[{index:6,x:52,z:53,rotation:0},{index:11,x:-18,z:-52,rotation:Math.PI/2}];
+for(const rest of benchResidents){
+  const n=npcs[rest.index];
+  if(!n)continue;
+  n.role="rest";
+  n.restAt=rest;
+  n.person.g.position.set(rest.x,-.26,rest.z);
+  n.person.g.rotation.y=rest.rotation;
+  n.person.leftLeg.rotation.x=-1.15;n.person.rightLeg.rotation.x=-1.15;
+  n.person.leftArm.rotation.x=-.15;n.person.rightArm.rotation.x=-.15;
 }
 
 const poiDefs=[
