@@ -47,7 +47,7 @@ export function buildDistrictBuildings({ building, box, flat, mat, world, walls 
   // Decorative walk-through archways (no hidden collider).
   const arch=mat(0xb9aa98);
   for(const [x,z,rotation] of [[-69,78,0],[70,-75,0],[108,70,1],[-108,-72,1]]){
-    const g=world.add(new (world.constructor)()); // Group class via THREE.Group prototype
+    const g=new world.constructor(); world.add(g);
     // g is parent group, position and local geometry keep arch open for later entry.
     g.position.set(x,0,z);g.rotation.y=rotation?Math.PI/2:0;
     box(.95,3.6,1.05,arch,-2.25,1.8,0,g);
