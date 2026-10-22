@@ -122,13 +122,27 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
   #toast{top:clamp(145px,25vh,220px);max-width:68vw}
 }
 
+
+/* 0.3: a small secondary exploration goal; no new floating HUD panels. */
+#entrance-progress{font-size:10px;margin-top:5px;color:#a8e2d4;letter-spacing:.015em;font-weight:700}
+.brand small.zone-name{margin-top:3px;display:block;font-size:9px;color:#ffe0a1;letter-spacing:.09em}
+#btn-action.available{background:rgba(26,94,83,.79);border:2px solid #a8e2d4}
+@media(orientation:landscape) and (max-height:540px){
+  #entrance-progress{font-size:9px;margin-top:3px}
+  .brand small.zone-name{font-size:8px;margin-top:1px}
+}
+@media(orientation:portrait) and (max-width:650px){
+  #entrance-progress{font-size:9px;margin-top:4px}
+  .brand small.zone-name{font-size:8px}
+}
+
 </style>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js"}}</script>
 </head>
 <body>
 <div id="screen"></div>
 <div id="ui" hidden>
-  <div class="topbar"><div class="brand"><b>РАЙОН</b><small>MINI CITY · 0.2.1 · <span id="fps-counter">— FPS</span></small><small class="perf-line" id="perf-info">GPU: —</small></div><div id="quest"><div class="kicker">ИССЛЕДУЙ РАЙОН</div><div class="line" id="quest-line">Найдено мест: 0 / 3</div><div class="progress"><div id="quest-fill" class="fill"></div></div></div></div>
+  <div class="topbar"><div class="brand"><b>РАЙОН</b><small>MINI CITY · 0.3 · <span id="fps-counter">— FPS</span></small><small class="perf-line" id="perf-info">GPU: —</small><small id="zone-name" class="zone-name">НА УЛИЦЕ</small></div><div id="quest"><div class="kicker">ИССЛЕДУЙ РАЙОН</div><div class="line" id="quest-line">Найдено мест: 0 / 3</div><div class="progress"><div id="quest-fill" class="fill"></div></div><div id="entrance-progress">Подъезды: 0 / 3</div></div></div>
   <div class="rightbar"><canvas id="minimap" width="240" height="240" aria-label="Карта района"></canvas><div class="right-buttons"><button id="btn-time" class="pill">☀️ ДЕНЬ</button><button id="btn-sound" class="pill">♫ ЗВУК: ВКЛ</button></div></div>
   <div id="toast" role="status" aria-live="polite"></div>
   
@@ -140,10 +154,10 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 <div id="welcome"><div class="intro">
   <div class="badge">ОТКРЫТЫЙ МИР · БРАУЗЕРНАЯ 3D-ИГРА</div>
   <h1>ТВОЙ<br><em>РАЙОН.</em></h1>
-  <p>Два квартала. Знакомые дворы. Вечерние фонари. Прогуляйся по маленькому живому городу и найди три интересных места.</p>
-  <div class="features"><span>СВОБОДНАЯ КАМЕРА</span><span>LOW POLY ПЕТЕРБУРГ</span><span>ПРОГУЛКИ</span><span>СМЕНА ВРЕМЕНИ СУТОК</span><span>ИССЛЕДОВАНИЕ</span></div>
+  <p>Прогуляйся по петербургским дворам, зайди в три подъезда, осмотри почтовые ящики и найди интересные места района.</p>
+  <div class="features"><span>ПОДЪЕЗДЫ</span><span>СКАМЕЙКИ</span><span>ЖИТЕЛИ РАЙОНА</span><span>СМЕНА ВРЕМЕНИ СУТОК</span><span>ИССЛЕДОВАНИЕ</span></div>
   <button id="start" disabled>ЗАГРУЗКА МИРА...</button>
-  <div class="note">Для iPhone: левый стик — движение, свайп по миру — камера, щипок — масштаб.</div>
+  <div class="note">Левый стик — ходьба. Подойди к голубой метке подъезда или к скамейке и нажми «Действие».</div>
   <div id="fatal"></div>
 </div></div>
 <script>window.addEventListener("error",function(e){if(!window.cityReady){document.getElementById("fatal").textContent="Не удалось загрузить игру. Проверь соединение с интернетом и обнови страницу.";}});window.addEventListener("unhandledrejection",function(){if(!window.cityReady){document.getElementById("fatal").textContent="Ошибка загрузки игрового движка. Попробуй обновить страницу.";}});</script>
