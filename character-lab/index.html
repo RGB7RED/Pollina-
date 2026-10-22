@@ -20,6 +20,8 @@ p{margin:0;color:var(--muted);font-size:12px}
 .badge{margin-top:9px;display:inline-block;border:1px solid #e1bca37a;color:#f1c9ae;border-radius:99px;padding:3px 8px;font-size:10px;font-weight:700}
 .stats{font-size:11px;min-width:155px;color:#e9eeea}
 .stats div{margin-bottom:5px}.stats strong{color:#b9d4c2}
+.source-choice{display:block;font-size:10px;color:#b9d4c2;pointer-events:auto}
+select{margin-top:5px;width:100%;padding:6px 5px;background:#31474e;color:#f2eee4;border:1px solid #adc7bb70;border-radius:8px;font-size:10px;outline:none;pointer-events:auto}
 .bottom{position:fixed;left:max(16px,env(safe-area-inset-left));right:max(16px,env(safe-area-inset-right));bottom:max(17px,env(safe-area-inset-bottom));display:flex;gap:10px;justify-content:center;flex-wrap:wrap;pointer-events:none}
 button{pointer-events:auto;border:1px solid #d4ded08c;background:rgba(28,46,54,.86);color:#edf0e8;padding:12px 16px;border-radius:12px;font-size:13px;font-weight:750;min-height:44px;box-shadow:0 8px 24px #16212a38;cursor:pointer}
 button.active{background:#afc8b5;color:#1c3436;border-color:#d8e8d8}
@@ -51,11 +53,11 @@ a{color:#e2c3a7}
     <div id="rig">Скелет: —</div>
     <div id="geometry">Геометрия: —</div>
     <div id="frame">FPS: —</div>
-    <div id="clip">Клипы: —</div>
+    <div id="clip">Клипы: —</div><label class="source-choice">Кандидат:<select id="model-source"><option value="casual">Городской (внешний)</option><option value="base">Анатомическая база CC0</option></select></label>
   </div>
 </div>
 <div id="status" role="status">Загрузка настоящего GLB-ассета…</div>
-<div class="footer">Свайп — вращать · щипок — масштаб<br>«Проверить суставы» — только тест рига, не финальная анимация.</div>
+<div class="footer">Свайп — вращать · щипок — масштаб<br>Городская модель загружается из внешнего открытого источника; если недоступна — включится локальная база.</div>
 <div class="bottom">
   <button class="active" data-mode="neutral">Модель</button>
   <button data-mode="rig">Проверить суставы</button>
