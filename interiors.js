@@ -1,113 +1,147 @@
-// MINI CITY 0.3 — self-contained, inexpensive playable stairwell interiors.
-// The interiors are reusable templates and intentionally have only a ground floor.
-// More floors, apartments and stash mechanics belong to later releases.
-
-export const ENTRANCES = Object.freeze([
-  {id:"entrance-1", number:1, name:"Подъезд №1", x:-32, z:-46.9, frontZ:-44.5},
-  {id:"entrance-2", number:2, name:"Подъезд №2", x:32, z:-46.2, frontZ:-43.5},
-  {id:"entrance-3", number:3, name:"Подъезд №3", x:-58, z:22.8, frontZ:25.5},
+// MINI CITY 0.3.1 — walkable multi-storey stairwells.
+// Stair rise is continuous (not teleportation). Dimensions in world metres.
+// Two five-floor buildings and a three-floor Khrushchyovka-style entrance.
+export const FLOOR_HEIGHT=3.05;
+export const ENTRANCES=Object.freeze([
+  {id:"entrance-1",number:1,name:"Подъезд №1",x:-32,z:-46.9,frontZ:-44.5,floors:5,kind:"panel"},
+  {id:"entrance-2",number:2,name:"Подъезд №2",x:32,z:-46.2,frontZ:-43.5,floors:5,kind:"panel"},
+  {id:"entrance-3",number:3,name:"Подъезд №3",x:-58,z:22.8,frontZ:25.5,floors:3,kind:"old"}
 ]);
-
-const MAILBOX={x:4.45,z:-1.35};
-const EXIT={x:0,z:5.45};
-
-export function indoorBlocked(x,z) {
-  const r=.43;
-  if(x-r<-5.65 || x+r>5.65 || z-r<-6.45 || z+r>6.45)return true;
-  // Stairs rise behind the landing and are scenery for now.
-  if(x-r<-1.75 && x+r>-5.25 && z-r<-1.8 && z+r>-5.95)return true;
-  return false;
+const HALF_R=.38;
+const FRONT=3.2,BACK=-4.15;
+const RISE=FLOOR_HEIGHT/2;
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+export function indoorBlocked(x,z,y=0) {
+  // Walls do not depend on the floor. Steps are walkable, not solid barriers.
+  return x-HALF_R< -5.65||x+HALF_R>5.65||z-HALF_R< -6.45||z+HALF_R>6.45;
 }
-export function nearIndoorObject(localX,localZ) {
-  const exitDist=Math.hypot(localX-EXIT.x,localZ-EXIT.z);
-  const boxDist=Math.hypot(localX-MAILBOX.x,localZ-MAILBOX.z);
-  if(exitDist<2.25)return {type:"lobby-exit",title:"Выйти во двор",distance:exitDist};
-  if(boxDist<2.25)return {type:"mailboxes",title:"Осмотреть почтовые ящики",distance:boxDist};
+export function indoorFloorHeight(x,z,currentY,floors=5){
+  const maxY=(floors-1)*FLOOR_HEIGHT;
+  // Each full storey: first flight travels to the rear, second returns to front.
+  // Choose the copy nearest to the player's current elevation.
+  let ramp=null;
+  if(x>=-4.95&&x<=-2.7&&z>=BACK-.25&&z<=FRONT+.2){
+    const along=clamp((FRONT-z)/(FRONT-BACK),0,1);
+    ramp=RISE*along;
+  }else if(x>=-1.99&&x<=.05&&z>=BACK-.25&&z<=FRONT+.2){
+    const along=clamp((z-BACK)/(FRONT-BACK),0,1);
+    ramp=RISE*(1+along);
+  }else if(x>-5.2&&x<.2&&z<BACK+.15&&z>BACK-.85){
+    ramp=RISE;
+  }
+  if(ramp!==null){
+    const index=clamp(Math.round((currentY-ramp)/FLOOR_HEIGHT),0,floors-2);
+    const candidate=index*FLOOR_HEIGHT+ramp;
+    // Do not allow a new storey to be entered vertically through the ceiling.
+    if(Math.abs(candidate-currentY)<.75)return Math.min(maxY,candidate);
+  }
+  return clamp(Math.round(currentY/FLOOR_HEIGHT),0,floors-1)*FLOOR_HEIGHT;
+}
+export function nearIndoorObject(localX,localZ,playerY=0,floors=5){
+  const floor=Math.max(0,Math.min(floors-1,Math.round(playerY/FLOOR_HEIGHT)));
+  if(floor===0&&Math.hypot(localX,localZ-5.35)<2.15)
+    return {type:"lobby-exit",title:"Выйти во двор",distance:Math.hypot(localX,localZ-5.35)};
+  if(floor===0&&Math.hypot(localX-4.45,localZ+1.35)<2.25)
+    return {type:"mailboxes",title:"Осмотреть почтовые ящики",distance:Math.hypot(localX-4.45,localZ+1.35)};
+  if(floor>=1&&localX>1.7&&localZ< -3.3)
+    return {type:"apartment",title:"Двери квартир закрыты",floor:floor+1,distance:1};
   return null;
 }
-
-export function buildInteriors({THREE,scene,world,box,mat,label,orb}) {
-  const floor=mat(0x888f91);
-  const wall=mat(0xc1c4b4);
-  const trim=mat(0x7b8c8b);
-  const wood=mat(0x766255);
-  const iron=mat(0x44545d);
-  const accent=mat(0x455a62);
-  const letter=mat(0xc3b18d);
-  const light=mat(0xf9e2b0,{emissive:0xffe0a0,emissiveIntensity:.65});
-
-  const rooms=[];
-  for(let i=0;i<ENTRANCES.length;i++){
-    const item=ENTRANCES[i];
-    // Separate static props per scene: hidden rooms do not render.
+export function buildInteriors({THREE,scene,world,box,mat,label}){
+  const concrete=mat(0x919695),wall=mat(0xb0b1a9),oldWall=mat(0xb6a99c),
+    edge=mat(0x666e6b),steps=mat(0x92999a),metal=mat(0x414b50),
+    darkDoor=mat(0x68534d),mail=mat(0x817d71),white=mat(0xd8d2bd),
+    warm=mat(0xd5b88d,{emissive:0xbba47e,emissiveIntensity:.15});
+  const regions=[];
+  const unit=new THREE.BoxGeometry(1,1,1),dummy=new THREE.Object3D();
+  ENTRANCES.forEach((entry,index)=>{
     const root=new THREE.Group();
-    root.position.set(440+i*36,0,0);
-    root.visible=false;
-    scene.add(root);
-
-    // Lobby floor and four walls, with a distinct opening marker by the exit.
-    box(12,.18,14,floor,0,-.08,0,root);
-    box(12,4.25,.22,wall,0,2.05,-7,root);
-    box(12,4.25,.22,wall,0,2.05,7,root);
-    box(.22,4.25,14,wall,-6,2.05,0,root);
-    box(.22,4.25,14,wall,6,2.05,0,root);
-    box(12,.17,14,trim,0,4.28,0,root);
-
-    // Front exit; clicking near it teleports back to the exact street entrance.
-    box(2.6,2.85,.15,accent,0,1.43,6.81,root);
-    box(1.8,2.2,.08,mat(0x677d86),0,1.6,6.69,root);
-    orb(.1,light,.79,1.18,6.62,root);
-    const exitSign=label("ВЫХОД","#ffffff","#31565b",3.15,.65);
-    exitSign.position.set(0,3.33,6.74);
-    root.add(exitSign);
-
-    // Staircase, with platforms and handrail; only ground level playable in 0.3.
-    for(let step=0;step<5;step++){
-      const h=.23*(step+1);
-      box(3.4,h,.75,floor,-3.55,h/2,-2.2-step*.76,root);
+    root.position.set(440+index*36,0,0);root.visible=false;scene.add(root);
+    const batches=new Map();
+    const put=(w,h,d,material,x,y,z)=>{
+      dummy.position.set(x,y,z);dummy.rotation.set(0,0,0);dummy.scale.set(w,h,d);
+      dummy.updateMatrix();
+      if(!batches.has(material))batches.set(material,[]);
+      batches.get(material).push(dummy.matrix.clone());
+    };
+    const height=entry.floors*FLOOR_HEIGHT+.45;
+    const plaster=entry.kind==="old"?oldWall:wall;
+    // Continuous shell, narrow lobby, and windows by the staircase at each landing.
+    put(12,.22,14,concrete,0,-.12,0);
+    put(.19,height,14,plaster,-6,height/2,0);
+    put(.19,height,14,plaster,6,height/2,0);
+    put(12,height,.19,plaster,0,height/2,-7);
+    put(12,height,.19,plaster,0,height/2,7);
+    put(12,.25,14,edge,0,height-.08,0);
+    // Walkable corridor shelves on higher floors (stairs stay open).
+    for(let floor=0;floor<entry.floors;floor++){
+      const y=floor*FLOOR_HEIGHT;
+      if(floor>0){
+        put(5.5,.18,12.2,steps,3.12,y-.11,0);
+        put(5.15,.17,1.75,steps,-2.45,y-.11,3.45);
+        put(5.0,.16,1.35,steps,-2.45,y-.1,-4.68);
+      }
+      put(2.35,2.64,.14,darkDoor,2.35,y+1.32,-6.78);
+      put(2.35,2.64,.14,darkDoor,4.73,y+1.32,-6.78);
+      put(4.5,.14,.24,white,3.52,y+2.76,-6.76);
+      put(4.5,.16,.16,edge,3.52,y+.14,-6.76);
+      // Window glass on landing-side wall and frames.
+      const shade=mat(0x6f8c94,{metalness:.05,roughness:.3});
+      put(.16,1.5,1.4,shade,-5.84,y+1.78,-3.25);
+      put(.20,.08,1.47,edge,-5.73,y+1.78,-3.25);
+      put(1.4,.13,.55,warm,3.2,y+2.8,-2.0);
+      // Two switch-back flights, real geometry and smooth stair-height sampling.
+      if(floor<entry.floors-1){
+        const stepsPerFlight=12;
+        for(let i=0;i<stepsPerFlight;i++){
+          const t=(i+.5)/stepsPerFlight;
+          const z1=FRONT-(FRONT-BACK)*t;
+          const z2=BACK+(FRONT-BACK)*t;
+          const h=RISE*t;
+          put(1.8,.16,.56,steps,-3.85,y+h-.08,z1);
+          put(1.8,.16,.56,steps,-1.04,y+RISE+h-.08,z2);
+        }
+        put(4.86,.18,1.05,steps,-2.38,y+RISE-.09,-4.65);
+        // Railings: functional visual guidance along both flights.
+        put(.09,.10,7.6,metal,-2.80,y+1.21,-.45);
+        put(.09,.10,7.6,metal,-.06,y+RISE+1.21,-.45);
+        for(let i=0;i<6;i++){
+          const z=2.65-i*1.2;
+          put(.065,1.05,.065,metal,-2.80,y+.78,z);
+          put(.065,1.05,.065,metal,-.06,y+RISE+.78,z);
+        }
+      }
     }
-    box(3.7,.16,.95,trim,-3.55,1.33,-5.8,root);
-    box(.09,1.25,4.45,iron,-1.69,.89,-4.09,root);
-    for(let z=-2.2;z>-5.8;z-=.9)box(.08,1.0,.08,iron,-1.69,.56,z,root);
-    const stairsSign=label("ЛЕСТНИЦА","#ffffff","#475b60",3.25,.58);
-    stairsSign.position.set(-3.5,2.68,-6.78);root.add(stairsSign);
-
-    // Mailboxes can be examined by pressing ACTION near the wall.
-    box(.17,1.7,2.3,iron,5.67,1.6,-1.36,root);
-    for(let row=0;row<3;row++)for(let col=0;col<4;col++){
-      box(.07,.42,.49,letter,5.54,1.06+row*.52,-2.13+col*.52,root);
-      box(.072,.045,.22,iron,5.49,1.17+row*.52,-2.13+col*.52,root);
+    // Interior ground-floor elevator-sized mailbox bank.
+    put(.22,1.85,2.5,metal,5.55,1.5,-1.35);
+    for(let row=0;row<4;row++)for(let col=0;col<4;col++){
+      put(.06,.34,.5,mail,5.41,.93+row*.42,-2.15+col*.52);
+      put(.07,.033,.19,edge,5.37,1.05+row*.42,-2.15+col*.52);
     }
-    // Walls of neighboring flats with an apartment number.
-    for(let a=0;a<2;a++){
-      const x=-.8+a*3.45;
-      box(2.1,2.86,.16,wood,x,1.43,-6.82,root);
-      const plate=label(String(a+i*2+1),"#fbe7c1","#394955",.56,.45);
-      plate.position.set(x,1.94,-6.69);root.add(plate);
+    put(2.3,2.82,.17,darkDoor,0,1.42,6.82);
+    const plaque=label(entry.kind==="old"?"СТАРЫЙ ФОНД":"ПАНЕЛЬНЫЙ ДОМ","#fff4dc","#45575e",3.6,.52);
+    plaque.position.set(2.55,2.82,6.68);root.add(plaque);
+    const exitSign=label("ВЫХОД","#e3f4ec","#49625a",1.7,.5);
+    exitSign.position.set(0,3.23,6.7);root.add(exitSign);
+    for(const [material,mats] of batches){
+      const mesh=new THREE.InstancedMesh(unit,material,mats.length);
+      mats.forEach((matrix,i)=>mesh.setMatrixAt(i,matrix));
+      mesh.instanceMatrix.needsUpdate=true;
+      mesh.computeBoundingSphere();mesh.receiveShadow=true;
+      root.add(mesh);
     }
-    for(let j=0;j<3;j++){
-      box(.14,.55,.14,iron,4.8-j*.37,.59,3.6,root);
-    }
-    // Ceiling lights emit without adding dynamic shadow-casting point lights.
-    box(2.1,.12,.8,light,0,4.14,-2.0,root);
-    box(1.5,.12,.55,light,0,4.14,3.5,root);
-
-    // Street-facing sign above a recognizable blue doorway.
-    box(2.26,2.72,.17,accent,item.x,1.36,item.frontZ-.23,world);
-    box(1.14,1.62,.18,mat(0x708894),item.x,1.54,item.frontZ-.34,world);
-    box(.17,.21,.2,light,item.x+.79,1.3,item.frontZ-.39,world);
-    const plaque=label("ПОДЪЕЗД "+item.number,"#fff4e2","#3b5a63",2.9,.57);
-    plaque.position.set(item.x,3.04,item.frontZ-.33);
-    world.add(plaque);
-    box(2.65,.12,1.1,floor,item.x,.08,item.frontZ-.94,world);
-
-    // Glowing marker one stride away from facade, outside building collision.
-    const halo=new THREE.Mesh(new THREE.TorusGeometry(.72,.055,5,24),
-      mat(0xb2e4d9,{emissive:0x4db9a2,emissiveIntensity:.45}));
-    halo.rotation.x=-Math.PI/2;
-    halo.position.set(item.x,.13,item.z);
+    // Entry canopy/door in external world; entrance marker always outside wall collision.
+    const frame=mat(0x53636b),glass=mat(0x849da2,{roughness:.36});
+    box(2.5,2.95,.18,frame,entry.x,1.47,entry.frontZ-.22,world);
+    box(1.47,1.78,.1,glass,entry.x,1.74,entry.frontZ-.34,world);
+    box(.12,.28,.13,warm,entry.x+.91,1.4,entry.frontZ-.39,world);
+    const sign=label("ПОДЪЕЗД "+entry.number,"#fff1d6","#4c6264",3,.58);
+    sign.position.set(entry.x,3.22,entry.frontZ-.3);world.add(sign);
+    const glow=mat(0x83b4aa,{emissive:0x439888,emissiveIntensity:.35});
+    const halo=new THREE.Mesh(new THREE.TorusGeometry(.75,.07,5,24),glow);
+    halo.rotation.x=-Math.PI/2;halo.position.set(entry.x,.15,entry.z);
     world.add(halo);
-    rooms.push({...item,root,centerX:root.position.x,visited:false,halo});
-  }
-  return rooms;
+    regions.push({...entry,root,centerX:root.position.x,visited:false,halo});
+  });
+  return regions;
 }

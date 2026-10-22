@@ -1,13 +1,26 @@
 import * as THREE from "three";
-import { buildDistrictBuildings, buildDistrictProps, decorateCentralBlocks } from "./district.js";
-import { ENTRANCES, indoorBlocked, nearIndoorObject, buildInteriors } from "./interiors.js";
+import { buildDistrictBuildings, buildDistrictProps, decorateCentralBlocks, decorateResidentialYards } from "./district.js";
+import { ENTRANCES, FLOOR_HEIGHT, indoorBlocked, indoorFloorHeight, nearIndoorObject, buildInteriors } from "./interiors.js";
+import { createCharacterFactory } from "./characters.js";
+import { createDistrictMaterials } from "./visuals.js";
 
 const $ = (id) => document.getElementById(id);
 const host = $("screen");
 const ui = $("ui");
 const scene = new THREE.Scene();
 const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
-let renderScale=Math.min(window.devicePixelRatio||1,1.35);
+const qualityModes=[
+  {id:"low",name:"НИЗКОЕ",scale:.9,shadows:false,view:98,pointLights:2},
+  {id:"medium",name:"СРЕДНЕЕ",scale:1.15,shadows:true,view:140,pointLights:3},
+  {id:"high",name:"ВЫСОКОЕ",scale:1.55,shadows:true,view:160,pointLights:4}
+];
+let qualityIndex=1;
+try{
+  const stored=localStorage.getItem("mini-city-quality");
+  const found=qualityModes.findIndex(mode=>mode.id===stored);
+  if(found>=0)qualityIndex=found;
+}catch(_){}
+let renderScale=Math.min(window.devicePixelRatio||1,qualityModes[qualityIndex].scale);
 renderer.setPixelRatio(renderScale);
 renderer.setSize(innerWidth, innerHeight);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -18,9 +31,9 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 host.appendChild(renderer.domElement);
 
 const camera = new THREE.PerspectiveCamera(innerWidth<innerHeight?63:59, innerWidth / innerHeight, .12, 260);
-const hemi = new THREE.HemisphereLight(0xe7f3ff, 0x4e5763, 2.2);
+const hemi = new THREE.HemisphereLight(0xe1e7e9, 0x747973, 1.65);
 scene.add(hemi);
-const sun = new THREE.DirectionalLight(0xffe2b5, 2.8);
+const sun = new THREE.DirectionalLight(0xe2e5e3, 2.1);
 sun.position.set(45, 84, 28);
 sun.castShadow = true;
 sun.shadow.mapSize.set(768, 768);
@@ -29,7 +42,7 @@ sun.shadow.camera.top = 65; sun.shadow.camera.bottom = -65;
 sun.shadow.camera.near = 1; sun.shadow.camera.far = 190;
 sun.shadow.bias = -.0004;
 scene.add(sun, sun.target);
-scene.fog = new THREE.Fog(0xbdd9e3, 85, 160);
+scene.fog = new THREE.Fog(0xadb9bb, 85, 177);
 const world = new THREE.Group();
 scene.add(world);
 
@@ -46,6 +59,11 @@ const M = {
   roof: mat(0x595c59), sidewalkLine: mat(0xd8d5c2),
   skin: mat(0xf4b896), hair: mat(0x30262b), shoes: mat(0x2b3038),
 };
+const cityStyle=createDistrictMaterials(THREE);
+M.grass=cityStyle.grass;
+M.asphalt=cityStyle.asphalt;
+M.pavement=cityStyle.pavement;
+M.roof=cityStyle.roof;
 const geomBox = new THREE.BoxGeometry(1, 1, 1);
 const geomSphere = new THREE.SphereGeometry(1, 9, 7);
 const geomCylinder = new THREE.CylinderGeometry(1, 1, 1, 9);
@@ -169,7 +187,7 @@ function street() {
 }
 street();
 
-const walls = [mat(0xaaa99c), mat(0xc1b29d), mat(0x94a8a0), mat(0xd2b6a7), mat(0xb4ab99), mat(0xc0bfaa)];
+const walls = cityStyle.facades;
 const brick = mat(0x7b6259);
 const litWindows = [];
 const darkWindows = [];
@@ -354,59 +372,19 @@ car(5.2,-53,carColors[1],0);
 car(28,5.1,carColors[3],Math.PI/2);
 car(-41,-5.1,carColors[1],Math.PI/2);
 buildDistrictProps({tree,bench,lamp,car,roadSign,box:decorationBox,flat,mat});
+decorateResidentialYards({box:decorationBox,solidBox:(w,h,d,m,x,y,z)=>box(w,h,d,m,x,y,z,world,true),mat,flat});
 flushDecorationBoxes();
 flushFlats();
 const lobbies=buildInteriors({THREE,scene,world,box,mat,label,orb});
 
-function human(palette = 0) {
-  // Low-poly block character with proportionate head and articulated limbs.
-  const g=new THREE.Group();
-  const shirts=[0x4c719a,0xbd805e,0x668570,0x906a8b,0xc0a36b,0x6a8b96,0xb46d75];
-  const pants=[0x28354a,0x35313b,0x454e60,0x48525b,0x3a404f];
-  const top=mat(shirts[palette%shirts.length]),bottom=mat(pants[palette%pants.length]);
-  const darkDetail=mat(0x243044),face=mat(palette%3===0?0xe5b18e:palette%3===1?0xca9579:0xedc0a1);
-  const torso=box(.90,1.03,.45,top,0,1.68,0,g);
-  box(.90,.25,.46,bottom,0,1.03,0,g);
-  box(.28,.18,.28,face,0,2.34,0,g);
-  const head=box(.65,.67,.58,face,0,2.65,0,g);
-  // Slight hair cap, fringe, eyes, nose and a small shirt collar.
-  box(.68,.14,.62,M.hair,0,3.05,0,g);
-  box(.66,.16,.12,M.hair,0,2.92,-.26,g);
-  box(.20,.085,.06,darkDetail,-.15,2.69,-.301,g);
-  box(.20,.085,.06,darkDetail,.15,2.69,-.301,g);
-  box(.10,.12,.08,face,0,2.54,-.33,g);
-  box(.20,.13,.47,mat(0xc7ced0),0,2.21,0,g);
-  const leftArm=new THREE.Group();leftArm.position.set(-.57,2.12,0);g.add(leftArm);
-  const rightArm=new THREE.Group();rightArm.position.set(.57,2.12,0);g.add(rightArm);
-  box(.34,.85,.38,top,0,-.39,0,leftArm);
-  box(.29,.23,.29,face,0,-.91,0,leftArm);
-  box(.34,.85,.38,top,0,-.39,0,rightArm);
-  box(.29,.23,.29,face,0,-.91,0,rightArm);
-  const leftLeg=new THREE.Group();leftLeg.position.set(-.24,.97,0);g.add(leftLeg);
-  const rightLeg=new THREE.Group();rightLeg.position.set(.24,.97,0);g.add(rightLeg);
-  box(.39,.92,.40,bottom,0,-.45,0,leftLeg);
-  box(.39,.92,.40,bottom,0,-.45,0,rightLeg);
-  box(.43,.18,.62,M.shoes,0,-.95,-.14,leftLeg);
-  box(.43,.18,.62,M.shoes,0,-.95,-.14,rightLeg);
-  if(palette===0) {
-    // Backpack distinguishes the player from city residents.
-    box(.66,.82,.23,mat(0x374f5c),0,1.64,.35,g);
-    box(.10,.83,.06,mat(0xdfbb7b),-.37,1.64,.26,g);
-    box(.10,.83,.06,mat(0xdfbb7b),.37,1.64,.26,g);
-  }
-  return {g,torso,head,leftArm,rightArm,leftLeg,rightLeg};
-}
+const human=createCharacterFactory(THREE);
 const player = human(0);
 player.g.position.set(0,0,15);
 scene.add(player.g);
 const avatar = {x:0,y:0,z:15,vy:0,angle:0,inCar:null,inLobby:null,sitting:null};
 const smoothVelocity=new THREE.Vector2(0,0);
-function animateHuman(h,velocity,t) {
-  const amt=Math.min(1,velocity/4);
-  const swing=Math.sin(t*(velocity>4.5?13:9))*amt*.52;
-  h.leftLeg.rotation.x=swing;h.rightLeg.rotation.x=-swing;
-  h.leftArm.rotation.x=-swing*.85;h.rightArm.rotation.x=swing*.85;
-  h.torso.position.y=1.71+Math.abs(Math.sin(t*10))*amt*.035;
+function animateHuman(h,velocity,t,seated=false,dt=.016) {
+  h.setPose(velocity,t,seated,dt);
 }
 const npcs = [];
 for (let i=0;i<5;i++) {
@@ -441,10 +419,9 @@ for(const rest of benchResidents){
   if(!n)continue;
   n.role="rest";
   n.restAt=rest;
-  n.person.g.position.set(rest.x,-.26,rest.z);
+  n.person.g.position.set(rest.x,-.16,rest.z);
   n.person.g.rotation.y=rest.rotation;
-  n.person.leftLeg.rotation.x=-1.15;n.person.rightLeg.rotation.x=-1.15;
-  n.person.leftArm.rotation.x=-.15;n.person.rightArm.rotation.x=-.15;
+  n.person.setPose(0,0,true,1);
 }
 
 const poiDefs=[
@@ -477,10 +454,10 @@ function lookForPlaces() {
   }
 }
 const timeModes=[
-  {name:"☀️ ДЕНЬ",sky:0xbdd9e3,ambient:2.2,sun:2.8,night:0, tint:0xffe2b5,fog:0xbdd9e3, exposure:1.22},
-  {name:"🌇 ВЕЧЕР",sky:0xcb8e82,ambient:1.4,sun:1.9,night:.6,tint:0xffa36d,fog:0xd49e91, exposure:1.2},
-  {name:"🌙 НОЧЬ",sky:0x172638,ambient:.6,sun:.42,night:1.8,tint:0x779ac7,fog:0x233850, exposure:1.4},
-  {name:"🌅 УТРО",sky:0xbcc8dd,ambient:1.7,sun:2.0,night:.25,tint:0xffc99a,fog:0xb9c8d4, exposure:1.24}
+  {name:"☁️ ДЕНЬ",sky:0xaeb9bc,ambient:1.8,sun:1.9,night:0, tint:0xe0e4e3,fog:0xb3bdc0, exposure:1.04},
+  {name:"🌆 ВЕЧЕР",sky:0x888e95,ambient:1.22,sun:1.35,night:.5,tint:0xd2b7a4,fog:0x99999d, exposure:1.08},
+  {name:"🌙 НОЧЬ",sky:0x202932,ambient:.68,sun:.32,night:1.6,tint:0x8ca0ad,fog:0x29353d, exposure:1.18},
+  {name:"🌫️ УТРО",sky:0xb6bdba,ambient:1.5,sun:1.4,night:.16,tint:0xcdd1c9,fog:0xbdc5c2, exposure:1.09}
 ];
 let timeIndex=0;
 // Limit expensive dynamic point lights to the four closest lamps.
@@ -497,7 +474,7 @@ function refreshStreetLights(){
     light,
     distance:(light.position.x-avatar.x)**2+(light.position.z-avatar.z)**2
   })).filter(item=>item.distance<43*43).sort((a,b)=>a.distance-b.distance);
-  const selected=new Set(closest.slice(0,4).map(item=>item.light));
+  const selected=new Set(closest.slice(0,qualityModes[qualityIndex].pointLights).map(item=>item.light));
   for(const light of nightLights){
     light.visible=selected.has(light);
     light.intensity=light.visible?intensity:0;
@@ -518,6 +495,22 @@ function setTime(index){
   $("btn-time").textContent=t.name;
 }
 setTime(0);
+function setQuality(i,save=true){
+  qualityIndex=(i+qualityModes.length)%qualityModes.length;
+  const mode=qualityModes[qualityIndex];
+  $("btn-quality").textContent="⚙ "+mode.name;
+  renderer.shadowMap.enabled=mode.shadows;
+  sun.castShadow=mode.shadows;
+  renderScale=Math.min(window.devicePixelRatio||1,mode.scale);
+  renderer.setPixelRatio(renderScale);
+  qualityCooldown=performance.now()+5000;
+  refreshStreetLights();
+  if(save){try{localStorage.setItem("mini-city-quality",mode.id)}catch(_){}}
+}
+$("btn-quality").addEventListener("click",()=>{setQuality(qualityIndex+1);notice("Графика: "+qualityModes[qualityIndex].name,1700);});
+$("btn-quality").textContent="⚙ "+qualityModes[qualityIndex].name;
+renderer.shadowMap.enabled=qualityModes[qualityIndex].shadows;
+sun.castShadow=qualityModes[qualityIndex].shadows;
 
 const joystick=$("joystick"),stick=$("stick");
 const joy={x:0,y:0,id:null};
@@ -647,7 +640,7 @@ updateEntranceProgress();
 function standUp(){
   if(!avatar.sitting)return;
   const seat=avatar.sitting;
-  avatar.sitting=null;
+  avatar.sitting=null;avatar.seatTween=null;
   const candidates=[
     [seat.x+1.7,seat.z],
     [seat.x-1.7,seat.z],
@@ -660,12 +653,12 @@ function standUp(){
   notice("Встал со скамейки",1400);
 }
 function jump(){
-  if(!running||avatar.inCar)return;
+  if(!running||avatar.inCar||avatar.inLobby)return;
   if(avatar.sitting){standUp();return;}
   if(avatar.y<=.015)avatar.vy=8.2;
 }
 function blocked(x,z){
-  if(avatar.inLobby)return indoorBlocked(x-avatar.inLobby.centerX,z);
+  if(avatar.inLobby)return indoorBlocked(x-avatar.inLobby.centerX,z,avatar.y);
   if(Math.abs(x)>153||Math.abs(z)>153)return true;
   const r=.49;
   for(const c of colliders){
@@ -679,25 +672,25 @@ function enterLobby(room){
   for(const r of lobbies)r.root.visible=r===room;
   world.visible=false;
   for(const n of npcs)n.person.g.visible=false;
-  avatar.inLobby=room;
+  avatar.inLobby=room;avatar.lastFloor=1;
   avatar.x=room.centerX;avatar.z=4.25;avatar.y=0;avatar.vy=0;
   avatar.angle=0;
   smoothVelocity.set(0,0);
   player.g.position.set(avatar.x,0,avatar.z);
-  yaw=0;pitch=.25;zoom=6.9;
-  setZoneLabel(room.name.toUpperCase());
+  yaw=0;pitch=.25;zoom=6.2;
+  setZoneLabel(room.name.toUpperCase()+" · 1/"+room.floors+" ЭТАЖ");
   if(!room.visited){
     room.visited=true;
     updateEntranceProgress();
     try{localStorage.setItem(visitStorageKey,JSON.stringify(lobbies.filter(r=>r.visited).map(r=>r.id)))}catch(_){}
-    notice("🚪 "+room.name+" исследован! Осмотри почтовые ящики.",3500);
-  }else notice("🚪 "+room.name+" — первый этаж",2500);
+    notice("🚪 "+room.name+" — поднимись по лестнице и осмотри этажи.",3500);
+  }else notice("🚪 "+room.name+" — "+room.floors+" этажа(ей)",2500);
   followCamera(1);
 }
 function exitLobby(){
   if(!avatar.inLobby)return;
   const room=avatar.inLobby;
-  avatar.inLobby=null;
+  avatar.inLobby=null;avatar.lastFloor=null;
   room.root.visible=false;
   world.visible=true;
   avatar.x=room.x;avatar.z=room.z-.6;avatar.y=0;avatar.vy=0;
@@ -715,7 +708,7 @@ function exitLobby(){
 function detectInteract(){
   nearby=null;
   if(avatar.inLobby){
-    const r=nearIndoorObject(avatar.x-avatar.inLobby.centerX,avatar.z);
+    const r=nearIndoorObject(avatar.x-avatar.inLobby.centerX,avatar.z,avatar.y,avatar.inLobby.floors);
     if(r)nearby=r;
   }else if(avatar.inCar){
     nearby={type:"exit-car",title:"Выйти из машины"};
@@ -734,6 +727,8 @@ function detectInteract(){
       if(distance<3.45)available.push({type:"car",obj:c,title:"Сесть в машину",distance});
     }
     for(const b of benches){
+      // Do not place the player on top of a resident using the same bench.
+      if(benchResidents.some(n=>Math.hypot(n.x-b.x,n.z-b.z)<.6))continue;
       const distance=Math.hypot(b.x-avatar.x,b.z-avatar.z);
       if(distance<2.45)available.push({type:"sit",obj:b,title:"Сесть на скамейку",distance});
     }
@@ -753,10 +748,12 @@ function interact(){
     case "entrance":enterLobby(nearby.obj);break;
     case "lobby-exit":exitLobby();break;
     case "mailboxes":notice("📬 Почтовые ящики. Пока здесь ничего нет.",3000);break;
+    case "apartment":notice("🔒 Пока квартиры закрыты.",1900);break;
     case "sit":{
       const seat=nearby.obj;
       avatar.sitting=seat;
-      avatar.x=seat.x;avatar.z=seat.z;avatar.y=0;avatar.vy=0;
+      avatar.seatTween={fromX:avatar.x,fromZ:avatar.z,start:elapsed,duration:.68};
+      avatar.y=0;avatar.vy=0;
       avatar.angle=seat.rotation;
       smoothVelocity.set(0,0);
       notice("🪑 Ты сел. Нажми «Действие», чтобы встать.",3200);
@@ -787,7 +784,7 @@ function interact(){
 const raycaster = new THREE.Raycaster(), camTarget=new THREE.Vector3(),camDest=new THREE.Vector3(),rayDir=new THREE.Vector3();
 function followCamera(dt){
   const base=avatar.inCar?avatar.inCar.g.position:player.g.position;
-  camTarget.set(base.x,1.66+(avatar.inCar?.42:0),base.z);
+  camTarget.set(base.x,base.y+1.65+(avatar.inCar?.42:0),base.z);
   const c=Math.cos(pitch);
   camDest.set(camTarget.x+Math.sin(yaw)*c*zoom,camTarget.y+Math.sin(pitch)*zoom,camTarget.z+Math.cos(yaw)*c*zoom);
   rayDir.copy(camDest).sub(camTarget);
@@ -800,7 +797,7 @@ function followCamera(dt){
     const x=avatar.inLobby.centerX;
     camDest.x=THREE.MathUtils.clamp(camDest.x,x-5.25,x+5.25);
     camDest.z=THREE.MathUtils.clamp(camDest.z,-6.1,6.1);
-    camDest.y=THREE.MathUtils.clamp(camDest.y,1.25,3.58);
+    camDest.y=THREE.MathUtils.clamp(camDest.y,avatar.y+.78,avatar.y+2.35);
   }
   camera.position.lerp(camDest,Math.min(1,dt*8));camera.lookAt(camTarget);
 }
@@ -814,6 +811,9 @@ function minimap(){
     g.fillStyle="#65757b";g.fillRect(22,18,196,16);g.fillRect(22,18,15,204);
     g.fillRect(203,18,15,204);g.fillRect(22,206,196,16);
     g.fillStyle="#77878d";g.fillRect(42,39,64,72);
+    g.strokeStyle="#617681";g.lineWidth=7;
+    g.beginPath();g.moveTo(48,190);g.lineTo(48,56);
+    g.lineTo(101,56);g.lineTo(101,190);g.stroke();
     g.fillStyle="#d9be80";g.fillRect(173,97,23,60);
     g.fillStyle="#76d4a9";g.fillRect(100,205,40,7);
     g.fillStyle="#fff";g.beginPath();
@@ -880,6 +880,18 @@ function update(dt) {
   smoothVelocity.y+=(desiredZ-smoothVelocity.y)*blend;
   if(immobilized)smoothVelocity.set(0,0);
   const movingSpeed=smoothVelocity.length();
+  if(avatar.sitting){
+    const seat=avatar.sitting,tween=avatar.seatTween;
+    if(tween){
+      const u=Math.min(1,(elapsed-tween.start)/tween.duration);
+      const eased=u*u*(3-2*u);
+      avatar.x=tween.fromX+(seat.x-tween.fromX)*eased;
+      avatar.z=tween.fromZ+(seat.z-tween.fromZ)*eased;
+      const target=seat.rotation;
+      avatar.angle+=Math.atan2(Math.sin(target-avatar.angle),Math.cos(target-avatar.angle))*Math.min(1,dt*12);
+      if(u>=1)avatar.seatTween=null;
+    }
+  }
   if(movingSpeed>.07){
     const vx=smoothVelocity.x,vz=smoothVelocity.y;
     const nx=avatar.x+vx*dt,nz=avatar.z+vz*dt;
@@ -889,21 +901,32 @@ function update(dt) {
     avatar.angle+=Math.atan2(Math.sin(targetAngle-avatar.angle),Math.cos(targetAngle-avatar.angle))*Math.min(1,dt*10);
   }
   if(!avatar.inCar){
-    avatar.vy-=19*dt;avatar.y+=avatar.vy*dt;
-    if(avatar.y<0){avatar.y=0;avatar.vy=0;}
-    player.g.position.set(avatar.x,avatar.y+(avatar.sitting?-.26:0),avatar.z);
-    player.g.rotation.y=avatar.angle;
-    animateHuman(player,movingSpeed,elapsed);
-    if(avatar.sitting){
-      player.leftLeg.rotation.x=-1.12;player.rightLeg.rotation.x=-1.12;
-      player.leftArm.rotation.x=-.14;player.rightArm.rotation.x=-.14;
-      player.torso.position.y=1.71;
+    if(avatar.inLobby){
+      // On the steps, elevation is a continuous function of walking position.
+      // Never jump between floors: interpolation follows the physical stair slope.
+      avatar.vy=0;
+      const relativeX=avatar.x-avatar.inLobby.centerX;
+      const target=indoorFloorHeight(relativeX,avatar.z,avatar.y,avatar.inLobby.floors);
+      avatar.y+=THREE.MathUtils.clamp(target-avatar.y,-dt*3.2,dt*3.2);
+      const level=Math.max(1,Math.min(avatar.inLobby.floors,Math.round(avatar.y/FLOOR_HEIGHT)+1));
+      if(avatar.lastFloor!==level){
+        avatar.lastFloor=level;
+        setZoneLabel(avatar.inLobby.name.toUpperCase()+" · "+level+"/"+avatar.inLobby.floors+" ЭТАЖ");
+      }
+    }else{
+      avatar.vy-=19*dt;avatar.y+=avatar.vy*dt;
+      if(avatar.y<0){avatar.y=0;avatar.vy=0;}
     }
+    player.g.position.set(avatar.x,avatar.y-(avatar.sitting?.16*player.sitBlend:0),avatar.z);
+    player.g.rotation.y=avatar.angle;
+    animateHuman(player,movingSpeed,elapsed,Boolean(avatar.sitting),dt);
+
     if(movingSpeed>1&&avatar.y===0&&elapsed-stepAt>(isRunning?.24:.39)){footstep();stepAt=elapsed;}
   }
   for(const n of npcs){
     const distance=Math.hypot(n.person.g.position.x-avatar.x,n.person.g.position.z-avatar.z);
-    const far=distance>86||Boolean(avatar.inLobby);
+    const npcRange=[43,67,86][qualityIndex];
+    const far=distance>npcRange||Boolean(avatar.inLobby);
     n.person.g.visible=!far;
     if(far)continue;
     if(n.role==="rest"){
@@ -939,9 +962,10 @@ function update(dt) {
   for(const p of pois){p.dot.position.y=2.2+Math.sin(elapsed*2.1+p.x)*.19;p.ring.rotation.z=elapsed*.15;}
   if(elapsed-lightUpdateAt>.6){
     lightUpdateAt=elapsed;
-    for(const o of treeGroups)o.g.visible=(o.x-avatar.x)**2+(o.z-avatar.z)**2<140*140;
-    for(const o of streetProps)o.g.visible=(o.x-avatar.x)**2+(o.z-avatar.z)**2<140*140;
-    for(const c of cars)c.g.visible=!!avatar.inCar&&avatar.inCar===c || (c.x-avatar.x)**2+(c.z-avatar.z)**2<145*145;
+    const view=qualityModes[qualityIndex].view;
+    for(const o of treeGroups)o.g.visible=(o.x-avatar.x)**2+(o.z-avatar.z)**2<view*view;
+    for(const o of streetProps)o.g.visible=(o.x-avatar.x)**2+(o.z-avatar.z)**2<view*view;
+    for(const c of cars)c.g.visible=!!avatar.inCar&&avatar.inCar===c || (c.x-avatar.x)**2+(c.z-avatar.z)**2<(view+5)*(view+5);
     refreshStreetLights();
     // Keep the sun/shadow box anchored near the moving player.
     if(Math.abs(sun.target.position.x-avatar.x)>24||Math.abs(sun.target.position.z-avatar.z)>24){
@@ -971,7 +995,7 @@ function animate(){
     const draws=renderer.info.render.calls;
     const tris=renderer.info.render.triangles;
     $("perf-info").textContent=draws+" рис. · "+Math.round(tris/1000)+"k трис · "+renderScale.toFixed(2)+"×";
-    const maxScale=Math.min(window.devicePixelRatio||1,1.35);
+    const maxScale=Math.min(window.devicePixelRatio||1,qualityModes[qualityIndex].scale);
     // Slowly lower framebuffer cost only when genuinely needed.
     // Never go below 0.9 device pixels per CSS pixel.
     if(now>qualityCooldown){
@@ -985,7 +1009,7 @@ window.addEventListener("resize",()=>{
   const w=innerWidth,h=innerHeight;
   camera.aspect=w/h;camera.fov=w<h?63:59;camera.updateProjectionMatrix();
   renderer.setSize(w,h);
-  renderScale=Math.min(renderScale,devicePixelRatio||1);
+  renderScale=Math.min(renderScale,devicePixelRatio||1,qualityModes[qualityIndex].scale);
   renderer.setPixelRatio(renderScale);
 });
 renderer.domElement.addEventListener("contextmenu",e=>e.preventDefault());

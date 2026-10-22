@@ -6,12 +6,15 @@ on:
       - feat/mini-city-v02
       - feat/mini-city-v021
       - feat/mini-city-v03
+      - feat/mini-city-v031
   pull_request:
     paths:
       - 'index.html'
       - 'game.js'
       - 'district.js'
       - 'interiors.js'
+      - 'characters.js'
+      - 'visuals.js'
       - 'test/**'
       - '.github/workflows/mini-city.yml'
   workflow_dispatch:
@@ -33,9 +36,17 @@ jobs:
         run: node --check district.js
       - name: Check stairwell module syntax
         run: node --check interiors.js
+      - name: Check new scene module syntax
+        run: |
+          node --check characters.js
+          node --check visuals.js
       - name: Run static smoke test
         run: node test/smoke.mjs
       - name: Test performance contracts
         run: node test/performance.mjs
       - name: Test interior interactions
         run: node test/interiors.mjs
+      - name: Test character rig and materials
+        run: node test/remaster.mjs
+      - name: Boot test gameplay interactions
+        run: node test/runtime.mjs

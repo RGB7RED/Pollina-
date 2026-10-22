@@ -44,10 +44,13 @@ const lightCode=extract("function refreshStreetLights(){","function setTime(");
 const lights=Array.from({length:16},(_,i)=>({
   position:{x:i*3,z:0},visible:false,intensity:0
 }));
-const refresh=new Function("nightLights","timeModes","avatar","timeIndex",lightCode+"\nrefreshStreetLights();");
-refresh(lights,[{night:1.8}],{x:0,z:0},0);
-assert.equal(lights.filter(l=>l.visible).length,4,"at most four dynamic lights");
-refresh(lights,[{night:0}],{x:0,z:0},0);
+const refresh=new Function("nightLights","timeModes","avatar","timeIndex","qualityModes","qualityIndex",lightCode+"\nrefreshStreetLights();");
+const modes=[{pointLights:2},{pointLights:3},{pointLights:4}];
+refresh(lights,[{night:1.8}],{x:0,z:0},0,modes,2);
+assert.equal(lights.filter(l=>l.visible).length,4,"at most four dynamic lights in high quality");
+refresh(lights,[{night:1.8}],{x:0,z:0},0,modes,0);
+assert.equal(lights.filter(l=>l.visible).length,2,"low quality limits dynamic lights to two");
+refresh(lights,[{night:0}],{x:0,z:0},0,modes,2);
 assert.equal(lights.filter(l=>l.visible||l.intensity>0).length,0,"daytime lights disabled");
 
 console.log("Mini City performance contract: OK — 270 floors -> 2 groups, 4 night lights maximum");
