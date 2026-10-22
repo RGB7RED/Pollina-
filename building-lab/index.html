@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
+<meta name="theme-color" content="#202f38">
+<title>MINI CITY · Building Lab 3.1</title>
+<style>
+:root{color-scheme:dark;--panel:rgba(22,35,43,.88);--line:rgba(231,231,218,.21);--cream:#eaece8;--mint:#b9d2cb;--gold:#edc6a8}
+*{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;color:var(--cream);background:#576974}
+#stage{position:fixed;inset:0;touch-action:none}#stage canvas{display:block;width:100%;height:100%;touch-action:none}
+.hud{position:fixed;top:max(env(safe-area-inset-top),12px);left:max(env(safe-area-inset-left),14px);right:max(env(safe-area-inset-right),14px);display:flex;justify-content:space-between;gap:9px;pointer-events:none}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:0 9px 28px rgba(11,23,27,.22);backdrop-filter:blur(13px);padding:13px 15px}
+.ident{width:min(310px,58vw)}.stats{width:min(210px,38vw);text-align:right}
+small{font-size:10px;letter-spacing:.12em;color:var(--mint);font-weight:800;text-transform:uppercase}
+h1{font-size:18px;margin:5px 0 8px;line-height:1.15}
+.desc{font-size:11px;line-height:1.35;color:#d4dddc;max-width:290px}
+.metrics{font-size:11px;color:#c7dfd7;line-height:1.55}
+.tag{margin-top:8px;display:inline-block;border:1px solid #e5b6a780;color:#f5cab3;border-radius:99px;font-size:10px;padding:4px 7px;font-weight:750}
+.controls{position:fixed;left:max(9px,env(safe-area-inset-left));right:max(9px,env(safe-area-inset-right));bottom:max(12px,env(safe-area-inset-bottom));display:flex;flex-wrap:wrap;justify-content:center;gap:7px}
+button{background:rgba(29,45,53,.9);color:#f0f2e9;border:1px solid #d5e1d06e;border-radius:11px;padding:10px 13px;min-height:44px;font-weight:750;font-size:12px;box-shadow:0 5px 18px rgba(0,0,0,.16);touch-action:manipulation}
+button.active{background:#c6d9cd;color:#243a3e;border-color:#f0ede4}
+.tips{position:fixed;bottom:84px;left:max(15px,env(safe-area-inset-left));color:#152a34;font-size:11px;line-height:1.5;text-shadow:0 1px #d7d7d280;font-weight:700;max-width:245px;pointer-events:none}
+#status{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);border-radius:14px;border:1px solid #e7cfb8a8;background:rgba(21,36,45,.93);font-size:13px;padding:18px 22px;max-width:80vw;text-align:center}
+#status[hidden]{display:none}
+@media(max-width:600px){.hud{top:max(env(safe-area-inset-top),7px);left:8px;right:8px}.card{padding:9px 10px;border-radius:11px}.ident{width:54vw}.stats{width:42vw}.desc{font-size:9px}small{font-size:8px}h1{font-size:15px}.tag{font-size:8px;padding:3px 5px}.metrics{font-size:10px}.controls{gap:5px}button{padding:9px 11px;font-size:10px;min-height:42px}.tips{font-size:9px;bottom:122px;max-width:185px}}
+@media(orientation:landscape) and (max-height:530px){.hud{top:max(env(safe-area-inset-top),4px)}h1{font-size:14px;margin:3px 0 5px}.card{padding:7px 10px}.tag{display:none}.controls{left:auto;right:max(9px,env(safe-area-inset-right));max-width:67%;bottom:max(5px,env(safe-area-inset-bottom))}.tips{bottom:9px;max-width:30%}}
+</style>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}
+</script>
+</head>
+<body>
+<div id="stage" aria-label="3D-модель жилого кирпичного дома"></div>
+<div class="hud">
+  <section class="card ident">
+    <small>MINI CITY / BUILDING LAB</small><h1>Дом · Этап 3.1</h1>
+    <div class="desc">Кирпичная пятиэтажка по архитектурному референсу. Проверяем <strong>геометрию и силуэт</strong>, материалы пока черновые.</div>
+    <div class="tag">BLOCKOUT · ЕЩЁ НЕ ФИНАЛЬНАЯ ГРАФИКА</div>
+  </section>
+  <section class="card stats">
+    <div class="metrics" id="fps">FPS: —</div>
+    <div class="metrics" id="render">Рис.: — · Трис.: —</div>
+    <div class="metrics" id="building-info">5 этажей · 4 подъезда</div>
+    <div class="metrics" id="quality-info">Качество: среднее</div>
+    <div class="metrics" id="view-label">Ракурс: ¾</div>
+  </section>
+</div>
+<div id="status" role="status" hidden>Загрузка модели здания…</div>
+<div class="tips">Свайп — поворот · Щипок — приближение<br>Фасад и пропорции сверяем с твоим фото.</div>
+<div class="controls">
+<button data-view="front">Фасад</button>
+<button class="active" data-view="threequarter">¾</button>
+<button data-view="end">Торец</button>
+<button data-view="top">Сверху</button>
+<button id="time">🌆 Вечер</button>
+<button id="quality">⚙ Среднее</button>
+<button id="reset">↻ Сброс</button>
+</div>
+<script type="module" src="./lab.js"></script>
+</body>
+</html>
