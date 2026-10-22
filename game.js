@@ -23,8 +23,8 @@ const sun = new THREE.DirectionalLight(0xffe2b5, 2.8);
 sun.position.set(45, 84, 28);
 sun.castShadow = true;
 sun.shadow.mapSize.set(768, 768);
-sun.shadow.camera.left = -85; sun.shadow.camera.right = 85;
-sun.shadow.camera.top = 85; sun.shadow.camera.bottom = -85;
+sun.shadow.camera.left = -65; sun.shadow.camera.right = 65;
+sun.shadow.camera.top = 65; sun.shadow.camera.bottom = -65;
 sun.shadow.camera.near = 1; sun.shadow.camera.far = 190;
 sun.shadow.bias = -.0004;
 scene.add(sun, sun.target);
@@ -244,14 +244,21 @@ windows(litWindows, M.glowing);
 
 const grass2 = mat(0x83936c);
 const leafLight = mat(0x87a470);
-function tree(x, z, type = 0) {
-  const height = 3.7 + rand() * 2;
-  cyl(.19, .22, height, M.trunk, x, height / 2, z);
-  const green = M.leaf[type % M.leaf.length];
-  orb(1.35, green, x, height + .45, z);
-  orb(1.15, green, x + .67, height + .18, z + .2);
-  orb(1.05, type % 3 === 0 ? leafLight : green, x - .5, height + .72, z - .4);
+const treeGroups=[];
+const streetProps=[];
+function tree(x,z,type=0){
+  const g=new THREE.Group();g.position.set(x,0,z);world.add(g);
+  const height=3.7+rand()*2;
+  cyl(.19,.22,height,M.trunk,0,height/2,0,g);
+  const green=M.leaf[type%M.leaf.length];
+  const a=orb(1.35,green,0,height+.45,0,g);
+  const b=orb(1.15,green,.67,height+.18,.2,g);
+  const c=orb(1.05,type%3===0?leafLight:green,-.5,height+.72,-.4,g);
+  // Avoid expensive foliage shadow-map casters on mobile; trunks remain.
+  a.castShadow=b.castShadow=c.castShadow=false;
+  treeGroups.push({g,x,z});
 }
+
 const treePositions = [
   [-13,-59],[-13,-44],[-13,-17],[-13,17],[-13,50],[-13,64],
   [13,-61],[13,-45],[13,-17],[13,18],[13,39],[13,60],
@@ -263,6 +270,7 @@ treePositions.forEach(([x, z], i) => tree(x, z, i));
 
 function bench(x, z, rotation = 0) {
   const group = new THREE.Group(); group.position.set(x, 0, z); group.rotation.y = rotation; world.add(group);
+  streetProps.push({g:group,x,z});
   box(2.5, .2, .65, mat(0x886d54), 0, .78, 0, group);
   box(2.5, .75, .15, mat(0x886d54), 0, 1.19, .3, group);
   for (const s of [-1, 1]) box(.13, .7, .6, M.metal, s, .38, 0, group);
@@ -270,14 +278,18 @@ function bench(x, z, rotation = 0) {
 bench(16, 25, Math.PI / 2);
 bench(52, 53, 0);
 bench(-18, -52, Math.PI / 2);
-function lamp(x, z) {
-  const metal = M.metal;
-  cyl(.10, .10, 7.5, metal, x, 3.75, z);
-  box(1.4, .11, .11, metal, x + .58, 7.4, z);
-  box(.65, .24, .65, M.glowing, x + 1.1, 7.3, z);
-  const light = new THREE.PointLight(0xffd28d, 0, 15, 2);
-  light.position.set(x + 1.1, 7.2, z); world.add(light); nightLights.push(light);
+function lamp(x,z){
+  const group=new THREE.Group();group.position.set(x,0,z);world.add(group);
+  streetProps.push({g:group,x,z});
+  cyl(.10,.10,7.5,M.metal,0,3.75,0,group);
+  box(1.4,.11,.11,M.metal,.58,7.4,0,group);
+  box(.65,.24,.65,M.glowing,1.1,7.3,0,group);
+  const light=new THREE.PointLight(0xffd28d,0,15,2);
+  light.position.set(x+1.1,7.2,z);
+  light.visible=false;light.castShadow=false;
+  world.add(light);nightLights.push(light);
 }
+
 const nightLights = [];
 // Street lighting
 for (const [x,z] of [[-12,-63],[-12,-26],[-12,25],[-12,61],[12,-61],[12,-24],[12,29],[12,64],[-59,12],[-23,12],[24,12],[57,12]]) lamp(x,z);
@@ -454,13 +466,36 @@ const timeModes=[
   {name:"🌅 УТРО",sky:0xbcc8dd,ambient:1.7,sun:2.0,night:.25,tint:0xffc99a,fog:0xb9c8d4, exposure:1.24}
 ];
 let timeIndex=0;
+// Limit expensive dynamic point lights to the four closest lamps.
+// Street-lamp emissive geometry stays visible everywhere.
+let lightUpdateAt=-10;
+function refreshStreetLights(){
+  if(!nightLights.length)return;
+  const intensity=timeModes[timeIndex].night;
+  if(intensity<=0){
+    for(const light of nightLights){light.intensity=0;light.visible=false;}
+    return;
+  }
+  const closest=nightLights.map(light=>({
+    light,
+    distance:(light.position.x-avatar.x)**2+(light.position.z-avatar.z)**2
+  })).filter(item=>item.distance<43*43).sort((a,b)=>a.distance-b.distance);
+  const selected=new Set(closest.slice(0,4).map(item=>item.light));
+  for(const light of nightLights){
+    light.visible=selected.has(light);
+    light.intensity=light.visible?intensity:0;
+  }
+}
+
 function setTime(index){
   timeIndex=index%timeModes.length;
   const t=timeModes[timeIndex];
   scene.background=new THREE.Color(t.sky);scene.fog.color.setHex(t.fog);
   hemi.intensity=t.ambient;sun.intensity=t.sun;sun.color.setHex(t.tint);
-  sun.position.set(timeIndex===2?-25:45,timeIndex===1?26:84,28);
-  nightLights.forEach(l=>l.intensity=t.night);
+  sun.position.set(avatar.x+(timeIndex===2?-25:45),timeIndex===1?35:84,avatar.z+28);
+  sun.target.position.set(avatar.x,0,avatar.z);
+  sun.target.updateMatrixWorld();
+  refreshStreetLights();
   M.glowing.emissiveIntensity=.08+t.night*.65;
   renderer.toneMappingExposure=t.exposure;
   $("btn-time").textContent=t.name;
@@ -706,6 +741,20 @@ function update(dt) {
   }
   for(const d of doors){if(d.opened>0)d.opened-=dt;d.pivot.rotation.y=THREE.MathUtils.damp(d.pivot.rotation.y,d.opened>0?-1.1:0,7,dt);}
   for(const p of pois){p.dot.position.y=2.2+Math.sin(elapsed*2.1+p.x)*.19;p.ring.rotation.z=elapsed*.15;}
+  if(elapsed-lightUpdateAt>.6){
+    lightUpdateAt=elapsed;
+    for(const o of treeGroups)o.g.visible=(o.x-avatar.x)**2+(o.z-avatar.z)**2<140*140;
+    for(const o of streetProps)o.g.visible=(o.x-avatar.x)**2+(o.z-avatar.z)**2<140*140;
+    for(const c of cars)c.g.visible=!!avatar.inCar&&avatar.inCar===c || (c.x-avatar.x)**2+(c.z-avatar.z)**2<145*145;
+    refreshStreetLights();
+    // Keep the sun/shadow box anchored near the moving player.
+    if(Math.abs(sun.target.position.x-avatar.x)>24||Math.abs(sun.target.position.z-avatar.z)>24){
+      sun.position.x+=(avatar.x-sun.target.position.x);
+      sun.position.z+=(avatar.z-sun.target.position.z);
+      sun.target.position.set(avatar.x,0,avatar.z);
+      sun.target.updateMatrixWorld();
+    }
+  }
   followCamera(dt);
   lookForPlaces();
   if(elapsed-lastMap>.13){minimap();lastMap=elapsed;}
