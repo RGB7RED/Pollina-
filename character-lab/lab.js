@@ -1,230 +1,278 @@
 import * as THREE from "three";
 import {GLTFLoader} from "three/addons/loaders/GLTFLoader.js";
 import {OrbitControls} from "three/addons/controls/OrbitControls.js";
+import {MotionController} from "./motion.mjs";
 
-// An isolated asset-acceptance lab. It never touches game.js or the old city.
-// A real, skinned GLB is loaded from our repository, not generated from spheres.
+// Stage 2 is an isolated animation acceptance test, not an alteration to
+// MINI CITY's public game.js. The model's own authored glTF animation clips
+// drive the skeleton. A temporary in-browser joint wiggle is NOT substituted.
 const $=id=>document.getElementById(id);
 const scene=new THREE.Scene();
-scene.background=new THREE.Color(0xb2bec0);
-scene.fog=new THREE.Fog(0xb2bec0,16,34);
-const camera=new THREE.PerspectiveCamera(39,innerWidth/innerHeight,.1,80);
-camera.position.set(2.65,1.76,4.2);
+scene.background=new THREE.Color(0xb0bec0);
+scene.fog=new THREE.Fog(0xb0bec0,19,45);
+const camera=new THREE.PerspectiveCamera(44,innerWidth/innerHeight,.1,85);
+camera.position.set(2.9,2.0,5.7);
 const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:"high-performance"});
-renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.7));
+renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.5));
 renderer.setSize(innerWidth,innerHeight);
 renderer.outputColorSpace=THREE.SRGBColorSpace;
 renderer.toneMapping=THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure=1.18;
+renderer.toneMappingExposure=1.15;
 renderer.shadowMap.enabled=true;
 renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 $("viewport").appendChild(renderer.domElement);
 const controls=new OrbitControls(camera,renderer.domElement);
-controls.target.set(0,.91,0);
-controls.enableDamping=true;
-controls.dampingFactor=.065;
-controls.enablePan=false;
-controls.minDistance=1.2;
-controls.maxDistance=8;
-controls.minPolarAngle=.12;
-controls.maxPolarAngle=Math.PI/2-.015;
+controls.target.set(0,1.03,0);
+controls.enableDamping=true;controls.enablePan=false;
+controls.minDistance=1.4;controls.maxDistance=11;
+controls.minPolarAngle=.13;controls.maxPolarAngle=Math.PI/2-.018;
 controls.update();
-const light=new THREE.HemisphereLight(0xe1e8e7,0x65706b,2.25);scene.add(light);
-const sun=new THREE.DirectionalLight(0xffe3c8,3.0);
-sun.position.set(3.5,7,5);
+scene.add(new THREE.HemisphereLight(0xdfe8e8,0x63716b,2.35));
+const sun=new THREE.DirectionalLight(0xf8ddc2,2.8);
+sun.position.set(4,8,5);
 sun.castShadow=true;
 sun.shadow.mapSize.set(1024,1024);
-sun.shadow.camera.left=-4;sun.shadow.camera.right=4;
-sun.shadow.camera.top=4;sun.shadow.camera.bottom=-4;
-sun.shadow.normalBias=.025;
+sun.shadow.camera.left=-11;sun.shadow.camera.right=11;
+sun.shadow.camera.top=11;sun.shadow.camera.bottom=-11;
+sun.shadow.normalBias=.027;
 scene.add(sun);
-const fill=new THREE.DirectionalLight(0xb7d3e0,1.6);
-fill.position.set(-3,4,-4);scene.add(fill);
-const stageMat=new THREE.MeshStandardMaterial({color:0x75888c,roughness:.98,metalness:0});
-const stage=new THREE.Mesh(new THREE.CylinderGeometry(1.65,1.75,.18,72),stageMat);
-stage.position.y=-.14;stage.receiveShadow=true;scene.add(stage);
-const ground=new THREE.Mesh(new THREE.PlaneGeometry(200,200),new THREE.MeshStandardMaterial({color:0xa5b2b0,roughness:1}));
-ground.rotation.x=-Math.PI/2;ground.position.y=-.23;ground.receiveShadow=true;scene.add(ground);
-const ring=new THREE.Mesh(new THREE.TorusGeometry(1.54,.008,6,96),new THREE.MeshBasicMaterial({color:0xdfd1bd}));
-ring.rotation.x=-Math.PI/2;ring.position.y=-.043;scene.add(ring);
+const bounce=new THREE.DirectionalLight(0xbad0df,1.35);
+bounce.position.set(-4,4,-5);scene.add(bounce);
 
+// A simple 12x12-metre studio runway: character motion is visible in space,
+// and distance is bounded to prevent walking into an empty horizon.
+const pavement=new THREE.Mesh(
+  new THREE.PlaneGeometry(14,14),
+  new THREE.MeshStandardMaterial({color:0x86999a,roughness:.99})
+);
+pavement.rotation.x=-Math.PI/2;pavement.position.y=-.02;
+pavement.receiveShadow=true;scene.add(pavement);
+const markings=new THREE.Group();scene.add(markings);
+const paint=new THREE.MeshBasicMaterial({color:0xdad9c8,transparent:true,opacity:.64,depthWrite:false});
+for(let j=-4;j<=4;j++){
+  const mark=new THREE.Mesh(new THREE.PlaneGeometry(.13,.4),paint);
+  mark.rotation.x=-Math.PI/2;mark.position.set(0,.007,j*1.3);
+  markings.add(mark);
+}
+const borderMat=new THREE.MeshStandardMaterial({color:0x5c6f74,roughness:.95});
+for(const direction of [-1,1]){
+  const curb=new THREE.Mesh(new THREE.BoxGeometry(.2,.14,14),borderMat);
+  curb.position.set(direction*6.9,.07,0);
+  curb.receiveShadow=true;scene.add(curb);
+}
 const root=new THREE.Group();scene.add(root);
-let model=null,bones=[],skeletonHelper=null,mixer=null;
-let mode="neutral",isLoaded=false,elapsed=0;
-const original=new Map();
-function fitCharacter(object){
-  object.updateMatrixWorld(true);
-  const bounds=new THREE.Box3().setFromObject(object);
-  const size=bounds.getSize(new THREE.Vector3());
-  if(!(size.y>0))throw new Error("У модели неверные размеры.");
-  const targetHeight=1.83;
-  object.scale.multiplyScalar(targetHeight/size.y);
-  object.updateMatrixWorld(true);
-  const actual=new THREE.Box3().setFromObject(object);
-  // Normalize position on the plinth, independently of the file's initial root.
-  object.position.x-=(actual.min.x+actual.max.x)/2;
-  object.position.z-=(actual.min.z+actual.max.z)/2;
-  object.position.y-=actual.min.y;
-  object.updateMatrixWorld(true);
-}
-function clearPose(){
-  for(const bone of bones){
-    const q=original.get(bone.uuid);
-    if(q)bone.quaternion.copy(q);
-  }
-}
-function poseBone(name,angle,axis="x"){
-  const b=bones.find(n=>n.name.toLowerCase()===name.toLowerCase());
-  if(!b)return;
-  const base=original.get(b.uuid);
-  if(!base)return;
-  const direction=axis==="x"?new THREE.Vector3(1,0,0):axis==="z"?new THREE.Vector3(0,0,1):new THREE.Vector3(0,1,0);
-  b.quaternion.copy(base).multiply(new THREE.Quaternion().setFromAxisAngle(direction,angle));
-}
-function poseTest(t){
-  clearPose();
-  if(mode!=="rig")return;
-  // This is ONLY a skinning test, not a shipped walk animation.
-  const swing=Math.sin(t*3.1);
-  const sway=Math.sin(t*1.6);
-  poseBone("upperarm_l",.19*swing);
-  poseBone("upperarm_r",-.19*swing);
-  poseBone("thigh_l",-.28*swing);
-  poseBone("thigh_r",.28*swing);
-  poseBone("calf_l",-.18*Math.max(0,-swing));
-  poseBone("calf_r",-.18*Math.max(0,swing));
-  poseBone("spine_02",.014*sway,"y");
-}
-function showStatus(message,failed=false){
-  $("status").hidden=false;
-  $("status").textContent=message;
-  $("status").style.borderColor=failed?"#e19a8b":"#c6d0c96d";
-  $("state").textContent=failed?"Ошибка ассета":"Загрузка модели";
-}
+let model=null,bones=[],skeletonHelper=null,motion=null;
+let lastRoot=new THREE.Vector3(),requestId=0;
+let isLoaded=false,elapsed=0,activeSource="casual";
 const loader=new GLTFLoader();
 const sources={
   casual:{
-    // An EXTERNAL preview candidate only, not a bundled production dependency.
-    // Quaternius's 2022 Casual Character is CC0 on Poly Pizza, but this mirror
-    // has NOT been independently byte-audited against that official asset.
     url:"https://raw.githubusercontent.com/QennNg/ar-model-viewer-test/e984c1906f41f35723f2b48f482ade37c3b71d57/CasualCharacter.glb",
-    name:"Городской персонаж · внешний кандидат"
+    name:"Городской кандидат · внешний файл"
   },
   base:{
     url:"./assets/hero-reference.glb",
-    name:"Локальная анатомическая база · CC0"
+    name:"Анатомическая база CC0 · без анимаций"
   }
 };
-let requestId=0,clips=[],idleAction=null,walkAction=null;
-function switchClip(){
-  if(!mixer)return;
-  mixer.stopAllAction();
-  if(mode==="rig"&&walkAction)walkAction.reset().fadeIn(.17).play();
-  else if(idleAction)idleAction.reset().fadeIn(.17).play();
+function report(message,error=false){
+  $("status").hidden=false;
+  $("status").style.borderColor=error?"#e99b85":"#b2c9c0";
+  $("status").textContent=message;
 }
-function loadSource(source,canFallback=true){
-  const sample=sources[source];
-  if(!sample)return;
-  const ticket=++requestId;
-  isLoaded=false;showStatus("Загрузка: "+sample.name);
-  loader.load(sample.url,gltf=>{
-    if(ticket!==requestId)return;
-    try{
-      // Dispose the previous preview, never mutate the open-world game.
-      if(skeletonHelper){root.remove(skeletonHelper);skeletonHelper=null;}
-      if(model)root.remove(model);
-      model=gltf.scene;
-      fitCharacter(model);
-      root.add(model);
-      bones=[];original.clear();
-      let triangleCount=0,skinCount=0;
-      model.traverse(o=>{
-        if(o.isMesh||o.isSkinnedMesh){
-          o.castShadow=true;o.receiveShadow=true;
-          if(o.isSkinnedMesh)skinCount++;
-          if(o.geometry){
-            const idx=o.geometry.index;
-            triangleCount+=Math.round((idx?idx.count:o.geometry.attributes.position?.count||0)/3);
-          }
-        }
-        if(o.isBone){bones.push(o);original.set(o.uuid,o.quaternion.clone());}
-      });
-      if(!bones.length||!skinCount)throw new Error("Нет настоящего skinned humanoid rig.");
-      skeletonHelper=new THREE.SkeletonHelper(model);
-      skeletonHelper.visible=false;root.add(skeletonHelper);
-      clips=gltf.animations||[];
-      mixer=clips.length?new THREE.AnimationMixer(model):null;
-      idleAction=null;walkAction=null;
-      if(mixer){
-        const idle=clips.find(c=>/idle|stand|breath/i.test(c.name))||clips[0];
-        const walk=clips.find(c=>/walk|run|jog/i.test(c.name));
-        if(idle)idleAction=mixer.clipAction(idle);
-        if(walk)walkAction=mixer.clipAction(walk);
-      }
-      switchClip();
-      $("state").textContent=sample.name;
-      $("rig").textContent="Скелет: "+bones.length+" костей · "+skinCount+" skinned meshes";
-      $("geometry").textContent="Модель: ~"+triangleCount.toLocaleString("ru")+" треугольников";
-      $("clip").textContent="Встроенные клипы: "+clips.length+(walkAction?" · ходьба доступна":"");
-      $("status").hidden=true;isLoaded=true;
-    }catch(error){
-      console.error("Character validation failed",error);
-      showStatus("Ошибка разбора модели: "+error.message,true);
-      if(source==="casual"&&canFallback){$("model-source").value="base";loadSource("base",false);}
-    }
-  },event=>{
-    if(ticket!==requestId)return;
-    if(event.total>0)$("status").textContent="Загрузка: "+Math.round(event.loaded/event.total*100)+"%";
-  },error=>{
-    if(ticket!==requestId)return;
-    console.error("Failed to fetch character candidate",error);
-    if(source==="casual"&&canFallback){
-      $("model-source").value="base";
-      loadSource("base",false);
-    }else{
-      showStatus("Не удалось загрузить GLB. Проверь интернет и перезагрузи страницу.",true);
+function resetCamera(){
+  const x=root.position.x,z=root.position.z;
+  camera.position.set(x+2.9,2.0,z+5.7);
+  controls.target.set(x,1.03,z);
+  lastRoot.copy(root.position);
+  controls.update();
+}
+function fitCharacter(object){
+  object.updateMatrixWorld(true);
+  const bounds=new THREE.Box3().setFromObject(object);
+  const height=bounds.getSize(new THREE.Vector3()).y;
+  if(!Number.isFinite(height)||height<.2)throw Error("У модели неверная высота");
+  object.scale.multiplyScalar(1.82/height);
+  object.updateMatrixWorld(true);
+  const scaled=new THREE.Box3().setFromObject(object);
+  object.position.x-=(scaled.min.x+scaled.max.x)/2;
+  object.position.z-=(scaled.min.z+scaled.max.z)/2;
+  object.position.y-=scaled.min.y;
+  object.updateMatrixWorld(true);
+}
+function refreshClipMenu(clips){
+  const select=$("clip-select");
+  select.replaceChildren(new Option("Управление персонажем",""));
+  clips.forEach(c=>select.add(new Option(c.name,c.name)));
+}
+function setMode(mode){
+  if(!motion)return;
+  const result=motion.transitionTo(mode);
+  $("clip-select").value="";
+  document.querySelectorAll("[data-motion]").forEach(
+    b=>b.classList.toggle("active",b.dataset.motion===mode)
+  );
+  $("motion-status").textContent=result.status||
+    ("Режим: "+({idle:"Ожидание",walk:"Ходьба",run:"Бег"}[mode]));
+}
+function installActor(gltf,source){
+  if(motion){motion.dispose();motion=null;}
+  if(skeletonHelper){root.remove(skeletonHelper);skeletonHelper=null;}
+  if(model){root.remove(model);model=null;}
+  root.position.set(0,0,0);
+  root.rotation.y=0;
+  model=gltf.scene;
+  fitCharacter(model);
+  root.add(model);
+  bones=[];
+  let skinned=0,triangles=0;
+  model.traverse(o=>{
+    if(o.isBone)bones.push(o);
+    if(o.isMesh||o.isSkinnedMesh){
+      o.castShadow=true;o.receiveShadow=true;
+      if(o.isSkinnedMesh)skinned++;
+      const geo=o.geometry;
+      if(geo)triangles+=Math.floor((geo.index?.count||geo.attributes.position?.count||0)/3);
     }
   });
+  if(!bones.length||!skinned)throw Error("Модель без настоящего скелета");
+  skeletonHelper=new THREE.SkeletonHelper(model);
+  skeletonHelper.visible=false;
+  root.add(skeletonHelper);
+  $("skeleton").classList.remove("active");
+  const clips=gltf.animations||[];
+  const mixer=clips.length?new THREE.AnimationMixer(model):null;
+  motion=new MotionController({
+    mixer,clips,root,
+    onChange:({clip})=>{$("motion-status").textContent="Клип: "+clip;}
+  });
+  const c=motion.getCapabilities();
+  $("state").textContent=sources[source].name;
+  $("rig").textContent="Скелет: "+bones.length+" костей · "+skinned+" skinned meshes";
+  $("geometry").textContent="Геометрия: ~"+triangles.toLocaleString("ru")+" трис";
+  $("clip").textContent="Клипы: "+clips.length+" · Ходьба "+(c.walk?"✓":"—")+" / Бег "+(c.run?"✓":"—");
+  refreshClipMenu(clips);
+  $("status").hidden=true;
+  isLoaded=true;
+  setMode("idle");
+  resetCamera();
 }
-$("model-source").addEventListener("change",e=>loadSource(e.target.value));
-loadSource("casual");
-document.querySelectorAll("[data-mode]").forEach(button=>button.addEventListener("click",()=>{
-  mode=button.dataset.mode;
-  document.querySelectorAll("[data-mode]").forEach(b=>b.classList.toggle("active",b===button));
-  if(model&&mode==="neutral")clearPose();
-  switchClip();
-}));
+function loadSource(source,allowFallback=true){
+  const candidate=sources[source];
+  if(!candidate)return;
+  activeSource=source;
+  const id=++requestId;
+  isLoaded=false;
+  report("Загрузка персонажа и анимаций…");
+  loader.load(candidate.url,
+    gltf=>{
+      if(id!==requestId)return;
+      try{installActor(gltf,source);}
+      catch(error){
+        console.error("Animation asset error",error);
+        if(source==="casual"&&allowFallback){
+          $("model-source").value="base";loadSource("base",false);
+        } else report("Ошибка модели: "+error.message,true);
+      }
+    },
+    ev=>{if(id===requestId&&ev.total)$("status").textContent=
+      "Загрузка модели: "+Math.round(ev.loaded/ev.total*100)+"%";},
+    err=>{
+      if(id!==requestId)return;
+      console.error("Cannot load asset",err);
+      if(source==="casual"&&allowFallback){
+        $("model-source").value="base";loadSource("base",false);
+      } else report("Не удалось загрузить GLB (проверь соединение)",true);
+    }
+  );
+}
+$("model-source").addEventListener("change",e=>loadSource(e.target.value,false));
+$("clip-select").addEventListener("change",e=>{
+  if(!motion)return;
+  if(!e.target.value)setMode("idle");
+  else if(motion.playNamedClip(e.target.value)){
+    document.querySelectorAll("[data-motion]").forEach(b=>b.classList.remove("active"));
+    $("motion-status").textContent="Отдельный клип: "+e.target.value;
+  }
+});
+document.querySelectorAll("[data-motion]").forEach(b=>b.addEventListener(
+  "click",()=>setMode(b.dataset.motion)
+));
+for(const [id,direction] of [["turn-left",-1],["turn-right",1]]){
+  const button=$(id);
+  const begin=e=>{
+    e.preventDefault();
+    button.setPointerCapture?.(e.pointerId);
+    motion?.setTurning(direction);
+    button.classList.add("active");
+  };
+  const end=e=>{
+    motion?.setTurning(0);
+    button.classList.remove("active");
+  };
+  button.addEventListener("pointerdown",begin);
+  for(const type of ["pointerup","pointercancel","lostpointercapture"])button.addEventListener(type,end);
+}
 $("skeleton").addEventListener("click",()=>{
   if(!skeletonHelper)return;
   skeletonHelper.visible=!skeletonHelper.visible;
   $("skeleton").classList.toggle("active",skeletonHelper.visible);
 });
 $("reset").addEventListener("click",()=>{
-  camera.position.set(2.65,1.76,4.2);
-  controls.target.set(0,.91,0);controls.update();
+  motion?.resetLocation();
+  resetCamera();
+  setMode("idle");
 });
+const keys=new Set();
+window.addEventListener("keydown",e=>{
+  if(["KeyW","KeyA","KeyD","ShiftLeft","ShiftRight","ArrowLeft","ArrowRight"].includes(e.code))
+    e.preventDefault();
+  keys.add(e.code);
+  if(e.code==="KeyW"||e.code==="ShiftLeft"||e.code==="ShiftRight")
+    setMode(keys.has("KeyW")?(keys.has("ShiftLeft")||keys.has("ShiftRight")?"run":"walk"):"idle");
+  if(e.code==="KeyA"||e.code==="ArrowLeft")motion?.setTurning(-1);
+  if(e.code==="KeyD"||e.code==="ArrowRight")motion?.setTurning(1);
+});
+window.addEventListener("keyup",e=>{
+  keys.delete(e.code);
+  if(e.code==="KeyW"||e.code==="ShiftLeft"||e.code==="ShiftRight")
+    setMode(keys.has("KeyW")?(keys.has("ShiftLeft")||keys.has("ShiftRight")?"run":"walk"):"idle");
+  if(["KeyA","KeyD","ArrowLeft","ArrowRight"].includes(e.code)){
+    motion?.setTurning(keys.has("KeyA")||keys.has("ArrowLeft")?-1:
+      keys.has("KeyD")||keys.has("ArrowRight")?1:0);
+  }
+});
+window.addEventListener("blur",()=>{keys.clear();motion?.setTurning(0);setMode("idle");});
 window.addEventListener("resize",()=>{
-  camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();
+  camera.aspect=innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
   renderer.setSize(innerWidth,innerHeight);
-  renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.7));
+  renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.5));
 });
-let frames=0,frameStart=performance.now();
 const clock=new THREE.Clock();
+let frames=0,frameAt=performance.now();
 function tick(){
   requestAnimationFrame(tick);
   const dt=Math.min(.05,clock.getDelta());
   elapsed+=dt;
-  if(isLoaded&&!mixer)poseTest(elapsed);
-  // The character model is inspected while the studio scene stays isolated.
-  if(mixer)mixer.update(dt);
+  if(isLoaded&&motion){
+    const info=motion.update(dt);
+    const delta=root.position.clone().sub(lastRoot);
+    controls.target.add(delta);
+    camera.position.add(delta);
+    lastRoot.copy(root.position);
+    $("speed").textContent="Скорость: "+info.speed.toFixed(2)+" м/с · "+info.phase;
+    if(info.status)$("motion-status").textContent=info.status;
+  }
   controls.update();
   renderer.render(scene,camera);
-  frames++;
   const now=performance.now();
-  if(now-frameStart>1400){
-    $("frame").textContent="FPS: "+Math.round(frames*1000/(now-frameStart));
-    frameStart=now;frames=0;
+  frames++;
+  if(now-frameAt>1200){
+    $("frame").textContent="FPS: "+Math.round(frames*1000/(now-frameAt));
+    frameAt=now;frames=0;
   }
 }
+loadSource("casual");
 tick();
-window.characterLabReady=true;
+window.characterLabStage2Ready=true;
