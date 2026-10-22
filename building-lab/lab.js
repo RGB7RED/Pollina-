@@ -94,7 +94,7 @@ function setView(name){
 document.querySelectorAll("[data-view]").forEach(b=>b.addEventListener("click",()=>setView(b.dataset.view)));
 $("time").addEventListener("click",()=>{timeIndex=(timeIndex+1)%lighting.length;applyTime();});
 $("quality").addEventListener("click",()=>{qualityIndex=(qualityIndex+1)%modes.length;applyQuality();});
-$("reset").addEventListener("click",()=>{controls.target.set(0,8,0);setView("threequarter");});
+$("reset").addEventListener("click",()=>{if(activeFly())return;controls.target.set(0,8,0);setView("threequarter");});
 $("building-info").textContent=config.floors+" этажей · "+stats.entrances+" подъезда · "+stats.balconies+" балконов";
 
 /* 3.1.1: ORBIT is retained, FREE is a separate explicit XYZ inspection mode.
@@ -117,9 +117,12 @@ function releaseInputs(){
   free.clearInputs();
   centerStick();
   for(const id of ["fly-up","fly-down"])$(id).classList.remove("held");
+  $("fly-boost").classList.remove("active");
+  $("fly-boost").setAttribute("aria-pressed","false");
 }
 function toggleFreeCamera(enabled=!activeFly()){
   if(enabled===activeFly())return;
+  // Undo any pointer captures and pressed state before changing modes.
   releaseInputs();
   if(enabled){
     free.start(controls.target);
