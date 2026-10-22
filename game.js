@@ -75,7 +75,7 @@ function flushDecorationBoxes(){
     const mesh=new THREE.InstancedMesh(geomBox,material,list.length);
     for(let i=0;i<list.length;i++)mesh.setMatrixAt(i,list[i]);
     mesh.instanceMatrix.needsUpdate=true;
-    mesh.frustumCulled=false;mesh.castShadow=false;mesh.receiveShadow=true;
+    mesh.computeBoundingSphere();mesh.castShadow=false;mesh.receiveShadow=true;
     world.add(mesh);
   }
   decoBatches.clear();
@@ -91,7 +91,30 @@ function orb(r, material, x, y, z, parent = world) {
   mesh.scale.setScalar(r); mesh.position.set(x, y, z); mesh.castShadow = true;
   parent.add(mesh); return mesh;
 }
-function flat(w, d, material, x, z, y = .022) { return box(w, .035, d, material, x, y, z); }
+// 0.2.1: Roads, sidewalks and markings used to be hundreds of individual
+// meshes/draw calls. Accumulate fixed floor geometry per material and render
+// each group as one instanced mesh.
+const flatBatches=new Map();
+const flatDummy=new THREE.Object3D();
+function flat(w,d,material,x,z,y=.022){
+  flatDummy.position.set(x,y,z);
+  flatDummy.rotation.set(0,0,0);
+  flatDummy.scale.set(w,.035,d);
+  flatDummy.updateMatrix();
+  if(!flatBatches.has(material))flatBatches.set(material,[]);
+  flatBatches.get(material).push(flatDummy.matrix.clone());
+}
+function flushFlats(){
+  for(const [material,instances] of flatBatches){
+    const mesh=new THREE.InstancedMesh(geomBox,material,instances.length);
+    instances.forEach((matrix,i)=>mesh.setMatrixAt(i,matrix));
+    mesh.instanceMatrix.needsUpdate=true;
+    mesh.receiveShadow=true;mesh.castShadow=false;
+    mesh.computeBoundingSphere();
+    world.add(mesh);
+  }
+  flatBatches.clear();
+}
 function label(text, color = "#f9eed5", bg = "#1b3543", width = 4.6, height = .9) {
   const cv = document.createElement("canvas"); cv.width = 512; cv.height = 128;
   const g = cv.getContext("2d");
@@ -165,7 +188,7 @@ function building(x, z, w, d, floors, style, shop = false) {
   body.castShadow = true;
   box(w + .5, .5, d + .5, M.roof, x, h + .25, z);
   for (let f = 1; f < floors; f++) {
-    box(w + .07, .11, d + .07, brick, x, f * 3.05, z);
+    decorationBox(w + .07, .11, d + .07, brick, x, f * 3.05, z);
   }
   const alongX = Math.floor((w - 2.8) / 2.55);
   const alongZ = Math.floor((d - 2.8) / 2.6);
@@ -214,7 +237,7 @@ const additionalBuildings=buildDistrictBuildings({building,box:decorationBox,fla
 function windows(list, material) {
   const mesh = new THREE.InstancedMesh(geomBox, material, list.length);
   list.forEach((matrix, i) => mesh.setMatrixAt(i, matrix));
-  mesh.instanceMatrix.needsUpdate = true; mesh.frustumCulled = false; world.add(mesh);
+  mesh.instanceMatrix.needsUpdate = true; mesh.computeBoundingSphere(); world.add(mesh);
 }
 windows(darkWindows, M.window);
 windows(litWindows, M.glowing);
@@ -317,6 +340,7 @@ car(28,5.1,carColors[3],Math.PI/2);
 car(-41,-5.1,carColors[1],Math.PI/2);
 buildDistrictProps({tree,bench,lamp,car,roadSign,box:decorationBox,flat,mat});
 flushDecorationBoxes();
+flushFlats();
 
 function human(palette = 0) {
   // Low-poly block character with proportionate head and articulated limbs.
