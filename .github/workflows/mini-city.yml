@@ -1,0 +1,28 @@
+name: Mini City checks
+on:
+  push:
+    branches:
+      - feat/mini-city-v1
+  pull_request:
+    paths:
+      - 'index.html'
+      - 'game.js'
+      - 'test/**'
+      - '.github/workflows/mini-city.yml'
+  workflow_dispatch:
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check JavaScript syntax
+        run: node --check game.js
+      - name: Run static smoke test
+        run: node test/smoke.mjs
