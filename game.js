@@ -76,8 +76,10 @@ function label(text, color = "#f9eed5", bg = "#1b3543", width = 4.6, height = .9
   g.fillStyle = color; g.textAlign = "center"; g.textBaseline = "middle";
   g.font = "800 47px system-ui, sans-serif"; g.fillText(text, 256, 69, 480);
   const texture = new THREE.CanvasTexture(cv); texture.colorSpace = THREE.SRGBColorSpace;
-  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(width, height), new THREE.MeshBasicMaterial({ map: texture, side: THREE.DoubleSide }));
-  return mesh;
+  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(width, height), new THREE.MeshBasicMaterial({ map: texture, side: THREE.FrontSide }));
+  const other=mesh.clone(); other.rotation.y=Math.PI;
+  const sign=new THREE.Group();sign.add(mesh,other);
+  return sign;
 }
 
 function street() {
@@ -616,8 +618,8 @@ function update(dt) {
   const isRunning=(holdRun||pressed.has("ShiftLeft")||pressed.has("ShiftRight"))&&mag>.05;
   const speed=isRunning?7.3:4.15;
   const input=avatar.inCar?0:Math.min(1,mag);
-  const desiredX=(Math.cos(yaw)*mx+Math.sin(yaw)*my)*speed*input;
-  const desiredZ=(-Math.sin(yaw)*mx+Math.cos(yaw)*my)*speed*input;
+  const desiredX=(Math.cos(yaw)*mx+Math.sin(yaw)*my)*speed*(avatar.inCar?0:1);
+  const desiredZ=(-Math.sin(yaw)*mx+Math.cos(yaw)*my)*speed*(avatar.inCar?0:1);
   const blend=1-Math.exp(-dt*(input>.04?9.4:13.5));
   smoothVelocity.x+=(desiredX-smoothVelocity.x)*blend;
   smoothVelocity.y+=(desiredZ-smoothVelocity.y)*blend;
