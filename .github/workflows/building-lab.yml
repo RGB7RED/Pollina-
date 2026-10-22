@@ -1,0 +1,27 @@
+name: MINI CITY Building Lab 3.1
+on:
+  push:
+    branches:
+      - feat/mini-city-v033-stage3-building-blockout
+    paths:
+      - 'building-lab/**'
+      - '.github/workflows/building-lab.yml'
+  workflow_dispatch:
+jobs:
+  building-shape:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Parse architectural JS modules
+        run: |
+          node --check building-lab/building.js
+          node --check building-lab/lab.js
+      - name: Check hipped roof, windows and balcony blockout
+        run: node building-lab/test-building.mjs
+      - name: Check browser controls and mobile UI wiring
+        run: node building-lab/test-viewer.mjs
