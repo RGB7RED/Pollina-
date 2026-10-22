@@ -794,11 +794,32 @@ function followCamera(dt){
   const dist=rayDir.length();rayDir.normalize();
   raycaster.set(camTarget,rayDir);raycaster.far=dist;
   const hits=raycaster.intersectObjects(cameraObstacles,false);
-  if(hits.length){const d=Math.max(.85,hits[0].distance-.55);camDest.copy(camTarget).addScaledVector(rayDir,d);}
+  if(!avatar.inLobby && hits.length){const d=Math.max(.85,hits[0].distance-.55);camDest.copy(camTarget).addScaledVector(rayDir,d);}
+  if(avatar.inLobby){
+    // Never allow the camera through walls/ceiling in a compact room.
+    const x=avatar.inLobby.centerX;
+    camDest.x=THREE.MathUtils.clamp(camDest.x,x-5.25,x+5.25);
+    camDest.z=THREE.MathUtils.clamp(camDest.z,-6.1,6.1);
+    camDest.y=THREE.MathUtils.clamp(camDest.y,1.25,3.58);
+  }
   camera.position.lerp(camDest,Math.min(1,dt*8));camera.lookAt(camTarget);
 }
 function minimap(){
   const cv=$("minimap"),g=cv.getContext("2d"),sz=240,range=94;
+  if(avatar.inLobby){
+    const x=avatar.x-avatar.inLobby.centerX,z=avatar.z;
+    g.clearRect(0,0,sz,sz);
+    g.fillStyle="#3b5360";g.fillRect(0,0,sz,sz);
+    g.fillStyle="#a4aca6";g.fillRect(22,18,196,204);
+    g.fillStyle="#65757b";g.fillRect(22,18,196,16);g.fillRect(22,18,15,204);
+    g.fillRect(203,18,15,204);g.fillRect(22,206,196,16);
+    g.fillStyle="#77878d";g.fillRect(42,39,64,72);
+    g.fillStyle="#d9be80";g.fillRect(173,97,23,60);
+    g.fillStyle="#76d4a9";g.fillRect(100,205,40,7);
+    g.fillStyle="#fff";g.beginPath();
+    g.arc(120+x/12*180,120+z/14*180,6,0,Math.PI*2);g.fill();
+    return;
+  }
   const centerX=THREE.MathUtils.clamp(avatar.x,-160+range,160-range);
   const centerZ=THREE.MathUtils.clamp(avatar.z,-160+range,160-range);
   const px=x=>(x-centerX+range)/(2*range)*sz;
@@ -842,12 +863,13 @@ function update(dt) {
   const isRunning=(holdRun||pressed.has("ShiftLeft")||pressed.has("ShiftRight"))&&mag>.05;
   const speed=isRunning?7.3:4.15;
   const input=avatar.inCar?0:Math.min(1,mag);
-  const desiredX=(Math.cos(yaw)*mx+Math.sin(yaw)*my)*speed*(avatar.inCar?0:1);
-  const desiredZ=(-Math.sin(yaw)*mx+Math.cos(yaw)*my)*speed*(avatar.inCar?0:1);
+  const immobilized=avatar.inCar||avatar.sitting;
+  const desiredX=(Math.cos(yaw)*mx+Math.sin(yaw)*my)*speed*(immobilized?0:1);
+  const desiredZ=(-Math.sin(yaw)*mx+Math.cos(yaw)*my)*speed*(immobilized?0:1);
   const blend=1-Math.exp(-dt*(input>.04?9.4:13.5));
   smoothVelocity.x+=(desiredX-smoothVelocity.x)*blend;
   smoothVelocity.y+=(desiredZ-smoothVelocity.y)*blend;
-  if(avatar.inCar)smoothVelocity.set(0,0);
+  if(immobilized)smoothVelocity.set(0,0);
   const movingSpeed=smoothVelocity.length();
   if(movingSpeed>.07){
     const vx=smoothVelocity.x,vz=smoothVelocity.y;
@@ -860,23 +882,49 @@ function update(dt) {
   if(!avatar.inCar){
     avatar.vy-=19*dt;avatar.y+=avatar.vy*dt;
     if(avatar.y<0){avatar.y=0;avatar.vy=0;}
-    player.g.position.set(avatar.x,avatar.y,avatar.z);
+    player.g.position.set(avatar.x,avatar.y+(avatar.sitting?-.26:0),avatar.z);
     player.g.rotation.y=avatar.angle;
     animateHuman(player,movingSpeed,elapsed);
+    if(avatar.sitting){
+      player.leftLeg.rotation.x=-1.12;player.rightLeg.rotation.x=-1.12;
+      player.leftArm.rotation.x=-.14;player.rightArm.rotation.x=-.14;
+      player.torso.position.y=1.71;
+    }
     if(movingSpeed>1&&avatar.y===0&&elapsed-stepAt>(isRunning?.24:.39)){footstep();stepAt=elapsed;}
   }
   for(const n of npcs){
-    const far=Math.hypot(n.person.g.position.x-avatar.x,n.person.g.position.z-avatar.z)>90;
+    const distance=Math.hypot(n.person.g.position.x-avatar.x,n.person.g.position.z-avatar.z);
+    const far=distance>86||Boolean(avatar.inLobby);
     n.person.g.visible=!far;
     if(far)continue;
-    if(n.pause>0){n.pause-=dt;animateHuman(n.person,0,elapsed);continue;}
-    n.progress+=n.dir*n.speed*dt/Math.abs(n.to-n.from);
-    if(n.progress>1){n.progress=1;n.dir=-1;n.pause=.7+rand()*1.8;}else if(n.progress<0){n.progress=0;n.dir=1;n.pause=.7+rand()*1.8;}
+    if(n.role==="rest"){
+      // A seated local looks toward a nearby visitor.
+      if(distance<5){
+        const target=Math.atan2(avatar.x-n.person.g.position.x,avatar.z-n.person.g.position.z);
+        const rot=n.person.g.rotation.y;
+        n.person.g.rotation.y=rot+Math.atan2(Math.sin(target-rot),Math.cos(target-rot))*Math.min(1,dt*1.5);
+      }else n.person.g.rotation.y=THREE.MathUtils.damp(n.person.g.rotation.y,n.restAt.rotation,1,dt);
+      continue;
+    }
+    if(n.pause>0){
+      n.pause-=dt;
+      animateHuman(n.person,0,elapsed);
+      if(distance<5){
+        // Not a suspicion mechanic yet: simply observe the passerby.
+        const a=Math.atan2(avatar.x-n.person.g.position.x,avatar.z-n.person.g.position.z);
+        const rot=n.person.g.rotation.y;
+        n.person.g.rotation.y=rot+Math.atan2(Math.sin(a-rot),Math.cos(a-rot))*Math.min(1,dt*1.7);
+      }
+      continue;
+    }
+    n.progress+=n.dir*n.speed*dt/Math.max(1,Math.abs(n.to-n.from));
+    if(n.progress>1){n.progress=1;n.dir=-1;n.pause=.8+rand()*4;}
+    else if(n.progress<0){n.progress=0;n.dir=1;n.pause=.8+rand()*4;}
     const pos=n.from+(n.to-n.from)*n.progress;
     n.person.g.position.set(n.vertical?n.fixed:pos,0,n.vertical?pos:n.fixed);
     const direction=(n.to-n.from)*n.dir;
     n.person.g.rotation.y=n.vertical?(direction>0?Math.PI:0):(direction>0?-Math.PI/2:Math.PI/2);
-    animateHuman(n.person,n.speed,elapsed+(n.fixed*.4));
+    animateHuman(n.person,n.speed,elapsed+n.fixed*.4);
   }
   for(const d of doors){if(d.opened>0)d.opened-=dt;d.pivot.rotation.y=THREE.MathUtils.damp(d.pivot.rotation.y,d.opened>0?-1.1:0,7,dt);}
   for(const p of pois){p.dot.position.y=2.2+Math.sin(elapsed*2.1+p.x)*.19;p.ring.rotation.z=elapsed*.15;}
@@ -895,7 +943,7 @@ function update(dt) {
     }
   }
   followCamera(dt);
-  lookForPlaces();
+  if(!avatar.inLobby)lookForPlaces();
   if(elapsed-lastMap>.13){minimap();lastMap=elapsed;}
   detectInteract();
 }
