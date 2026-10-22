@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#111a20">
-<title>MINI CITY · Character Lab 0.3.3</title>
+<title>MINI CITY · Character Lab / Stage 2</title>
 <style>
 :root{color-scheme:dark;--text:#e9eae4;--muted:#adbdc0;--ink:rgba(19,30,38,.83);--mint:#9bbfae;--edge:rgba(233,229,216,.19)}
 *{box-sizing:border-box}
@@ -31,6 +31,34 @@ button.active{background:#afc8b5;color:#1c3436;border-color:#d8e8d8}
 a{color:#e2c3a7}
 @media(max-width:650px){.top{gap:7px}.card{padding:10px 12px;border-radius:13px}.identity{min-width:0;max-width:57%}h1{font-size:16px}.stats{min-width:0;font-size:10px;max-width:43%}p{font-size:10px}.kicker{font-size:9px}.badge{font-size:9px;margin-top:6px}.bottom{gap:7px}button{font-size:11px;padding:10px 13px}.footer{bottom:143px;font-size:10px;max-width:230px}}
 @media(orientation:landscape) and (max-height:520px){.bottom{bottom:max(6px,env(safe-area-inset-bottom));right:max(10px,env(safe-area-inset-right));left:auto;max-width:55%}.footer{bottom:15px;left:15px;max-width:35%;font-size:10px}.top{top:max(5px,env(safe-area-inset-top))}h1{font-size:16px}.card{padding:8px 11px}.badge{display:none}}
+
+/* Stage 2: real-clip animation controls, reachable by thumb on iPhone. */
+.bottom{flex-direction:column;align-items:center;gap:7px;max-width:100%;bottom:max(12px,env(safe-area-inset-bottom))}
+.movement-row{display:flex;justify-content:center;gap:8px;flex-wrap:nowrap;max-width:100%}
+.movement-row button{min-width:80px;touch-action:none;user-select:none;-webkit-user-select:none}
+button:disabled{opacity:.44;cursor:not-allowed}
+#motion-status{color:#b4e0c3;line-height:1.25}
+#speed{color:#d9cfbf}
+.footer{bottom:126px;max-width:min(550px,55vw)}
+#clip-select{max-width:100%;text-overflow:ellipsis}
+@media(max-width:650px){
+ .bottom{gap:5px}
+ .movement-row{gap:5px}
+ .movement-row button{padding:8px 9px;min-width:70px;font-size:10px;min-height:42px}
+ .footer{bottom:126px;left:12px;max-width:45%;font-size:9px}
+ .top{top:max(8px,env(safe-area-inset-top))}
+ .card{padding:8px 10px}
+ .identity{max-width:53%}.stats{max-width:47%}
+ .badge{font-size:8px;padding:2px 6px}
+}
+@media(orientation:landscape) and (max-height:520px){
+ .bottom{left:auto;right:max(9px,env(safe-area-inset-right));bottom:max(6px,env(safe-area-inset-bottom));max-width:43%}
+ .movement-row{gap:4px}
+ .movement-row button{min-width:0;padding:7px 8px;font-size:9px;min-height:40px}
+ .footer{left:12px;bottom:9px;max-width:35%}
+ .top .identity{max-width:38%}.top .stats{max-width:40%}
+}
+
 </style>
 <script type="importmap">
 {"imports":{
@@ -44,8 +72,8 @@ a{color:#e2c3a7}
 <div class="top">
   <div class="card identity">
     <span class="kicker">MINI CITY / ART PIPELINE</span>
-    <h1>Персонаж · Этап 1</h1>
-    <p>Отдельная сцена для оценки <b>настоящей skinned 3D-модели</b>, не всего города.</p>
+    <h1>Персонаж · Этап 2</h1>
+    <p>Проверка <b>реальных анимаций</b> ходьбы, бега, поворотов и плавной остановки.</p>
     <div class="badge">КАНДИДАТ — НЕ ФИНАЛЬНЫЙ ГЕРОЙ</div>
   </div>
   <div class="card stats">
@@ -53,16 +81,23 @@ a{color:#e2c3a7}
     <div id="rig">Скелет: —</div>
     <div id="geometry">Геометрия: —</div>
     <div id="frame">FPS: —</div>
-    <div id="clip">Клипы: —</div><label class="source-choice">Кандидат:<select id="model-source"><option value="casual">Городской (внешний)</option><option value="base">Анатомическая база CC0</option></select></label>
+    <div id="clip">Клипы: —</div><div id="motion-status">Состояние: ожидание</div><div id="speed">Скорость: —</div><label class="source-choice">Кандидат:<select id="model-source"><option value="casual">Городской (внешний)</option><option value="base">Анатомическая база CC0</option></select></label><label class="source-choice">Проверить отдельную анимацию:<select id="clip-select"><option value="">Управление персонажем</option></select></label>
   </div>
 </div>
 <div id="status" role="status">Загрузка настоящего GLB-ассета…</div>
-<div class="footer">Свайп — вращать · щипок — масштаб<br>Городская модель загружается из внешнего открытого источника; если недоступна — включится локальная база.</div>
-<div class="bottom">
-  <button class="active" data-mode="neutral">Модель</button>
-  <button data-mode="rig">Проверить суставы</button>
-  <button id="skeleton">Скелет</button>
-  <button id="reset">Сбросить камеру</button>
+<div class="footer">Свайп по фону — камера; щипок — зум.<br>Ходьба / Бег / Стоп переключают реальные клипы. Стрелки — поворачивают. Если клипа нет, это показано прямо.</div>
+<div class="bottom" aria-label="Управление анимациями">
+  <div class="movement-row">
+    <button data-motion="idle" id="btn-idle" class="active">■ Стоп</button>
+    <button data-motion="walk" id="btn-walk">▶ Ходьба</button>
+    <button data-motion="run" id="btn-run">⏩ Бег</button>
+  </div>
+  <div class="movement-row">
+    <button id="turn-left" class="turn">↶ Поворот</button>
+    <button id="turn-right" class="turn">Поворот ↷</button>
+    <button id="skeleton">Скелет</button>
+    <button id="reset">Вернуться</button>
+  </div>
 </div>
 <script type="module" src="./lab.js"></script>
 </body>
