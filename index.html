@@ -104,16 +104,34 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
   .action{width:43px;height:43px}
 }
 
+
+/* 0.2.1 — no overlapping instructional banners, and compact performance HUD. */
+#toast{
+  top:clamp(110px,26vh,230px);
+  padding:9px 14px;min-width:0;max-width:min(290px,76vw);
+  border-radius:11px;line-height:1.35;font-size:12px;
+  pointer-events:none;z-index:4;
+}
+#rotate{display:none!important}
+.brand small.perf-line{display:block;font-size:9px;line-height:1.5;letter-spacing:.04em;color:#9cdbcc;margin-top:3px}
+@media(orientation:landscape) and (max-height:540px){
+  #toast{top:98px;max-width:36vw;font-size:11px}
+  .brand small.perf-line{font-size:8px}
+}
+@media(orientation:portrait) and (max-width:650px){
+  #toast{top:clamp(145px,25vh,220px);max-width:68vw}
+}
+
 </style>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js"}}</script>
 </head>
 <body>
 <div id="screen"></div>
 <div id="ui" hidden>
-  <div class="topbar"><div class="brand"><b>РАЙОН</b><small>MINI CITY · 0.2 · <span id="fps-counter">— FPS</span></small></div><div id="quest"><div class="kicker">ИССЛЕДУЙ РАЙОН</div><div class="line" id="quest-line">Найдено мест: 0 / 3</div><div class="progress"><div id="quest-fill" class="fill"></div></div></div></div>
+  <div class="topbar"><div class="brand"><b>РАЙОН</b><small>MINI CITY · 0.2.1 · <span id="fps-counter">— FPS</span></small><small class="perf-line" id="perf-info">GPU: —</small></div><div id="quest"><div class="kicker">ИССЛЕДУЙ РАЙОН</div><div class="line" id="quest-line">Найдено мест: 0 / 3</div><div class="progress"><div id="quest-fill" class="fill"></div></div></div></div>
   <div class="rightbar"><canvas id="minimap" width="240" height="240" aria-label="Карта района"></canvas><div class="right-buttons"><button id="btn-time" class="pill">☀️ ДЕНЬ</button><button id="btn-sound" class="pill">♫ ЗВУК: ВКЛ</button></div></div>
   <div id="toast" role="status" aria-live="polite"></div>
-  <div id="rotate">↻ В горизонтальном режиме больше обзор</div>
+  
   <div class="touch" id="joystick" aria-label="Джойстик"><div id="stick"></div></div>
   <div class="actions"><button id="btn-action" class="action" aria-label="Взаимодействие"><span>ДЕЙСТВИЕ</span></button><button id="btn-jump" class="action" aria-label="Прыжок"><span>ПРЫЖОК</span></button><button id="btn-run" class="action" aria-label="Бег"><span>БЕГ</span></button></div>
   <div id="interact-hint"></div>
