@@ -48,3 +48,5 @@ jobs:
         run: node test/interiors.mjs
       - name: Test character rig and materials
         run: node test/remaster.mjs
+      - name: Boot test gameplay interactions
+        run: node test/runtime.mjs
