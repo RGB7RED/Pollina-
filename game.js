@@ -846,6 +846,15 @@ function minimap(){
     if(x<0||x>sz||z<0||z>sz)continue;
     g.fillStyle=p.found?"#8bdfbb":"#ffdd85";g.beginPath();g.arc(x,z,5,0,Math.PI*2);g.fill();
   }
+  // Cyan squares are explorable stairwell entrances. Mint means visited.
+  for(const room of lobbies){
+    const bx=px(room.x),bz=pz(room.z);
+    if(bx<0||bx>sz||bz<0||bz>sz)continue;
+    g.fillStyle=room.visited?"#7ad7ad":"#8ae8fa";
+    g.fillRect(bx-5,bz-5,10,10);
+    g.strokeStyle="#1e4e56";g.lineWidth=1.5;
+    g.strokeRect(bx-5,bz-5,10,10);
+  }
   const x=px(avatar.x),z=pz(avatar.z),a=avatar.angle;
   g.fillStyle="#ffffff";g.beginPath();g.arc(x,z,6,0,Math.PI*2);g.fill();
   g.strokeStyle="#142b3f";g.lineWidth=3;g.beginPath();g.moveTo(x,z);g.lineTo(x-Math.sin(a)*14,z-Math.cos(a)*14);g.stroke();
@@ -984,7 +993,7 @@ $("start").disabled=false;$("start").textContent="НАЧАТЬ ПРОГУЛКУ 
 window.cityReady=true;
 $("start").addEventListener("click",()=>{
   $("welcome").style.display="none";ui.hidden=false;running=true;clock.getDelta();
-  startAudio();notice("Исследуй район. Найди 3 места!",4000);
+  startAudio();notice("Голубые квадраты на карте — входы в подъезды!",4300);
 });
 followCamera(1);
 animate();
