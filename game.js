@@ -15,7 +15,7 @@ renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 host.appendChild(renderer.domElement);
 
-const camera = new THREE.PerspectiveCamera(62, innerWidth / innerHeight, .12, 230);
+const camera = new THREE.PerspectiveCamera(innerWidth<innerHeight?63:59, innerWidth / innerHeight, .12, 260);
 const hemi = new THREE.HemisphereLight(0xe7f3ff, 0x4e5763, 2.2);
 scene.add(hemi);
 const sun = new THREE.DirectionalLight(0xffe2b5, 2.8);
@@ -332,6 +332,7 @@ const player = human(0);
 player.g.position.set(0,0,15);
 scene.add(player.g);
 const avatar = {x:0,y:0,z:15,vy:0,angle:0,inCar:null};
+const smoothVelocity=new THREE.Vector2(0,0);
 function animateHuman(h,velocity,t) {
   const amt=Math.min(1,velocity/4);
   const swing=Math.sin(t*(velocity>4.5?13:9))*amt*.52;
@@ -429,12 +430,47 @@ joystick.addEventListener("pointerdown",e=>{e.preventDefault();if(joy.id!==null)
 joystick.addEventListener("pointermove",e=>{if(joy.id===e.pointerId){e.preventDefault();joyAt(e);}});
 function clearJoy(e){if(joy.id!==e.pointerId)return;joy.id=null;joy.x=joy.y=0;stick.style.left="50%";stick.style.top="50%";}
 joystick.addEventListener("pointerup",clearJoy);joystick.addEventListener("pointercancel",clearJoy);
-let yaw=.43,pitch=.32,zoom=9.4;
-let drag=null;
-renderer.domElement.addEventListener("pointerdown",e=>{if(!running)return;drag={id:e.pointerId,x:e.clientX,y:e.clientY};renderer.domElement.setPointerCapture(e.pointerId);});
-renderer.domElement.addEventListener("pointermove",e=>{if(!drag||drag.id!==e.pointerId)return; const dx=e.clientX-drag.x,dy=e.clientY-drag.y;drag.x=e.clientX;drag.y=e.clientY;yaw-=dx*.006;pitch=THREE.MathUtils.clamp(pitch+dy*.005, .12, 1.12);});
-const clearDrag=e=>{if(drag?.id===e.pointerId)drag=null;};
-renderer.domElement.addEventListener("pointerup",clearDrag);renderer.domElement.addEventListener("pointercancel",clearDrag);
+let yaw=.43,pitch=.26,zoom=innerWidth<innerHeight?12.1:10.5;
+const pointers=new Map();
+let drag=null,pinch=null;
+const surface=renderer.domElement;
+surface.addEventListener("pointerdown",e=>{
+  if(!running)return;
+  e.preventDefault();surface.setPointerCapture(e.pointerId);
+  pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(pointers.size===1)drag={id:e.pointerId,x:e.clientX,y:e.clientY};
+  if(pointers.size===2){
+    const [p,q]=[...pointers.values()];
+    pinch={distance:Math.max(8,Math.hypot(p.x-q.x,p.y-q.y)),zoom};
+    drag=null;
+  }
+});
+surface.addEventListener("pointermove",e=>{
+  if(!pointers.has(e.pointerId))return;
+  e.preventDefault();
+  pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(pointers.size>=2&&pinch){
+    const [p,q]=[...pointers.values()];
+    const d=Math.max(8,Math.hypot(p.x-q.x,p.y-q.y));
+    zoom=THREE.MathUtils.clamp(pinch.zoom*pinch.distance/d,5.6,19);
+    return;
+  }
+  if(drag?.id===e.pointerId){
+    yaw-=(e.clientX-drag.x)*.0055;
+    pitch=THREE.MathUtils.clamp(pitch+(e.clientY-drag.y)*.0045,.11,1.0);
+    drag.x=e.clientX;drag.y=e.clientY;
+  }
+});
+function releaseCameraPointer(e){
+  pointers.delete(e.pointerId);
+  if(pointers.size===1){
+    const [id,p]=[...pointers.entries()][0];drag={id,x:p.x,y:p.y};pinch=null;
+  }else if(pointers.size===0){drag=null;pinch=null;}
+}
+surface.addEventListener("pointerup",releaseCameraPointer);
+surface.addEventListener("pointercancel",releaseCameraPointer);
+surface.addEventListener("lostpointercapture",releaseCameraPointer);
+surface.addEventListener("wheel",e=>{if(!running)return;e.preventDefault();zoom=THREE.MathUtils.clamp(zoom+Math.sign(e.deltaY)*.9,5.6,19);},{passive:false});
 const pressed=new Set();
 window.addEventListener("keydown",e=>{if(["Space","ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.code))e.preventDefault();pressed.add(e.code);if(!e.repeat&&e.code==="Space")jump();if(!e.repeat&&e.code==="KeyE")interact();});
 window.addEventListener("keyup",e=>pressed.delete(e.code));
@@ -508,7 +544,7 @@ function detectInteract(){
 function interact(){
   if(!running||!nearby)return;
   if(nearby.type==="car"){
-    avatar.inCar=nearby.obj;player.g.visible=false;
+    avatar.inCar=nearby.obj;player.g.visible=false;smoothVelocity.set(0,0);
     avatar.x=nearby.obj.x;avatar.z=nearby.obj.z;avatar.y=0;
     notice("🚙 Ты сел в припаркованную машину. Вождение пока недоступно.");
   } else if(nearby.type==="exit"){
@@ -525,29 +561,49 @@ function interact(){
 const raycaster = new THREE.Raycaster(), camTarget=new THREE.Vector3(),camDest=new THREE.Vector3(),rayDir=new THREE.Vector3();
 function followCamera(dt){
   const base=avatar.inCar?avatar.inCar.g.position:player.g.position;
-  camTarget.set(base.x,1.78+(avatar.inCar?.4:0),base.z);
+  camTarget.set(base.x,1.66+(avatar.inCar?.42:0),base.z);
   const c=Math.cos(pitch);
   camDest.set(camTarget.x+Math.sin(yaw)*c*zoom,camTarget.y+Math.sin(pitch)*zoom,camTarget.z+Math.cos(yaw)*c*zoom);
   rayDir.copy(camDest).sub(camTarget);
   const dist=rayDir.length();rayDir.normalize();
   raycaster.set(camTarget,rayDir);raycaster.far=dist;
   const hits=raycaster.intersectObjects(cameraObstacles,false);
-  if(hits.length){const d=Math.max(1.85,hits[0].distance-.6);camDest.copy(camTarget).addScaledVector(rayDir,d);}
+  if(hits.length){const d=Math.max(.85,hits[0].distance-.55);camDest.copy(camTarget).addScaledVector(rayDir,d);}
   camera.position.lerp(camDest,Math.min(1,dt*8));camera.lookAt(camTarget);
 }
 function minimap(){
-  const cv=$("minimap"),g=cv.getContext("2d"),sz=240;
+  const cv=$("minimap"),g=cv.getContext("2d"),sz=240,range=94;
+  const centerX=THREE.MathUtils.clamp(avatar.x,-160+range,160-range);
+  const centerZ=THREE.MathUtils.clamp(avatar.z,-160+range,160-range);
+  const px=x=>(x-centerX+range)/(2*range)*sz;
+  const pz=z=>(z-centerZ+range)/(2*range)*sz;
   g.clearRect(0,0,sz,sz);
-  g.fillStyle="#60765f";g.fillRect(0,0,sz,sz);
-  const px=x=>(x+80)/160*sz,pz=z=>(z+80)/160*sz;
-  g.fillStyle="#414d55";g.fillRect(px(-7),0,px(7)-px(-7),sz);g.fillRect(0,pz(-7),sz,pz(7)-pz(-7));
-  g.fillStyle="#a7b1a7";
-  for(const s of [-1,1]){g.fillRect(px(s*11-2),0,6,sz);g.fillRect(0,pz(s*11-2),sz,6);}
-  for (const c of colliders.slice(0,9)){g.fillStyle="#293b43";g.fillRect(px(c.x1),pz(c.z1),(c.x2-c.x1)/160*sz,(c.z2-c.z1)/160*sz);}
-  for (const p of pois){g.fillStyle=p.found?"#8bdfbb":"#ffdd85";g.beginPath();g.arc(px(p.x),pz(p.z),5,0,Math.PI*2);g.fill();}
-  g.fillStyle="#fff";g.beginPath();g.arc(px(avatar.x),pz(avatar.z),5.5,0,Math.PI*2);g.fill();
-  const a=avatar.angle;g.strokeStyle="#fff";g.lineWidth=2.5;g.beginPath();g.moveTo(px(avatar.x),pz(avatar.z));g.lineTo(px(avatar.x)-Math.sin(a)*13,pz(avatar.z)-Math.cos(a)*13);g.stroke();
+  g.fillStyle="#657961";g.fillRect(0,0,sz,sz);
+  for(const road of [-91,0,91]){
+    g.fillStyle="#414d55";
+    g.fillRect(px(road-7),0,14/(2*range)*sz,sz);
+    g.fillRect(0,pz(road-7),sz,14/(2*range)*sz);
+    g.fillStyle="#a2b0aa";
+    for(const sign of [-1,1]){
+      g.fillRect(px(road+sign*8),0,3,sz);
+      g.fillRect(0,pz(road+sign*8),sz,3);
+    }
+  }
+  g.fillStyle="#293b43";
+  for(const c of colliders){
+    if(c.x2-c.x1<8||c.z2-c.z1<8)continue; // buildings only
+    g.fillRect(px(c.x1),pz(c.z1),(c.x2-c.x1)/(2*range)*sz,(c.z2-c.z1)/(2*range)*sz);
+  }
+  for(const p of pois){
+    const x=px(p.x),z=pz(p.z);
+    if(x<0||x>sz||z<0||z>sz)continue;
+    g.fillStyle=p.found?"#8bdfbb":"#ffdd85";g.beginPath();g.arc(x,z,5,0,Math.PI*2);g.fill();
+  }
+  const x=px(avatar.x),z=pz(avatar.z),a=avatar.angle;
+  g.fillStyle="#ffffff";g.beginPath();g.arc(x,z,6,0,Math.PI*2);g.fill();
+  g.strokeStyle="#142b3f";g.lineWidth=3;g.beginPath();g.moveTo(x,z);g.lineTo(x-Math.sin(a)*14,z-Math.cos(a)*14);g.stroke();
 }
+
 let running=false,elapsed=0,lastMap=0;
 const clock=new THREE.Clock();
 function update(dt) {
@@ -558,24 +614,30 @@ function update(dt) {
   const mag=Math.hypot(mx,my);
   if(mag>1){mx/=mag;my/=mag;}
   const isRunning=(holdRun||pressed.has("ShiftLeft")||pressed.has("ShiftRight"))&&mag>.05;
-  const speed=isRunning?7.5:4.1;
+  const speed=isRunning?7.3:4.15;
   const input=avatar.inCar?0:Math.min(1,mag);
-  const vx=(Math.cos(yaw)*mx + Math.sin(yaw)*my)*speed;
-  const vz=(-Math.sin(yaw)*mx + Math.cos(yaw)*my)*speed;
-  if(input>.04){
+  const desiredX=(Math.cos(yaw)*mx+Math.sin(yaw)*my)*speed*input;
+  const desiredZ=(-Math.sin(yaw)*mx+Math.cos(yaw)*my)*speed*input;
+  const blend=1-Math.exp(-dt*(input>.04?9.4:13.5));
+  smoothVelocity.x+=(desiredX-smoothVelocity.x)*blend;
+  smoothVelocity.y+=(desiredZ-smoothVelocity.y)*blend;
+  if(avatar.inCar)smoothVelocity.set(0,0);
+  const movingSpeed=smoothVelocity.length();
+  if(movingSpeed>.07){
+    const vx=smoothVelocity.x,vz=smoothVelocity.y;
     const nx=avatar.x+vx*dt,nz=avatar.z+vz*dt;
-    if(!blocked(nx,avatar.z))avatar.x=nx;
-    if(!blocked(avatar.x,nz))avatar.z=nz;
+    if(!blocked(nx,avatar.z))avatar.x=nx;else smoothVelocity.x=0;
+    if(!blocked(avatar.x,nz))avatar.z=nz;else smoothVelocity.y=0;
     const targetAngle=Math.atan2(-vx,-vz);
-    avatar.angle+=Math.atan2(Math.sin(targetAngle-avatar.angle),Math.cos(targetAngle-avatar.angle))*Math.min(1,dt*12);
+    avatar.angle+=Math.atan2(Math.sin(targetAngle-avatar.angle),Math.cos(targetAngle-avatar.angle))*Math.min(1,dt*10);
   }
   if(!avatar.inCar){
     avatar.vy-=19*dt;avatar.y+=avatar.vy*dt;
     if(avatar.y<0){avatar.y=0;avatar.vy=0;}
     player.g.position.set(avatar.x,avatar.y,avatar.z);
     player.g.rotation.y=avatar.angle;
-    animateHuman(player,input*speed,elapsed);
-    if(input>.2&&avatar.y===0&&elapsed-stepAt>(isRunning?.24:.39)){footstep();stepAt=elapsed;}
+    animateHuman(player,movingSpeed,elapsed);
+    if(movingSpeed>1&&avatar.y===0&&elapsed-stepAt>(isRunning?.24:.39)){footstep();stepAt=elapsed;}
   }
   for(const n of npcs){
     const far=Math.hypot(n.person.g.position.x-avatar.x,n.person.g.position.z-avatar.z)>90;
@@ -605,9 +667,9 @@ function animate(){
 }
 window.addEventListener("resize",()=>{
   const w=innerWidth,h=innerHeight;
-  camera.aspect=w/h;camera.updateProjectionMatrix();
+  camera.aspect=w/h;camera.fov=w<h?63:59;camera.updateProjectionMatrix();
   renderer.setSize(w,h);
-  renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.5));
+  renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.25));
 });
 renderer.domElement.addEventListener("contextmenu",e=>e.preventDefault());
 $("start").disabled=false;$("start").textContent="НАЧАТЬ ПРОГУЛКУ →";
