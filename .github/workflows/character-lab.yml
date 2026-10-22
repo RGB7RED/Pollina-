@@ -1,7 +1,7 @@
 name: Character Lab Asset Gate
 on:
   push:
-    branches: [feat/mini-city-v033-character-lab]
+    branches: [feat/mini-city-v033-character-lab, feat/mini-city-v033-stage2-motion]
     paths:
       - "character-lab/**"
       - ".github/workflows/character-lab.yml"
@@ -22,3 +22,5 @@ jobs:
         run: node character-lab/test-model.mjs
       - name: Verify lab UI contracts
         run: node character-lab/test-ui.mjs
+      - name: Test authored animation state transitions
+        run: node character-lab/test-motion.mjs
