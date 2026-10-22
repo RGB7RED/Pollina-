@@ -3,6 +3,7 @@ import { buildDistrictBuildings, buildDistrictProps, decorateCentralBlocks, deco
 import { ENTRANCES, FLOOR_HEIGHT, indoorBlocked, indoorFloorHeight, nearIndoorObject, buildInteriors } from "./interiors.js";
 import { createCharacterFactory } from "./characters.js";
 import { createDistrictMaterials } from "./visuals.js";
+import { createArtDirection } from "./art_direction.js";
 
 const $ = (id) => document.getElementById(id);
 const host = $("screen");
@@ -60,10 +61,12 @@ const M = {
   skin: mat(0xf4b896), hair: mat(0x30262b), shoes: mat(0x2b3038),
 };
 const cityStyle=createDistrictMaterials(THREE);
+const art=createArtDirection(THREE,world);
 M.grass=cityStyle.grass;
 M.asphalt=cityStyle.asphalt;
 M.pavement=cityStyle.pavement;
 M.roof=cityStyle.roof;
+M.window=art.darkWindows;
 const geomBox = new THREE.BoxGeometry(1, 1, 1);
 const geomSphere = new THREE.SphereGeometry(1, 9, 7);
 const geomCylinder = new THREE.CylinderGeometry(1, 1, 1, 9);
@@ -259,7 +262,7 @@ function windows(list, material) {
   mesh.instanceMatrix.needsUpdate = true; mesh.computeBoundingSphere(); world.add(mesh);
 }
 windows(darkWindows, M.window);
-windows(litWindows, M.glowing);
+windows(litWindows, art.litWindows);
 
 const grass2 = mat(0x83936c);
 const leafLight = mat(0x87a470);
@@ -485,6 +488,7 @@ function setTime(index){
   timeIndex=index%timeModes.length;
   const t=timeModes[timeIndex];
   scene.background=new THREE.Color(t.sky);scene.fog.color.setHex(t.fog);
+  art.setMood(timeIndex);
   hemi.intensity=t.ambient;sun.intensity=t.sun;sun.color.setHex(t.tint);
   sun.position.set(avatar.x+(timeIndex===2?-25:45),timeIndex===1?35:84,avatar.z+28);
   sun.target.position.set(avatar.x,0,avatar.z);
@@ -527,7 +531,7 @@ joystick.addEventListener("pointerdown",e=>{e.preventDefault();if(joy.id!==null)
 joystick.addEventListener("pointermove",e=>{if(joy.id===e.pointerId){e.preventDefault();joyAt(e);}});
 function clearJoy(e){if(joy.id!==e.pointerId)return;joy.id=null;joy.x=joy.y=0;stick.style.left="50%";stick.style.top="50%";}
 joystick.addEventListener("pointerup",clearJoy);joystick.addEventListener("pointercancel",clearJoy);
-let yaw=.43,pitch=.26,zoom=innerWidth<innerHeight?12.1:10.5;
+let yaw=.43,pitch=.21,zoom=innerWidth<innerHeight?10.3:9.1;
 const pointers=new Map();
 let drag=null,pinch=null;
 const surface=renderer.domElement;
@@ -799,7 +803,9 @@ function followCamera(dt){
     camDest.z=THREE.MathUtils.clamp(camDest.z,-6.1,6.1);
     camDest.y=THREE.MathUtils.clamp(camDest.y,avatar.y+.78,avatar.y+2.35);
   }
-  camera.position.lerp(camDest,Math.min(1,dt*8));camera.lookAt(camTarget);
+  camera.position.lerp(camDest,Math.min(1,dt*(avatar.inLobby?9:5.6)));
+  camera.lookAt(camTarget);
+  art.update(camera);
 }
 function minimap(){
   const cv=$("minimap"),g=cv.getContext("2d"),sz=240,range=94;
