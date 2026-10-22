@@ -136,14 +136,43 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
   .brand small.zone-name{font-size:8px}
 }
 
+
+/* 0.3.1 subdued mobile game design. */
+:root{--ink:#f3f4ee;--gold:#d5ddd6;--glass:rgba(23,32,39,.86);--border:rgba(209,225,223,.19)}
+.brand,#quest,.pill{background:rgba(20,29,36,.83);border:1px solid rgba(218,228,222,.18);
+ box-shadow:0 8px 30px rgba(7,15,19,.19);backdrop-filter:blur(15px)}
+.brand{border-left:3px solid #91aba8}
+#quest .kicker{color:#c3d4cd}
+#quest .fill{background:linear-gradient(90deg,#789b92,#c8d0c4)}
+#entrance-progress{color:#9cc6bf}
+.brand small.zone-name{color:#b8d3cf}
+.pill{font-size:10px;letter-spacing:.02em;white-space:nowrap}
+#btn-quality{border-color:rgba(167,215,199,.4);color:#d8e9e2}
+.action{border-color:rgba(228,239,234,.42);background:rgba(21,33,37,.58)}
+#btn-action.available{background:rgba(34,88,79,.8)}
+#toast{background:rgba(24,38,41,.92);border-color:rgba(202,221,211,.38)}
+#minimap{border-radius:13px;background:rgba(22,35,38,.75)}
+@media (orientation:portrait) and (max-width:650px){
+ .brand{padding:7px 9px}
+ #quest{padding:7px 8px}
+ #minimap{height:76px;width:76px}
+ .right-buttons{gap:4px}
+ .right-buttons .pill{font-size:9px;padding:5px 7px}
+}
+@media (orientation:landscape) and (max-height:540px){
+ #minimap{width:72px;height:72px}
+ .right-buttons{gap:4px}
+ .right-buttons .pill{font-size:8px;padding:4px 8px}
+}
+
 </style>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js"}}</script>
 </head>
 <body>
 <div id="screen"></div>
 <div id="ui" hidden>
-  <div class="topbar"><div class="brand"><b>РАЙОН</b><small>MINI CITY · 0.3 · <span id="fps-counter">— FPS</span></small><small class="perf-line" id="perf-info">GPU: —</small><small id="zone-name" class="zone-name">НА УЛИЦЕ</small></div><div id="quest"><div class="kicker">ИССЛЕДУЙ РАЙОН</div><div class="line" id="quest-line">Найдено мест: 0 / 3</div><div class="progress"><div id="quest-fill" class="fill"></div></div><div id="entrance-progress">Подъезды: 0 / 3</div></div></div>
-  <div class="rightbar"><canvas id="minimap" width="240" height="240" aria-label="Карта района"></canvas><div class="right-buttons"><button id="btn-time" class="pill">☀️ ДЕНЬ</button><button id="btn-sound" class="pill">♫ ЗВУК: ВКЛ</button></div></div>
+  <div class="topbar"><div class="brand"><b>РАЙОН</b><small>MINI CITY · 0.3.1 · <span id="fps-counter">— FPS</span></small><small class="perf-line" id="perf-info">GPU: —</small><small id="zone-name" class="zone-name">НА УЛИЦЕ</small></div><div id="quest"><div class="kicker">ИССЛЕДУЙ РАЙОН</div><div class="line" id="quest-line">Найдено мест: 0 / 3</div><div class="progress"><div id="quest-fill" class="fill"></div></div><div id="entrance-progress">Подъезды: 0 / 3</div></div></div>
+  <div class="rightbar"><canvas id="minimap" width="240" height="240" aria-label="Карта района"></canvas><div class="right-buttons"><button id="btn-time" class="pill">☀️ ДЕНЬ</button><button id="btn-sound" class="pill">♫ ЗВУК: ВКЛ</button><button id="btn-quality" class="pill">⚙ СРЕДНЕЕ</button></div></div>
   <div id="toast" role="status" aria-live="polite"></div>
   
   <div class="touch" id="joystick" aria-label="Джойстик"><div id="stick"></div></div>
@@ -154,10 +183,10 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 <div id="welcome"><div class="intro">
   <div class="badge">ОТКРЫТЫЙ МИР · БРАУЗЕРНАЯ 3D-ИГРА</div>
   <h1>ТВОЙ<br><em>РАЙОН.</em></h1>
-  <p>Прогуляйся по петербургским дворам, зайди в три подъезда, осмотри почтовые ящики и найди интересные места района.</p>
-  <div class="features"><span>ПОДЪЕЗДЫ</span><span>СКАМЕЙКИ</span><span>ЖИТЕЛИ РАЙОНА</span><span>СМЕНА ВРЕМЕНИ СУТОК</span><span>ИССЛЕДОВАНИЕ</span></div>
+  <p>Пасмурный Петербург. Поднимайся по настоящим лестницам, исследуй этажи и дворы спального района. Новые персонажи и графика.</p>
+  <div class="features"><span>МНОГОЭТАЖНЫЕ ПОДЪЕЗДЫ</span><span>НОВЫЙ ПЕРСОНАЖ</span><span>ГРАФИКА 0.3.1</span><span>СМЕНА ВРЕМЕНИ СУТОК</span><span>ИССЛЕДОВАНИЕ</span></div>
   <button id="start" disabled>ЗАГРУЗКА МИРА...</button>
-  <div class="note">Левый стик — ходьба. Подойди к голубой метке подъезда или к скамейке и нажми «Действие».</div>
+  <div class="note">Левый стик — ходьба, свайп — камера. Найди голубой вход и поднимись по лестнице. Качество переключается кнопкой ⚙.</div>
   <div id="fatal"></div>
 </div></div>
 <script>window.addEventListener("error",function(e){if(!window.cityReady){document.getElementById("fatal").textContent="Не удалось загрузить игру. Проверь соединение с интернетом и обнови страницу.";}});window.addEventListener("unhandledrejection",function(){if(!window.cityReady){document.getElementById("fatal").textContent="Ошибка загрузки игрового движка. Попробуй обновить страницу.";}});</script>
