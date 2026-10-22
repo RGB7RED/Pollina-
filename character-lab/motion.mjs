@@ -98,8 +98,14 @@ export class MotionController {
       this.active?.fadeOut?.(.22);
       this.active=null;
       this.activeClip=null;
+      // An unanimated fallback must never slide around in a T-pose.
+      if(mode!=="idle"){
+        this.mode="idle";
+        this.speed=0;
+        this.actualMode="idle";
+      }
     }
-    this.phase=mode==="idle"?"stop":"starting";
+    this.phase=this.mode==="idle"?"stop":"starting";
     return {requested:mode,played:this.actualMode,clip:selected?.name||null,status:this.status};
   }
   playNamedClip(name) {
