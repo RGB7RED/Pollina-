@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111a20">
+<title>MINI CITY · Character Lab 0.3.3</title>
+<style>
+:root{color-scheme:dark;--text:#e9eae4;--muted:#adbdc0;--ink:rgba(19,30,38,.83);--mint:#9bbfae;--edge:rgba(233,229,216,.19)}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#a5b2b3;color:var(--text);font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+#viewport{position:fixed;inset:0;touch-action:none}
+#viewport canvas{display:block;width:100%;height:100%;outline:none;touch-action:none}
+.top{position:fixed;top:max(16px,env(safe-area-inset-top));left:max(15px,env(safe-area-inset-left));right:max(15px,env(safe-area-inset-right));display:flex;justify-content:space-between;gap:10px;align-items:flex-start;pointer-events:none}
+.card{background:var(--ink);border:1px solid var(--edge);backdrop-filter:blur(13px);border-radius:16px;padding:15px 17px;box-shadow:0 16px 46px #09161e2a}
+.identity{min-width:184px}
+.kicker{font-size:10px;text-transform:uppercase;letter-spacing:.16em;font-weight:800;color:var(--mint)}
+h1{margin:5px 0 5px;font-size:19px;letter-spacing:.045em;line-height:1.2}
+p{margin:0;color:var(--muted);font-size:12px}
+.badge{margin-top:9px;display:inline-block;border:1px solid #e1bca37a;color:#f1c9ae;border-radius:99px;padding:3px 8px;font-size:10px;font-weight:700}
+.stats{font-size:11px;min-width:155px;color:#e9eeea}
+.stats div{margin-bottom:5px}.stats strong{color:#b9d4c2}
+.source-choice{display:block;font-size:10px;color:#b9d4c2;pointer-events:auto}
+select{margin-top:5px;width:100%;padding:6px 5px;background:#31474e;color:#f2eee4;border:1px solid #adc7bb70;border-radius:8px;font-size:10px;outline:none;pointer-events:auto}
+.bottom{position:fixed;left:max(16px,env(safe-area-inset-left));right:max(16px,env(safe-area-inset-right));bottom:max(17px,env(safe-area-inset-bottom));display:flex;gap:10px;justify-content:center;flex-wrap:wrap;pointer-events:none}
+button{pointer-events:auto;border:1px solid #d4ded08c;background:rgba(28,46,54,.86);color:#edf0e8;padding:12px 16px;border-radius:12px;font-size:13px;font-weight:750;min-height:44px;box-shadow:0 8px 24px #16212a38;cursor:pointer}
+button.active{background:#afc8b5;color:#1c3436;border-color:#d8e8d8}
+#status{position:fixed;top:49%;left:50%;transform:translate(-50%,-50%);background:rgba(22,36,42,.92);border:1px solid #c6d0c96d;border-radius:18px;padding:17px 25px;text-align:center;color:#f4f2eb;max-width:85vw;font-size:14px}
+#status[hidden]{display:none}
+.footer{position:fixed;left:20px;bottom:86px;color:#203941;text-shadow:0 1px 2px #ffffff60;font-size:12px;pointer-events:none;max-width:320px;font-weight:600}
+a{color:#e2c3a7}
+@media(max-width:650px){.top{gap:7px}.card{padding:10px 12px;border-radius:13px}.identity{min-width:0;max-width:57%}h1{font-size:16px}.stats{min-width:0;font-size:10px;max-width:43%}p{font-size:10px}.kicker{font-size:9px}.badge{font-size:9px;margin-top:6px}.bottom{gap:7px}button{font-size:11px;padding:10px 13px}.footer{bottom:143px;font-size:10px;max-width:230px}}
+@media(orientation:landscape) and (max-height:520px){.bottom{bottom:max(6px,env(safe-area-inset-bottom));right:max(10px,env(safe-area-inset-right));left:auto;max-width:55%}.footer{bottom:15px;left:15px;max-width:35%;font-size:10px}.top{top:max(5px,env(safe-area-inset-top))}h1{font-size:16px}.card{padding:8px 11px}.badge{display:none}}
+</style>
+<script type="importmap">
+{"imports":{
+  "three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+  "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+}}
+</script>
+</head>
+<body>
+<main id="viewport" aria-label="Интерактивный 3D-просмотр персонажа"></main>
+<div class="top">
+  <div class="card identity">
+    <span class="kicker">MINI CITY / ART PIPELINE</span>
+    <h1>Персонаж · Этап 1</h1>
+    <p>Отдельная сцена для оценки <b>настоящей skinned 3D-модели</b>, не всего города.</p>
+    <div class="badge">КАНДИДАТ — НЕ ФИНАЛЬНЫЙ ГЕРОЙ</div>
+  </div>
+  <div class="card stats">
+    <div><strong id="state">Загрузка ассета...</strong></div>
+    <div id="rig">Скелет: —</div>
+    <div id="geometry">Геометрия: —</div>
+    <div id="frame">FPS: —</div>
+    <div id="clip">Клипы: —</div><label class="source-choice">Кандидат:<select id="model-source"><option value="casual">Городской (внешний)</option><option value="base">Анатомическая база CC0</option></select></label>
+  </div>
+</div>
+<div id="status" role="status">Загрузка настоящего GLB-ассета…</div>
+<div class="footer">Свайп — вращать · щипок — масштаб<br>Городская модель загружается из внешнего открытого источника; если недоступна — включится локальная база.</div>
+<div class="bottom">
+  <button class="active" data-mode="neutral">Модель</button>
+  <button data-mode="rig">Проверить суставы</button>
+  <button id="skeleton">Скелет</button>
+  <button id="reset">Сбросить камеру</button>
+</div>
+<script type="module" src="./lab.js"></script>
+</body>
+</html>
