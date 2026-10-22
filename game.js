@@ -619,12 +619,12 @@ function standUp(){
   notice("Встал со скамейки",1400);
 }
 function jump(){
-  if(!running||avatar.inCar)return;
+  if(!running||avatar.inCar||avatar.inLobby)return;
   if(avatar.sitting){standUp();return;}
   if(avatar.y<=.015)avatar.vy=8.2;
 }
 function blocked(x,z){
-  if(avatar.inLobby)return indoorBlocked(x-avatar.inLobby.centerX,z);
+  if(avatar.inLobby)return indoorBlocked(x-avatar.inLobby.centerX,z,avatar.y);
   if(Math.abs(x)>153||Math.abs(z)>153)return true;
   const r=.49;
   for(const c of colliders){
@@ -638,25 +638,25 @@ function enterLobby(room){
   for(const r of lobbies)r.root.visible=r===room;
   world.visible=false;
   for(const n of npcs)n.person.g.visible=false;
-  avatar.inLobby=room;
+  avatar.inLobby=room;avatar.lastFloor=1;
   avatar.x=room.centerX;avatar.z=4.25;avatar.y=0;avatar.vy=0;
   avatar.angle=0;
   smoothVelocity.set(0,0);
   player.g.position.set(avatar.x,0,avatar.z);
-  yaw=0;pitch=.25;zoom=6.9;
-  setZoneLabel(room.name.toUpperCase());
+  yaw=0;pitch=.25;zoom=6.2;
+  setZoneLabel(room.name.toUpperCase()+" · 1/"+room.floors+" ЭТАЖ");
   if(!room.visited){
     room.visited=true;
     updateEntranceProgress();
     try{localStorage.setItem(visitStorageKey,JSON.stringify(lobbies.filter(r=>r.visited).map(r=>r.id)))}catch(_){}
-    notice("🚪 "+room.name+" исследован! Осмотри почтовые ящики.",3500);
-  }else notice("🚪 "+room.name+" — первый этаж",2500);
+    notice("🚪 "+room.name+" — поднимись по лестнице и осмотри этажи.",3500);
+  }else notice("🚪 "+room.name+" — "+room.floors+" этажа(ей)",2500);
   followCamera(1);
 }
 function exitLobby(){
   if(!avatar.inLobby)return;
   const room=avatar.inLobby;
-  avatar.inLobby=null;
+  avatar.inLobby=null;avatar.lastFloor=null;
   room.root.visible=false;
   world.visible=true;
   avatar.x=room.x;avatar.z=room.z-.6;avatar.y=0;avatar.vy=0;
@@ -674,7 +674,7 @@ function exitLobby(){
 function detectInteract(){
   nearby=null;
   if(avatar.inLobby){
-    const r=nearIndoorObject(avatar.x-avatar.inLobby.centerX,avatar.z);
+    const r=nearIndoorObject(avatar.x-avatar.inLobby.centerX,avatar.z,avatar.y,avatar.inLobby.floors);
     if(r)nearby=r;
   }else if(avatar.inCar){
     nearby={type:"exit-car",title:"Выйти из машины"};
@@ -693,6 +693,8 @@ function detectInteract(){
       if(distance<3.45)available.push({type:"car",obj:c,title:"Сесть в машину",distance});
     }
     for(const b of benches){
+      // Do not place the player on top of a resident using the same bench.
+      if(benchResidents.some(n=>Math.hypot(n.x-b.x,n.z-b.z)<.6))continue;
       const distance=Math.hypot(b.x-avatar.x,b.z-avatar.z);
       if(distance<2.45)available.push({type:"sit",obj:b,title:"Сесть на скамейку",distance});
     }
@@ -712,6 +714,7 @@ function interact(){
     case "entrance":enterLobby(nearby.obj);break;
     case "lobby-exit":exitLobby();break;
     case "mailboxes":notice("📬 Почтовые ящики. Пока здесь ничего нет.",3000);break;
+    case "apartment":notice("🔒 Пока квартиры закрыты.",1900);break;
     case "sit":{
       const seat=nearby.obj;
       avatar.sitting=seat;
@@ -747,7 +750,7 @@ function interact(){
 const raycaster = new THREE.Raycaster(), camTarget=new THREE.Vector3(),camDest=new THREE.Vector3(),rayDir=new THREE.Vector3();
 function followCamera(dt){
   const base=avatar.inCar?avatar.inCar.g.position:player.g.position;
-  camTarget.set(base.x,1.66+(avatar.inCar?.42:0),base.z);
+  camTarget.set(base.x,base.y+1.65+(avatar.inCar?.42:0),base.z);
   const c=Math.cos(pitch);
   camDest.set(camTarget.x+Math.sin(yaw)*c*zoom,camTarget.y+Math.sin(pitch)*zoom,camTarget.z+Math.cos(yaw)*c*zoom);
   rayDir.copy(camDest).sub(camTarget);
@@ -760,7 +763,7 @@ function followCamera(dt){
     const x=avatar.inLobby.centerX;
     camDest.x=THREE.MathUtils.clamp(camDest.x,x-5.25,x+5.25);
     camDest.z=THREE.MathUtils.clamp(camDest.z,-6.1,6.1);
-    camDest.y=THREE.MathUtils.clamp(camDest.y,1.25,3.58);
+    camDest.y=THREE.MathUtils.clamp(camDest.y,avatar.y+.78,avatar.y+2.35);
   }
   camera.position.lerp(camDest,Math.min(1,dt*8));camera.lookAt(camTarget);
 }
@@ -774,6 +777,9 @@ function minimap(){
     g.fillStyle="#65757b";g.fillRect(22,18,196,16);g.fillRect(22,18,15,204);
     g.fillRect(203,18,15,204);g.fillRect(22,206,196,16);
     g.fillStyle="#77878d";g.fillRect(42,39,64,72);
+    g.strokeStyle="#617681";g.lineWidth=7;
+    g.beginPath();g.moveTo(48,190);g.lineTo(48,56);
+    g.lineTo(101,56);g.lineTo(101,190);g.stroke();
     g.fillStyle="#d9be80";g.fillRect(173,97,23,60);
     g.fillStyle="#76d4a9";g.fillRect(100,205,40,7);
     g.fillStyle="#fff";g.beginPath();
@@ -861,8 +867,22 @@ function update(dt) {
     avatar.angle+=Math.atan2(Math.sin(targetAngle-avatar.angle),Math.cos(targetAngle-avatar.angle))*Math.min(1,dt*10);
   }
   if(!avatar.inCar){
-    avatar.vy-=19*dt;avatar.y+=avatar.vy*dt;
-    if(avatar.y<0){avatar.y=0;avatar.vy=0;}
+    if(avatar.inLobby){
+      // On the steps, elevation is a continuous function of walking position.
+      // Never jump between floors: interpolation follows the physical stair slope.
+      avatar.vy=0;
+      const relativeX=avatar.x-avatar.inLobby.centerX;
+      const target=indoorFloorHeight(relativeX,avatar.z,avatar.y,avatar.inLobby.floors);
+      avatar.y+=THREE.MathUtils.clamp(target-avatar.y,-dt*3.2,dt*3.2);
+      const level=Math.max(1,Math.min(avatar.inLobby.floors,Math.round(avatar.y/FLOOR_HEIGHT)+1));
+      if(avatar.lastFloor!==level){
+        avatar.lastFloor=level;
+        setZoneLabel(avatar.inLobby.name.toUpperCase()+" · "+level+"/"+avatar.inLobby.floors+" ЭТАЖ");
+      }
+    }else{
+      avatar.vy-=19*dt;avatar.y+=avatar.vy*dt;
+      if(avatar.y<0){avatar.y=0;avatar.vy=0;}
+    }
     player.g.position.set(avatar.x,avatar.y-(avatar.sitting?.16*player.sitBlend:0),avatar.z);
     player.g.rotation.y=avatar.angle;
     animateHuman(player,movingSpeed,elapsed,Boolean(avatar.sitting),dt);
