@@ -31,3 +31,5 @@ jobs:
         run: node --check district.js
       - name: Run static smoke test
         run: node test/smoke.mjs
+      - name: Test performance contracts
+        run: node test/performance.mjs
