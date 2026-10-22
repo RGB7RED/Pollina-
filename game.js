@@ -522,8 +522,8 @@ function update(dt) {
   const isRunning=(holdRun||pressed.has("ShiftLeft")||pressed.has("ShiftRight"))&&mag>.05;
   const speed=isRunning?7.5:4.1;
   const input=avatar.inCar?0:Math.min(1,mag);
-  const vx=(Math.cos(yaw)*mx + Math.sin(yaw)*my)*speed*input;
-  const vz=(-Math.sin(yaw)*mx + Math.cos(yaw)*my)*speed*input;
+  const vx=(Math.cos(yaw)*mx + Math.sin(yaw)*my)*speed;
+  const vz=(-Math.sin(yaw)*mx + Math.cos(yaw)*my)*speed;
   if(input>.04){
     const nx=avatar.x+vx*dt,nz=avatar.z+vz*dt;
     if(!blocked(nx,avatar.z))avatar.x=nx;
