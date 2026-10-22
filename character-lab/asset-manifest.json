@@ -1,0 +1,35 @@
+{
+  "stage": "0.3.3 / character / isolated acceptance lab",
+  "localCandidate": {
+    "path": "assets/hero-reference.glb",
+    "assetName": "Superhero Male (anatomical base)",
+    "creator": "Quaternius",
+    "origin": "Universal Base Characters [Standard], CC0",
+    "license": "CC0-1.0",
+    "licenseFile": "assets/QUATERNIUS-LICENSE.txt",
+    "upstreamArchive": "https://quaternius.com/packs/universalbasecharacters.html",
+    "intermediateRepository": "https://github.com/programasweights/avatar",
+    "intermediatePath": "public/assets/character.glb",
+    "sourceBlobSha": "b3fd79533fdb9fcedd077744f7e120920eb6cc97",
+    "sizeBytes": 741320,
+    "glTF": "2.0",
+    "skeletonJoints": 65,
+    "vertices": 8483,
+    "meshes": 3,
+    "authoredAnimationClips": 0,
+    "isFinalHero": false,
+    "gaps": [
+      "not a clothed city hero",
+      "no authored animation clips",
+      "no chosen art direction"
+    ]
+  },
+  "optionalExternalComparison": {
+    "name": "Casual Character (external preview; not bundled)",
+    "pinnedMirror": "https://raw.githubusercontent.com/QennNg/ar-model-viewer-test/e984c1906f41f35723f2b48f482ade37c3b71d57/CasualCharacter.glb",
+    "observedOriginCandidate": "Quaternius Casual Character, 2022",
+    "upstreamLicenseEvidence": "https://poly.pizza/m/kZ3DmIoGip",
+    "note": "External mirror bytes have not been independently checked against upstream CC0 source; do not ship or merge into game as a licensed asset without verification. Preview only.",
+    "fallback": "assets/hero-reference.glb"
+  }
+}
