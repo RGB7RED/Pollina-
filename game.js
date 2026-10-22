@@ -268,16 +268,31 @@ const grass2 = mat(0x83936c);
 const leafLight = mat(0x87a470);
 const treeGroups=[];
 const streetProps=[];
+const leafGeometry=new THREE.IcosahedronGeometry(1,1);
+const leafyColors=[mat(0x607b72),mat(0x879283),mat(0x768a78),mat(0x688377)];
 function tree(x,z,type=0){
   const g=new THREE.Group();g.position.set(x,0,z);world.add(g);
-  const height=3.7+rand()*2;
-  cyl(.19,.22,height,M.trunk,0,height/2,0,g);
-  const green=M.leaf[type%M.leaf.length];
-  const a=orb(1.35,green,0,height+.45,0,g);
-  const b=orb(1.15,green,.67,height+.18,.2,g);
-  const c=orb(1.05,type%3===0?leafLight:green,-.5,height+.72,-.4,g);
-  // Avoid expensive foliage shadow-map casters on mobile; trunks remain.
-  a.castShadow=b.castShadow=c.castShadow=false;
+  const h=3.9+rand()*1.7;
+  // Branching trunks and asymmetrical leafy shapes instead of toy lollipop trees.
+  cyl(.145,.19,h,M.trunk,0,h/2,0,g);
+  const branch=mat(0x5c6259);
+  for(const side of [-1,1]){
+    const stick=cyl(.072,.07,1.4,branch,side*.49,h-.12,0,g);
+    stick.rotation.z=-side*.7;
+  }
+  for(const [i,dx,dy,dz,sx,sy,sz] of [
+    [0,-.62,.44,0,1.20,1.03,1.12],
+    [1,.62,.30,.25,1.1,1.02,.96],
+    [2,0,1.04,-.17,1.08,1.21,1.05],
+    [3,-.09,-.10,.42,.96,.85,1.02]
+  ]){
+    const crown=new THREE.Mesh(leafGeometry,leafyColors[(type+i)%leafyColors.length]);
+    crown.position.set(dx,h+dy,dz);
+    crown.scale.set(sx,sy,sz);
+    crown.rotation.y=(type+i)*.8;
+    crown.castShadow=false;
+    g.add(crown);
+  }
   treeGroups.push({g,x,z});
 }
 
