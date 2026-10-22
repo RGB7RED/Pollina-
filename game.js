@@ -57,6 +57,29 @@ function box(w, h, d, material, x = 0, y = 0, z = 0, parent = world, solid = fal
   if (solid) { colliders.push({ x1: x - w / 2, x2: x + w / 2, z1: z - d / 2, z2: z + d / 2 }); cameraObstacles.push(mesh); }
   return mesh;
 }
+// Merge static facade details into InstancedMesh batches (few draw calls on iPhone).
+const decoBatches=new Map();
+const decorDummy=new THREE.Object3D();
+function decorationBox(w,h,d,material,x=0,y=0,z=0,parent=world){
+  if(parent!==world)return box(w,h,d,material,x,y,z,parent,false);
+  decorDummy.position.set(x,y,z);decorDummy.rotation.set(0,0,0);
+  decorDummy.scale.set(w,h,d);decorDummy.updateMatrix();
+  if(!decoBatches.has(material))decoBatches.set(material,[]);
+  decoBatches.get(material).push(decorDummy.matrix.clone());
+  return null;
+}
+function flushDecorationBoxes(){
+  for(const [material,list] of decoBatches){
+    if(!list.length)continue;
+    const mesh=new THREE.InstancedMesh(geomBox,material,list.length);
+    for(let i=0;i<list.length;i++)mesh.setMatrixAt(i,list[i]);
+    mesh.instanceMatrix.needsUpdate=true;
+    mesh.frustumCulled=false;mesh.castShadow=false;mesh.receiveShadow=true;
+    world.add(mesh);
+  }
+  decoBatches.clear();
+}
+
 function cyl(rt, rb, height, material, x, y, z, parent = world) {
   const mesh = new THREE.Mesh(geomCylinder, material);
   mesh.scale.set(rt, height, rb); // used for circular poles with equal radii
@@ -185,8 +208,8 @@ building(59, -33, 17, 17, 4, 2);
 building(34, 37, 18, 22, 5, 5);
 building(60, 37, 18, 22, 3, 1);
 building(50, 68, 18, 11, 3, 0);
-decorateCentralBlocks({box,mat});
-const additionalBuildings=buildDistrictBuildings({building,box,flat,mat,world,walls});
+decorateCentralBlocks({box:decorationBox,mat});
+const additionalBuildings=buildDistrictBuildings({building,box:decorationBox,flat,mat,world,walls});
 function windows(list, material) {
   const mesh = new THREE.InstancedMesh(geomBox, material, list.length);
   list.forEach((matrix, i) => mesh.setMatrixAt(i, matrix));
@@ -291,7 +314,8 @@ car(-5.3,58,carColors[4],0);
 car(5.2,-53,carColors[1],0);
 car(28,5.1,carColors[3],Math.PI/2);
 car(-41,-5.1,carColors[1],Math.PI/2);
-buildDistrictProps({tree,bench,lamp,car,roadSign,box,flat,mat});
+buildDistrictProps({tree,bench,lamp,car,roadSign,box:decorationBox,flat,mat});
+flushDecorationBoxes();
 
 function human(palette = 0) {
   // Low-poly block character with proportionate head and articulated limbs.
