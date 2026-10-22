@@ -925,7 +925,8 @@ function update(dt) {
   }
   for(const n of npcs){
     const distance=Math.hypot(n.person.g.position.x-avatar.x,n.person.g.position.z-avatar.z);
-    const far=distance>86||Boolean(avatar.inLobby);
+    const npcRange=[43,67,86][qualityIndex];
+    const far=distance>npcRange||Boolean(avatar.inLobby);
     n.person.g.visible=!far;
     if(far)continue;
     if(n.role==="rest"){
