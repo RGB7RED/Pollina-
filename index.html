@@ -165,13 +165,42 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
  .right-buttons .pill{font-size:8px;padding:4px 8px}
 }
 
+
+/* 0.3.2 — lighter filmic mobile heads-up display. Retain comfortable hitboxes. */
+:root{
+ --ink:#f2f2e9;--muted:#abbdb8;--gold:#f0c5a4;
+ --glass:rgba(18,32,38,.78);--border:rgba(235,235,219,.18);
+}
+.brand,#quest{background:linear-gradient(135deg,rgba(24,43,49,.82),rgba(18,32,39,.72));box-shadow:0 5px 25px #12202b28;border-radius:11px}
+.brand{border-left:2px solid #d6baa3}
+.brand b{font-weight:850;letter-spacing:.15em}
+.brand small.zone-name{color:#e2bea6}
+#quest .kicker{color:#e7d1bc;letter-spacing:.13em}
+#quest .progress{background:rgba(226,237,228,.14)}
+#quest .fill{background:linear-gradient(90deg,#b3cbc5,#e9bda2)}
+#entrance-progress{color:#afccc4}
+#minimap{border:1px solid #e2d6c94f;box-shadow:0 5px 25px #131d2650}
+.right-buttons .pill{background:rgba(20,33,41,.72);border:1px solid #d7cbbc4b;font-weight:700}
+#btn-quality{color:#f0cfb8}
+#joystick{background:radial-gradient(circle,#84969624,#172a3360);border-color:#ebede58a;box-shadow:0 6px 20px #0002}
+#stick{background:linear-gradient(140deg,#e2e0d3d9,#849b9cbd)}
+.action{border:1.2px solid #e6ebe1aa;background:linear-gradient(140deg,#263c46c9,#172d38b8)}
+.action.available{background:linear-gradient(145deg,#527871da,#244b4aca)}
+#toast{border:1px solid #d7b59f80;background:#243e47ef}
+.intro{background:linear-gradient(130deg,#26353dea,#172b34e8);border:1px solid #d4d1bb44}
+.intro h1 em{color:#e9b9a1}
+.intro .badge{color:#e5bea5;border-color:#c4a28d}
+#start{background:linear-gradient(110deg,#e9b7a2,#e8cbb2)}
+@media(orientation:landscape) and (max-height:540px){
+  .brand{padding:7px 10px}#quest{padding:7px 9px}
+}
 </style>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js"}}</script>
 </head>
 <body>
 <div id="screen"></div>
 <div id="ui" hidden>
-  <div class="topbar"><div class="brand"><b>РАЙОН</b><small>MINI CITY · 0.3.1 · <span id="fps-counter">— FPS</span></small><small class="perf-line" id="perf-info">GPU: —</small><small id="zone-name" class="zone-name">НА УЛИЦЕ</small></div><div id="quest"><div class="kicker">ИССЛЕДУЙ РАЙОН</div><div class="line" id="quest-line">Найдено мест: 0 / 3</div><div class="progress"><div id="quest-fill" class="fill"></div></div><div id="entrance-progress">Подъезды: 0 / 3</div></div></div>
+  <div class="topbar"><div class="brand"><b>РАЙОН</b><small>MINI CITY · 0.3.2 · <span id="fps-counter">— FPS</span></small><small class="perf-line" id="perf-info">GPU: —</small><small id="zone-name" class="zone-name">НА УЛИЦЕ</small></div><div id="quest"><div class="kicker">ИССЛЕДУЙ РАЙОН</div><div class="line" id="quest-line">Найдено мест: 0 / 3</div><div class="progress"><div id="quest-fill" class="fill"></div></div><div id="entrance-progress">Подъезды: 0 / 3</div></div></div>
   <div class="rightbar"><canvas id="minimap" width="240" height="240" aria-label="Карта района"></canvas><div class="right-buttons"><button id="btn-time" class="pill">☀️ ДЕНЬ</button><button id="btn-sound" class="pill">♫ ЗВУК: ВКЛ</button><button id="btn-quality" class="pill">⚙ СРЕДНЕЕ</button></div></div>
   <div id="toast" role="status" aria-live="polite"></div>
   
@@ -183,8 +212,8 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 <div id="welcome"><div class="intro">
   <div class="badge">ОТКРЫТЫЙ МИР · БРАУЗЕРНАЯ 3D-ИГРА</div>
   <h1>ТВОЙ<br><em>РАЙОН.</em></h1>
-  <p>Пасмурный Петербург. Поднимайся по настоящим лестницам, исследуй этажи и дворы спального района. Новые персонажи и графика.</p>
-  <div class="features"><span>МНОГОЭТАЖНЫЕ ПОДЪЕЗДЫ</span><span>НОВЫЙ ПЕРСОНАЖ</span><span>ГРАФИКА 0.3.1</span><span>СМЕНА ВРЕМЕНИ СУТОК</span><span>ИССЛЕДОВАНИЕ</span></div>
+  <p>Холодный город, мягкие рисованные облака и вечерние огни. Исследуй дворы и подъезды в новом художественном стиле.</p>
+  <div class="features"><span>МНОГОЭТАЖНЫЕ ПОДЪЕЗДЫ</span><span>НОВЫЙ ПЕРСОНАЖ</span><span>GRAPHIC REWORK</span><span>СМЕНА ВРЕМЕНИ СУТОК</span><span>ИССЛЕДОВАНИЕ</span></div>
   <button id="start" disabled>ЗАГРУЗКА МИРА...</button>
   <div class="note">Левый стик — ходьба, свайп — камера. Найди голубой вход и поднимись по лестнице. Качество переключается кнопкой ⚙.</div>
   <div id="fatal"></div>
