@@ -102,54 +102,97 @@ function showStatus(message,failed=false){
   $("state").textContent=failed?"Ошибка ассета":"Загрузка модели";
 }
 const loader=new GLTFLoader();
-loader.load("./assets/hero-reference.glb",gltf=>{
-  try{
-    model=gltf.scene;
-    fitCharacter(model);
-    root.add(model);
-    const names=new Set();let triangleCount=0,skinCount=0;
-    model.traverse(o=>{
-      if(o.isMesh||o.isSkinnedMesh){
-        o.castShadow=true;o.receiveShadow=true;
-        if(o.isSkinnedMesh)skinCount++;
-        if(o.geometry){
-          const idx=o.geometry.index;
-          const count=idx?idx.count:o.geometry.attributes.position?.count||0;
-          triangleCount+=Math.round(count/3);
-        }
-        // Keep the CC0 model's own skin/material setup untouched.
-        const mats=Array.isArray(o.material)?o.material:[o.material];
-        for(const m of mats)if(m?.name)names.add(m.name);
-      }
-      if(o.isBone){bones.push(o);original.set(o.uuid,o.quaternion.clone());}
-    });
-    if(!bones.length||!skinCount)throw new Error("Скелетная модель не обнаружена.");
-    skeletonHelper=new THREE.SkeletonHelper(model);
-    skeletonHelper.visible=false;
-    root.add(skeletonHelper);
-    $("state").textContent="3D-модель загружена";
-    $("rig").textContent="Скелет: "+bones.length+" костей · "+skinCount+" skinned meshes";
-    $("geometry").textContent="Геометрия: ~"+triangleCount.toLocaleString("ru")+" треугольников";
-    $("clip").textContent="Встроенные клипы: "+(gltf.animations?.length||0);
-    // Preserve actual animation clips if the candidate is later replaced.
-    if(gltf.animations?.length){mixer=new THREE.AnimationMixer(model);}
-    $("status").hidden=true;
-    isLoaded=true;
-  }catch(error){
-    console.error("Character validation failed",error);
-    showStatus("Проблема с моделью: "+error.message,true);
+const sources={
+  casual:{
+    // An EXTERNAL preview candidate only, not a bundled production dependency.
+    // Quaternius's 2022 Casual Character is CC0 on Poly Pizza, but this mirror
+    // has NOT been independently byte-audited against that official asset.
+    url:"https://raw.githubusercontent.com/QennNg/ar-model-viewer-test/e984c1906f41f35723f2b48f482ade37c3b71d57/CasualCharacter.glb",
+    name:"Городской персонаж · внешний кандидат"
+  },
+  base:{
+    url:"./assets/hero-reference.glb",
+    name:"Локальная анатомическая база · CC0"
   }
-},event=>{
-  if(event.total>0){$("status").textContent="Загрузка GLB: "+Math.round(event.loaded/event.total*100)+"%";}
-},error=>{
-  console.error("Cannot load hero-reference.glb",error);
-  showStatus("Не удалось загрузить GLB. Проверь интернет и перезагрузи страницу.",true);
-});
-
+};
+let requestId=0,clips=[],idleAction=null,walkAction=null;
+function switchClip(){
+  if(!mixer)return;
+  mixer.stopAllAction();
+  if(mode==="rig"&&walkAction)walkAction.reset().fadeIn(.17).play();
+  else if(idleAction)idleAction.reset().fadeIn(.17).play();
+}
+function loadSource(source,canFallback=true){
+  const sample=sources[source];
+  if(!sample)return;
+  const ticket=++requestId;
+  isLoaded=false;showStatus("Загрузка: "+sample.name);
+  loader.load(sample.url,gltf=>{
+    if(ticket!==requestId)return;
+    try{
+      // Dispose the previous preview, never mutate the open-world game.
+      if(skeletonHelper){root.remove(skeletonHelper);skeletonHelper=null;}
+      if(model)root.remove(model);
+      model=gltf.scene;
+      fitCharacter(model);
+      root.add(model);
+      bones=[];original.clear();
+      let triangleCount=0,skinCount=0;
+      model.traverse(o=>{
+        if(o.isMesh||o.isSkinnedMesh){
+          o.castShadow=true;o.receiveShadow=true;
+          if(o.isSkinnedMesh)skinCount++;
+          if(o.geometry){
+            const idx=o.geometry.index;
+            triangleCount+=Math.round((idx?idx.count:o.geometry.attributes.position?.count||0)/3);
+          }
+        }
+        if(o.isBone){bones.push(o);original.set(o.uuid,o.quaternion.clone());}
+      });
+      if(!bones.length||!skinCount)throw new Error("Нет настоящего skinned humanoid rig.");
+      skeletonHelper=new THREE.SkeletonHelper(model);
+      skeletonHelper.visible=false;root.add(skeletonHelper);
+      clips=gltf.animations||[];
+      mixer=clips.length?new THREE.AnimationMixer(model):null;
+      idleAction=null;walkAction=null;
+      if(mixer){
+        const idle=clips.find(c=>/idle|stand|breath/i.test(c.name))||clips[0];
+        const walk=clips.find(c=>/walk|run|jog/i.test(c.name));
+        if(idle)idleAction=mixer.clipAction(idle);
+        if(walk)walkAction=mixer.clipAction(walk);
+      }
+      switchClip();
+      $("state").textContent=sample.name;
+      $("rig").textContent="Скелет: "+bones.length+" костей · "+skinCount+" skinned meshes";
+      $("geometry").textContent="Модель: ~"+triangleCount.toLocaleString("ru")+" треугольников";
+      $("clip").textContent="Встроенные клипы: "+clips.length+(walkAction?" · ходьба доступна":"");
+      $("status").hidden=true;isLoaded=true;
+    }catch(error){
+      console.error("Character validation failed",error);
+      showStatus("Ошибка разбора модели: "+error.message,true);
+      if(source==="casual"&&canFallback){$("model-source").value="base";loadSource("base",false);}
+    }
+  },event=>{
+    if(ticket!==requestId)return;
+    if(event.total>0)$("status").textContent="Загрузка: "+Math.round(event.loaded/event.total*100)+"%";
+  },error=>{
+    if(ticket!==requestId)return;
+    console.error("Failed to fetch character candidate",error);
+    if(source==="casual"&&canFallback){
+      $("model-source").value="base";
+      loadSource("base",false);
+    }else{
+      showStatus("Не удалось загрузить GLB. Проверь интернет и перезагрузи страницу.",true);
+    }
+  });
+}
+$("model-source").addEventListener("change",e=>loadSource(e.target.value));
+loadSource("casual");
 document.querySelectorAll("[data-mode]").forEach(button=>button.addEventListener("click",()=>{
   mode=button.dataset.mode;
   document.querySelectorAll("[data-mode]").forEach(b=>b.classList.toggle("active",b===button));
   if(model&&mode==="neutral")clearPose();
+  switchClip();
 }));
 $("skeleton").addEventListener("click",()=>{
   if(!skeletonHelper)return;
@@ -171,7 +214,7 @@ function tick(){
   requestAnimationFrame(tick);
   const dt=Math.min(.05,clock.getDelta());
   elapsed+=dt;
-  if(isLoaded)poseTest(elapsed);
+  if(isLoaded&&!mixer)poseTest(elapsed);
   // The character model is inspected while the studio scene stays isolated.
   if(mixer)mixer.update(dt);
   controls.update();
