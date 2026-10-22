@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { buildDistrictBuildings, buildDistrictProps, decorateCentralBlocks } from "./district.js";
 import { ENTRANCES, FLOOR_HEIGHT, indoorBlocked, indoorFloorHeight, nearIndoorObject, buildInteriors } from "./interiors.js";
 import { createCharacterFactory } from "./characters.js";
+import { createDistrictMaterials } from "./visuals.js";
 
 const $ = (id) => document.getElementById(id);
 const host = $("screen");
@@ -19,9 +20,9 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 host.appendChild(renderer.domElement);
 
 const camera = new THREE.PerspectiveCamera(innerWidth<innerHeight?63:59, innerWidth / innerHeight, .12, 260);
-const hemi = new THREE.HemisphereLight(0xe7f3ff, 0x4e5763, 2.2);
+const hemi = new THREE.HemisphereLight(0xe1e7e9, 0x747973, 1.65);
 scene.add(hemi);
-const sun = new THREE.DirectionalLight(0xffe2b5, 2.8);
+const sun = new THREE.DirectionalLight(0xe2e5e3, 2.1);
 sun.position.set(45, 84, 28);
 sun.castShadow = true;
 sun.shadow.mapSize.set(768, 768);
@@ -30,7 +31,7 @@ sun.shadow.camera.top = 65; sun.shadow.camera.bottom = -65;
 sun.shadow.camera.near = 1; sun.shadow.camera.far = 190;
 sun.shadow.bias = -.0004;
 scene.add(sun, sun.target);
-scene.fog = new THREE.Fog(0xbdd9e3, 85, 160);
+scene.fog = new THREE.Fog(0xadb9bb, 85, 177);
 const world = new THREE.Group();
 scene.add(world);
 
@@ -47,6 +48,11 @@ const M = {
   roof: mat(0x595c59), sidewalkLine: mat(0xd8d5c2),
   skin: mat(0xf4b896), hair: mat(0x30262b), shoes: mat(0x2b3038),
 };
+const cityStyle=createDistrictMaterials(THREE);
+M.grass=cityStyle.grass;
+M.asphalt=cityStyle.asphalt;
+M.pavement=cityStyle.pavement;
+M.roof=cityStyle.roof;
 const geomBox = new THREE.BoxGeometry(1, 1, 1);
 const geomSphere = new THREE.SphereGeometry(1, 9, 7);
 const geomCylinder = new THREE.CylinderGeometry(1, 1, 1, 9);
@@ -170,7 +176,7 @@ function street() {
 }
 street();
 
-const walls = [mat(0xaaa99c), mat(0xc1b29d), mat(0x94a8a0), mat(0xd2b6a7), mat(0xb4ab99), mat(0xc0bfaa)];
+const walls = cityStyle.facades;
 const brick = mat(0x7b6259);
 const litWindows = [];
 const darkWindows = [];
