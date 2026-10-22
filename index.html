@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#131a2b">
+<title>РАЙОН — маленький открытый мир</title>
+<meta name="description" content="Исследуй маленький трёхмерный район: прогулка от третьего лица на телефоне.">
+<style>
+:root{--ink:#f6f2e9;--muted:#b9c5d0;--gold:#ffe0a1;--glass:rgba(16,25,39,.75);--border:rgba(255,255,255,.16)}
+*{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#8eb9d3;color:var(--ink);font:500 14px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif;touch-action:none;-webkit-user-select:none;user-select:none}
+button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+#screen,canvas{display:block}#screen{position:fixed;inset:0;z-index:0}#screen canvas{width:100%;height:100%}
+#ui{position:fixed;inset:0;z-index:2;pointer-events:none}
+#ui button,#ui .touch{pointer-events:auto}
+.topbar{position:absolute;left:max(16px,env(safe-area-inset-left));top:max(12px,env(safe-area-inset-top));display:flex;align-items:start;gap:12px}
+.brand{padding:10px 13px;background:var(--glass);border:1px solid var(--border);border-radius:14px;backdrop-filter:blur(12px)}
+.brand b{display:block;letter-spacing:.18em;font-size:15px;font-weight:900;line-height:1.15}.brand small{display:block;letter-spacing:.09em;font-size:9px;color:var(--muted);margin-top:5px}
+#quest{min-width:200px;max-width:min(270px,34vw);padding:10px 13px;background:var(--glass);border:1px solid var(--border);border-radius:14px;backdrop-filter:blur(12px)}
+#quest .kicker{font-size:9px;letter-spacing:.15em;color:var(--gold);font-weight:800}#quest .line{margin-top:4px;font-size:12px}#quest .progress{height:4px;background:rgba(255,255,255,.13);border-radius:5px;margin-top:8px;overflow:hidden}#quest .fill{height:100%;width:0;background:#ffd687;transition:width .4s}
+.rightbar{position:absolute;top:max(12px,env(safe-area-inset-top));right:max(14px,env(safe-area-inset-right));display:flex;flex-direction:column;align-items:end;gap:9px}
+#minimap{height:124px;width:124px;border-radius:18px;border:1px solid var(--border);background:rgba(16,25,39,.72);backdrop-filter:blur(9px);box-shadow:0 6px 24px #0002}
+.pill{border:1px solid var(--border);background:var(--glass);border-radius:30px;padding:9px 13px;backdrop-filter:blur(10px);font-size:11px;font-weight:800;white-space:nowrap;box-shadow:0 3px 16px #0002}
+.pill:active,.action:active{transform:scale(.95)}
+#toast{position:absolute;top:23%;left:50%;transform:translate(-50%,-8px);opacity:0;background:#17253be8;padding:12px 22px;border:1px solid #ffe0a169;border-radius:14px;text-align:center;font-weight:800;box-shadow:0 12px 50px #0005;transition:opacity .25s,transform .25s;min-width:180px;max-width:85vw}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+.bottom-hint{position:absolute;left:50%;transform:translateX(-50%);bottom:max(11px,env(safe-area-inset-bottom));text-align:center;background:rgba(16,25,39,.5);border-radius:30px;padding:7px 13px;color:#f6f2e9bb;font-size:10px;white-space:nowrap}
+#joystick{position:absolute;left:max(32px,calc(env(safe-area-inset-left) + 22px));bottom:max(34px,calc(env(safe-area-inset-bottom) + 25px));width:132px;height:132px;border:2px solid #ffffff64;border-radius:50%;background:rgba(21,30,47,.25);box-shadow:inset 0 0 0 17px #ffffff09,0 4px 30px #0002;touch-action:none}
+#stick{position:absolute;left:50%;top:50%;width:59px;height:59px;transform:translate(-50%,-50%);background:linear-gradient(145deg,#f7f2e9b8,#a6bbc3bd);border:3px solid #fff9;border-radius:50%;box-shadow:0 4px 16px #0005;pointer-events:none}
+.actions{position:absolute;right:max(30px,calc(env(safe-area-inset-right) + 20px));bottom:max(28px,calc(env(safe-area-inset-bottom) + 24px));display:grid;grid-template-columns:repeat(2,63px);gap:12px;justify-items:center;align-items:center}
+.action{width:63px;height:63px;border:1.5px solid #fff8;border-radius:50%;background:rgba(17,29,45,.58);box-shadow:0 4px 18px #0003;backdrop-filter:blur(10px);font-size:24px;font-weight:800;display:grid;place-items:center;touch-action:none}
+.action span{font-size:10px;letter-spacing:.02em;font-weight:800}.action.active{background:#ffdf97bd;color:#111d30}
+#btn-action{grid-column:2;grid-row:1;opacity:.5}#btn-action.available{opacity:1;border-color:#ffdf97}
+#btn-jump{grid-column:1;grid-row:2}#btn-run{grid-column:2;grid-row:2}
+#interact-hint{position:absolute;bottom:max(164px,calc(env(safe-area-inset-bottom) + 146px));right:max(25px,env(safe-area-inset-right));font-size:11px;text-shadow:0 2px 8px #000;text-align:center;max-width:160px}
+#welcome{position:fixed;inset:0;z-index:10;display:grid;place-items:center;background:linear-gradient(140deg,rgba(10,25,41,.84),rgba(7,15,28,.72));padding:24px;overflow:auto}
+.intro{max-width:460px;width:100%;border:1px solid #ffffff2d;background:rgba(20,29,45,.78);border-radius:24px;padding:clamp(24px,6vw,38px);box-shadow:0 16px 70px #06142190;backdrop-filter:blur(18px)}
+.intro .badge{display:inline-block;letter-spacing:.21em;color:var(--gold);font-size:10px;font-weight:900;border-bottom:1px solid #ffdf985e;padding-bottom:8px}
+.intro h1{font-size:clamp(48px,12vw,76px);margin:10px 0 0;line-height:1;font-weight:950;letter-spacing:-.04em}.intro h1 em{font-style:normal;color:var(--gold)}
+.intro p{color:#d9e4e9;font-size:13px;line-height:1.65;margin:16px 0}
+.intro .features{display:flex;gap:8px;flex-wrap:wrap;margin:20px 0}.intro .features span{border:1px solid #ffffff36;padding:6px 9px;border-radius:7px;color:#fff9;font-size:10px;letter-spacing:.03em}
+#start{width:100%;background:var(--gold);color:#142238;border:0;border-radius:13px;padding:15px;font-weight:950;letter-spacing:.08em;font-size:14px}#start:disabled{opacity:.6;cursor:wait}
+.intro .note{font-size:10px;text-align:center;color:#c5d0d9;margin-top:13px}
+#fatal{position:absolute;bottom:8px;left:8px;right:8px;color:#ffbaba;font-size:11px;text-align:center}
+#rotate{display:none;position:absolute;left:50%;transform:translateX(-50%);top:21%;background:rgba(17,30,43,.7);border-radius:9px;padding:8px 12px;font-size:11px;text-align:center}
+@media (max-width:650px){.topbar{gap:5px}.brand{padding:8px 10px}.brand b{font-size:12px}.brand small{font-size:8px}#quest{min-width:0;width:154px;max-width:154px;padding:7px 9px}#quest .line{font-size:10px}#minimap{width:97px;height:97px}.pill{padding:6px 10px;font-size:10px}.rightbar{gap:6px}#joystick{width:122px;height:122px}.actions{grid-template-columns:repeat(2,56px);gap:9px}.action{width:56px;height:56px}#interact-hint{bottom:max(150px,calc(env(safe-area-inset-bottom) + 135px))}.bottom-hint{display:none}}
+@media (orientation:portrait) and (max-width:650px){#rotate{display:block}.topbar{top:max(12px,env(safe-area-inset-top))}#joystick{bottom:max(39px,env(safe-area-inset-bottom))}.actions{bottom:max(44px,env(safe-area-inset-bottom))}}
+@media (pointer:fine){#joystick,.actions{opacity:.65}.bottom-hint{display:block}#rotate{display:none}}
+@media (max-height:420px){.intro{padding:15px 24px}.intro h1{font-size:46px}.intro p{margin:9px 0}.intro .features{margin:9px 0}.intro .note{margin-top:8px}#joystick{width:105px;height:105px;bottom:12px}.actions{bottom:10px}.bottom-hint{display:none}#minimap{width:88px;height:88px}#quest{max-width:160px}.brand small{display:none}}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js"}}</script>
+</head>
+<body>
+<div id="screen"></div>
+<div id="ui" hidden>
+  <div class="topbar"><div class="brand"><b>РАЙОН</b><small>MINI CITY · 0.1</small></div><div id="quest"><div class="kicker">ИССЛЕДУЙ РАЙОН</div><div class="line" id="quest-line">Найдено мест: 0 / 3</div><div class="progress"><div id="quest-fill" class="fill"></div></div></div></div>
+  <div class="rightbar"><canvas id="minimap" width="240" height="240" aria-label="Карта района"></canvas><button id="btn-time" class="pill">☀️ ДЕНЬ</button><button id="btn-sound" class="pill">♫ ЗВУК: ВКЛ</button></div>
+  <div id="toast" role="status" aria-live="polite"></div>
+  <div id="rotate">↻ Поверни телефон горизонтально для большего обзора</div>
+  <div class="touch" id="joystick" aria-label="Джойстик"><div id="stick"></div></div>
+  <div class="actions"><button id="btn-action" class="action" aria-label="Взаимодействие"><span>ДЕЙСТВИЕ</span></button><button id="btn-jump" class="action" aria-label="Прыжок"><span>ПРЫЖОК</span></button><button id="btn-run" class="action" aria-label="Бег"><span>БЕГ</span></button></div>
+  <div id="interact-hint"></div>
+  <div class="bottom-hint">WASD — идти · мышь — камера · Shift — бег · Пробел — прыжок · E — действие</div>
+</div>
+<div id="welcome"><div class="intro">
+  <div class="badge">ОТКРЫТЫЙ МИР · БРАУЗЕРНАЯ 3D-ИГРА</div>
+  <h1>ТВОЙ<br><em>РАЙОН.</em></h1>
+  <p>Два квартала. Знакомые дворы. Вечерние фонари. Прогуляйся по маленькому живому городу и найди три интересных места.</p>
+  <div class="features"><span>СВОБОДНАЯ КАМЕРА</span><span>ПРОГУЛКИ</span><span>СМЕНА ВРЕМЕНИ СУТОК</span><span>ИССЛЕДОВАНИЕ</span></div>
+  <button id="start" disabled>ЗАГРУЗКА МИРА...</button>
+  <div class="note">Для iPhone: левый стик — движение, свайп справа — камера.</div>
+  <div id="fatal"></div>
+</div></div>
+<script>window.addEventListener("error",function(e){if(!window.cityReady){document.getElementById("fatal").textContent="Не удалось загрузить игру. Проверь соединение с интернетом и обнови страницу.";}});window.addEventListener("unhandledrejection",function(){if(!window.cityReady){document.getElementById("fatal").textContent="Ошибка загрузки игрового движка. Попробуй обновить страницу.";}});</script>
+<script type="module" src="./game.js"></script>
+</body>
+</html>
