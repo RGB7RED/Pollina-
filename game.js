@@ -909,7 +909,7 @@ function update(dt) {
     if(n.role==="rest"){
       // A seated local looks toward a nearby visitor.
       if(distance<5){
-        const target=Math.atan2(avatar.x-n.person.g.position.x,avatar.z-n.person.g.position.z);
+        const target=Math.atan2(n.person.g.position.x-avatar.x,n.person.g.position.z-avatar.z);
         const rot=n.person.g.rotation.y;
         n.person.g.rotation.y=rot+Math.atan2(Math.sin(target-rot),Math.cos(target-rot))*Math.min(1,dt*1.5);
       }else n.person.g.rotation.y=THREE.MathUtils.damp(n.person.g.rotation.y,n.restAt.rotation,1,dt);
@@ -920,7 +920,7 @@ function update(dt) {
       animateHuman(n.person,0,elapsed);
       if(distance<5){
         // Not a suspicion mechanic yet: simply observe the passerby.
-        const a=Math.atan2(avatar.x-n.person.g.position.x,avatar.z-n.person.g.position.z);
+        const a=Math.atan2(n.person.g.position.x-avatar.x,n.person.g.position.z-avatar.z);
         const rot=n.person.g.rotation.y;
         n.person.g.rotation.y=rot+Math.atan2(Math.sin(a-rot),Math.cos(a-rot))*Math.min(1,dt*1.7);
       }
