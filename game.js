@@ -6,7 +6,8 @@ const host = $("screen");
 const ui = $("ui");
 const scene = new THREE.Scene();
 const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.25));
+let renderScale=Math.min(window.devicePixelRatio||1,1.35);
+renderer.setPixelRatio(renderScale);
 renderer.setSize(innerWidth, innerHeight);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -686,17 +687,34 @@ function update(dt) {
   if(elapsed-lastMap>.13){minimap();lastMap=elapsed;}
   detectInteract();
 }
+let sampleFrames=0,sampleTime=performance.now(),qualityCooldown=0;
 function animate(){
   requestAnimationFrame(animate);
   const dt=Math.min(.05,clock.getDelta());
   if(running)update(dt);else followCamera(dt);
   renderer.render(scene,camera);
+  if(!running)return;
+  sampleFrames++;
+  const now=performance.now();
+  if(now-sampleTime>2300){
+    const fps=Math.round(sampleFrames*1000/(now-sampleTime));
+    $("fps-counter").textContent=fps+" FPS";
+    const maxScale=Math.min(window.devicePixelRatio||1,1.35);
+    // Slowly lower framebuffer cost only when genuinely needed.
+    // Never go below 0.9 device pixels per CSS pixel.
+    if(now>qualityCooldown){
+      if(fps<25&&renderScale>.92){renderScale=Math.max(.9,renderScale-.15);qualityCooldown=now+3500;renderer.setPixelRatio(renderScale);}
+      else if(fps>49&&renderScale<maxScale-.04){renderScale=Math.min(maxScale,renderScale+.08);qualityCooldown=now+4000;renderer.setPixelRatio(renderScale);}
+    }
+    sampleTime=now;sampleFrames=0;
+  }
 }
 window.addEventListener("resize",()=>{
   const w=innerWidth,h=innerHeight;
   camera.aspect=w/h;camera.fov=w<h?63:59;camera.updateProjectionMatrix();
   renderer.setSize(w,h);
-  renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.25));
+  renderScale=Math.min(renderScale,devicePixelRatio||1);
+  renderer.setPixelRatio(renderScale);
 });
 renderer.domElement.addEventListener("contextmenu",e=>e.preventDefault());
 $("start").disabled=false;$("start").textContent="НАЧАТЬ ПРОГУЛКУ →";
