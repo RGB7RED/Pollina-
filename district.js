@@ -134,3 +134,49 @@ export function buildDistrictProps({ tree, bench, lamp, car, roadSign, box, flat
     for(let i=-1;i<=1;i++)box(.63,.52,.63,mat(i===0?0x688857:0x6b845a),x+i*2,.26,z);
   }
 }
+
+// Soviet residential detail pass: low, repetitive garages, yard fencing and
+// utility fixtures. All fine details use caller-provided instanced boxes.
+export function decorateResidentialYards({box,solidBox,mat,flat}){
+  const cement=mat(0x888f89),oldMetal=mat(0x686f6b),
+        garage=mat(0x77837e),rust=mat(0x82695f),
+        iron=mat(0x4f5957),dirt=mat(0x7d8177);
+  // Three small garage blocks in a side yard away from existing streets.
+  for(const [x,z,count] of [[-73,-76,3],[75,73,2]]){
+    flat(count*4.6+2,9,dirt,x+(count-1)*2.25,z,-.01);
+    for(let i=0;i<count;i++){
+      const gx=x+i*4.5;
+      solidBox(4.15,2.6,5.1,cement,gx,1.3,z);
+      box(4.15,.18,5.3,oldMetal,gx,2.68,z);
+      box(3.38,2.13,.12,i%2?rust:garage,gx,1.15,z-2.63);
+      box(3.7,.09,.16,iron,gx,1.99,z-2.73);
+      for(const dx of [-1.62,0,1.62]){
+        box(.04,1.97,.12,iron,gx+dx,1.18,z-2.73);
+      }
+      box(.18,.32,.12,iron,gx+1.2,1.18,z-2.79);
+    }
+  }
+  // Solid but walk-around courtyard fences, with posts.
+  const rows=[
+    [-22,67,14,0], [29,-73,16,0], [71,59,0,14],
+    [-69,55,0,14],[110,69,12,0]
+  ];
+  for(const [x,z,dx,dz] of rows){
+    const n=Math.round((dx||dz)/1.7);
+    for(let i=0;i<=n;i++){
+      const xx=x+dx*i/n,zz=z+dz*i/n;
+      box(.08,1.38,.08,iron,xx,.69,zz);
+      if(i<n){
+        const cx=(xx+x+dx*(i+1)/n)/2,cz=(zz+z+dz*(i+1)/n)/2;
+        if(dx)box(dx/n,.058,.052,oldMetal,cx,1.18,cz);
+        else box(.052,.058,dz/n,oldMetal,cx,1.18,cz);
+      }
+    }
+  }
+  // Slightly different Russian courtyard furniture.
+  for(const [x,z] of [[-68,59],[-22,53],[69,-58],[74,50],[47,-74],[114,58]]){
+    box(1.3,.85,.9,oldMetal,x,.43,z);
+    box(1.5,.13,1.1,rust,x,.91,z);
+    box(.15,.3,.17,iron,x+.5,1,z-.43);
+  }
+}
