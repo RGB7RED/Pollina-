@@ -772,6 +772,9 @@ function animate(){
   if(now-sampleTime>2300){
     const fps=Math.round(sampleFrames*1000/(now-sampleTime));
     $("fps-counter").textContent=fps+" FPS";
+    const draws=renderer.info.render.calls;
+    const tris=renderer.info.render.triangles;
+    $("perf-info").textContent=draws+" рис. · "+Math.round(tris/1000)+"k трис · "+renderScale.toFixed(2)+"×";
     const maxScale=Math.min(window.devicePixelRatio||1,1.35);
     // Slowly lower framebuffer cost only when genuinely needed.
     // Never go below 0.9 device pixels per CSS pixel.
