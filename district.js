@@ -57,6 +57,46 @@ export function buildDistrictBuildings({ building, box, flat, mat, world, walls 
   return parcels.length;
 }
 
+
+export function decorateCentralBlocks({ box, mat }) {
+  // Detail pass over the original prototype buildings: cornices, balconies,
+  // entrance frames and roof utilities; the 0.1 geometry remains stable.
+  const sites=[
+    [-32,-35,18,19,5],[-56,-32,18,21,4],[-32,30,20,18,5],
+    [-58,36,16,21,3],[32,-34,21,19,5],[59,-33,17,17,4],
+    [34,37,18,22,5],[60,37,18,22,3],[50,68,18,11,3]
+  ];
+  const pale=mat(0xd6cabc),cap=mat(0x7d827f),iron=mat(0x525d64);
+  for(let i=0;i<sites.length;i++){
+    const [x,z,w,d,floors]=sites[i],h=floors*3.05,frontZ=z-d/2;
+    box(w+.34,.28,d+.34,pale,x,h-.22,z);
+    box(w+.24,.45,d+.24,cap,x,.25,z);
+    // Quiet facade rhythm with narrow side framing.
+    box(.22,h,d+.1,pale,x-w/2+.16,h/2,z);
+    box(.22,h,d+.1,pale,x+w/2-.16,h/2,z);
+    for(let floor=1;floor<floors;floor+=2){
+      const by=floor*3.05+.66;
+      for(let side of [-1,1]){
+        if(i%3===1&&side===1)continue;
+        const bx=x+side*w*.23,bz=frontZ-.43;
+        box(1.95,.16,1.1,cap,bx,by,bz);
+        box(1.95,.07,.07,iron,bx,by+.75,bz-.54);
+        for (let rail=-.85;rail<1;rail+=.43){
+          box(.06,.70,.06,iron,bx+rail,by+.39,bz-.54);
+        }
+      }
+    }
+    // Roof chimneys improve the silhouette when seen from across the street.
+    for(let c=0;c<2;c++){
+      box(.68,1.08,.68,cap,x-w*.28+c*w*.55,h+.67,z+d*.18);
+    }
+    // Entrance light and contrasting stone surround.
+    box(2.4,.16,.20,pale,x,2.78,frontZ-.16);
+    box(.19,2.55,.18,pale,x-1.11,1.28,frontZ-.16);
+    box(.19,2.55,.18,pale,x+1.11,1.28,frontZ-.16);
+  }
+}
+
 export function buildDistrictProps({ tree, bench, lamp, car, roadSign, box, flat, mat }) {
   const treelines=[-143,-118,-64,-42,40,63,117,144];
   for(let i=0;i<treelines.length;i++){
