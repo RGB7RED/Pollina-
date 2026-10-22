@@ -8,6 +8,7 @@ const district = readFileSync(new URL("../district.js", import.meta.url), "utf8"
 const interiors = readFileSync(new URL("../interiors.js", import.meta.url), "utf8");
 const characters = readFileSync(new URL("../characters.js", import.meta.url), "utf8");
 const visuals = readFileSync(new URL("../visuals.js", import.meta.url), "utf8");
+const art = readFileSync(new URL("../art_direction.js", import.meta.url), "utf8");
 
 assert.match(html, /<script\s+type="module"\s+src="\.\/game\.js"><\/script>/);
 assert.match(html, /"three":"https:\/\/cdn\.jsdelivr\.net\/npm\/three@0\.170\.0\/build\/three\.module\.js"/);
@@ -26,6 +27,7 @@ new Script(district.replace(/^export /gm, ""), { filename: "district.js" });
 new Script(interiors.replace(/^export /gm, ""), { filename: "interiors.js" });
 new Script(characters.replace(/^export /gm, ""), { filename: "characters.js" });
 new Script(visuals.replace(/^export /gm, ""), { filename: "visuals.js" });
+new Script(art.replace(/^export /gm, ""), { filename: "art_direction.js" });
 assert.match(js, /function blocked\(x,z\)/);
 assert.match(js, /function followCamera\(dt\)/);
 assert.match(js, /function setTime\(index\)/);
@@ -40,7 +42,7 @@ assert.match(js, /function minimap\(\)/);
 assert.match(js, /renderScale/);
 assert.match(js, /pinch\.zoom/);
 assert.match(js, /smoothVelocity/);
-assert.match(html, /MINI CITY · 0\.3\.1/);
+assert.match(html, /MINI CITY · 0\.3\.2/);
 assert.match(html, /id="zone-name"/);
 assert.match(html, /id="entrance-progress"/);
 assert.match(js, /from "\.\/interiors\.js"/);
@@ -63,6 +65,12 @@ assert.match(visuals, /export function createDistrictMaterials/);
 assert.match(html, /id="btn-quality"/);
 assert.match(js, /qualityModes/);
 assert.match(js, /function setQuality/);
+assert.match(js, /createArtDirection\(THREE,world\)/);
+assert.match(js, /art\.setMood/);
+assert.match(js, /art\.update\(camera\)/);
+assert.match(art,/export function createArtDirection/);
+assert.match(art,/new THREE\.InstancedMesh/);
+assert.match(art,/createRadialGradient/);
 assert.match(js, /indoorFloorHeight/);
 assert.match(js, /decorateResidentialYards/);
 // 0.2.1 version guard replaced by the 0.3 assertion above.
