@@ -7,6 +7,7 @@ on:
       - feat/mini-city-v021
       - feat/mini-city-v03
       - feat/mini-city-v031
+      - feat/mini-city-v032
   pull_request:
     paths:
       - 'index.html'
@@ -15,6 +16,7 @@ on:
       - 'interiors.js'
       - 'characters.js'
       - 'visuals.js'
+      - 'art_direction.js'
       - 'test/**'
       - '.github/workflows/mini-city.yml'
   workflow_dispatch:
@@ -40,6 +42,7 @@ jobs:
         run: |
           node --check characters.js
           node --check visuals.js
+          node --check art_direction.js
       - name: Run static smoke test
         run: node test/smoke.mjs
       - name: Test performance contracts
