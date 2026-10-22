@@ -9,7 +9,7 @@ new Script(visuals.replace(/^export /gm,""));
 class Mesh {
  constructor(geometry,material){
    this.geometry=geometry;this.material=material;this.children=[];
-   this.scale={set(x,y,z){this.x=x;this.y=y;this.z=z}};
+   this.scale={set(x,y,z){this.x=x;this.y=y;this.z=z},setScalar(v){this.x=this.y=this.z=v}};
    this.position={set(x,y,z){this.x=x;this.y=y;this.z=z}};
    this.rotation={x:0,y:0,z:0};
  }
@@ -18,7 +18,7 @@ class Mesh {
 class Group extends Mesh {}
 class Mat {constructor(config){Object.assign(this,config)}}
 const THREE={
- Group,Mesh,BoxGeometry:class{},SphereGeometry:class{},CylinderGeometry:class{},
+ Group,Mesh,BoxGeometry:class{},SphereGeometry:class{},CylinderGeometry:class{},LatheGeometry:class{},Vector2:class {constructor(x,y){this.x=x;this.y=y}},
  MeshStandardMaterial:Mat, CanvasTexture:class{constructor(canvas){this.canvas=canvas;this.repeat={set(){}}}},
  RepeatWrapping:1000,SRGBColorSpace:1
 };
@@ -29,6 +29,7 @@ assert.ok(hero.head&&hero.torso&&hero.leftLeg&&hero.rightLeg);
 assert.equal(hero.legs.length,2);
 assert.equal(hero.arms.length,2);
 assert.ok(hero.g.children.length>=7);
+assert.ok(hero.head.children.length>=7,"hero has facial features and sculpted hair");
 hero.setPose(4.2,1.2,false,.5);
 assert.ok(hero.legs[0].thigh.rotation.x!==hero.legs[1].thigh.rotation.x,"walking legs alternate");
 hero.setPose(0,2,true,1);
@@ -52,4 +53,4 @@ assert.ok(materials.asphalt.map?.canvas);
 assert.ok(materials.pavement.map?.canvas);
 assert.ok(materials.grass.map?.canvas);
 assert.ok(materials.facades.every(m=>m.map));
-console.log("Character and material remaster: OK — articulated seated pose and 9 procedural textures");
+console.log("Graphic rework: character body, facial sculpt, joint animation and painterly materials OK");
