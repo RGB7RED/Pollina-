@@ -4,7 +4,7 @@
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
 
-const files=["district.js","interiors.js","characters.js","visuals.js","game.js"];
+const files=["district.js","interiors.js","characters.js","visuals.js","art_direction.js","game.js"];
 const source=files.map(name=>readFileSync(new URL("../"+name,import.meta.url),"utf8")
  .replace(/^import[^\n]*\n/gm,"").replace(/^export /gm,"")).join("\n");
 
@@ -34,7 +34,7 @@ class O{
  updateMatrix(){}updateMatrixWorld(){}
 }
 class Mesh extends O{constructor(geometry,material){super();this.geometry=geometry;this.material=material}}
-class Mat{constructor(opts){Object.assign(this,opts)}}
+class Mat{constructor(opts){Object.assign(this,opts);this.color={setHex(){}}}}
 class Light extends O{constructor(){super();this.color={setHex(){}};this.shadow={mapSize:{set(){}},camera:{}};this.target=new O}}
 class Renderer{
  constructor(){this.shadowMap={};this.domElement={addEventListener(){},setPointerCapture(){}};
@@ -49,17 +49,19 @@ const THREE={
  InstancedMesh:Instanced,WebGLRenderer:Renderer,PerspectiveCamera:Camera,
  HemisphereLight:Light,DirectionalLight:Light,PointLight:Light,
  BoxGeometry:Geometry,CylinderGeometry:Geometry,SphereGeometry:Geometry,
+ LatheGeometry:Geometry,IcosahedronGeometry:Geometry,PlaneGeometry:Geometry,
  TorusGeometry:Geometry,PlaneGeometry:Geometry,Matrix4:Geometry,
  CanvasTexture:class{},Clock:class{getDelta(){return .016}},Vector2:V2,Vector3:V,
  Color:class{setHex(){}},Fog:class{constructor(){this.color={setHex(){}}}},
  Raycaster:class{set(){}intersectObjects(){return []}},
  MathUtils:{clamp:(x,a,b)=>Math.max(a,Math.min(b,x)),damp:(a,b,f,dt)=>a+(b-a)*Math.min(f*dt,1)},
- RepeatWrapping:1,SRGBColorSpace:2
+ RepeatWrapping:1,SRGBColorSpace:2,BackSide:2
 };
 const canvasContext={
- clearRect(){},fillRect(){},strokeRect(){},fillText(){},arc(){},
+ clearRect(){},fillRect(){},strokeRect(){},fillText(){},arc(){},ellipse(){},
  beginPath(){},fill(){},stroke(){},moveTo(){},lineTo(){},
- createLinearGradient(){return {addColorStop(){}}}
+ createLinearGradient(){return {addColorStop(){}}},
+ createRadialGradient(){return {addColorStop(){}}}
 };
 const nodes={};
 function node(id){
@@ -83,6 +85,7 @@ const game=run(THREE,document,window,390,844,3,storage,
  {now(){return 1000}},()=>{},()=>1,()=>{},()=>1);
 assert.equal(game.npcs.length,17);
 assert.deepEqual(game.lobbies.map(room=>room.floors),[5,5,3]);
+assert.ok(game.world.children.some(n=>n.renderOrder===-10),"painted panorama is installed");
 node("start").listeners.click();
 const room=game.lobbies[0];
 game.enterLobby(room);
