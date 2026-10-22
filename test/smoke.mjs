@@ -34,6 +34,23 @@ assert.match(js, /function minimap\(\)/);
 assert.match(js, /renderScale/);
 assert.match(js, /pinch\.zoom/);
 assert.match(js, /smoothVelocity/);
+assert.match(html,/MINI CITY · 0\.2\.1/);
+assert.match(html,/id="perf-info"/);
+assert.doesNotMatch(html,/<div id="rotate">/);
+assert.match(js,/const flatBatches=new Map\(\)/);
+assert.match(js,/function flushFlats\(\)/);
+assert.match(js,/flushFlats\(\)/);
+assert.match(js,/mesh\.computeBoundingSphere\(\)/);
+assert.match(js,/function refreshStreetLights\(\)/);
+assert.match(js,/closest\.slice\(0,4\)/);
+assert.match(js,/treeGroups/);
+assert.match(js,/streetProps/);
+assert.match(js,/renderer\.info\.render\.calls/);
+assert.match(js,/sun\.target\.position\.set\(avatar\.x,0,avatar\.z\)/);
+// Regression guard: the road stripes/sidewalks should not fall back to
+// individual Mesh allocations as the map grows.
+assert.doesNotMatch(js,/function flat\([^)]*\)\s*\{\s*return box\(/);
+
 assert.match(html, /id="fps-counter"/);
 assert.match(district, /export function buildDistrictBuildings/);
 assert.match(district, /export function decorateCentralBlocks/);
