@@ -41,7 +41,9 @@ for(const id of ["street_tree","street_lamp","street_bench"]){
  assert.equal(root.children.length,3,"isolated viewer has exactly one 3-batch model");
  assert.deepEqual(root.children.map(c=>c.name),spec.parts);
  assert.ok(root.children.every(mesh=>mesh instanceof InstancedMesh));
- assert.ok(root.children.every(mesh=>mesh.count===1));
+ assert.ok(root.children.every(mesh=>mesh.count===
+   (id==="street_bench"&&mesh.name==="benches-legs"?4:1)),
+  "single bench legitimately has four leg instances");
  const instances=id==="street_tree"?worldPlan.trees:id==="street_lamp"?worldPlan.lamps:worldPlan.benches;
  const worldOrigin=instances[0];
  for(const isolated of root.children){
