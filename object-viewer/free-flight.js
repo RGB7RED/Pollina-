@@ -5,6 +5,7 @@ const KEYS=new Set(["KeyW","KeyA","KeyS","KeyD","KeyQ","KeyE","Space","ArrowUp",
 const makeButton=(label)=>{const b=document.createElement("button");b.type="button";b.textContent=label;return b;};
 export function mountInspectionFlight({camera,orbit,canvas,resetPose,speed=2.6,onToggle=()=>{}}){
   const free=new FreeCamera(camera,{speed});
+  free.speedMode=2; // first speed press selects precision, not fast travel
   free.limits={x:90,z:90,yMin:.2,yMax:55};
   const bar=document.createElement("div");bar.className="mc-flight-toolbar";
   const toggle=makeButton("✥ Свободная камера"),rate=makeButton("⚡ Скорость"),

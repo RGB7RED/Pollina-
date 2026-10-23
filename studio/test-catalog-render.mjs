@@ -109,6 +109,10 @@ assert.equal(nodes["catalog-list"].children.length,0);
 assert.equal(window.location.search,"");
 const furniture=nodes["folder-list"].children.find(c=>c.dataset.category==="street_furniture");
 furniture.fire("click");
+assert.equal(nodes["catalog-list"].children[0].children.at(-1).children[0].href,
+ "../street-asset-lab/index.html?model=street_lamp");
+assert.equal(nodes["catalog-list"].children[1].children.at(-1).children[0].href,
+ "../street-asset-lab/index.html?model=street_bench");
 assert.deepEqual(nodes["catalog-list"].children.map(c=>c.dataset.modelNumber),["1","2","3"]);
 assert.deepEqual(nodes["catalog-list"].children.map(c=>c.dataset.assetId),
   ["street_lamp","street_bench","bus_stop_city_001"]);
@@ -120,6 +124,8 @@ assert.match(stopCard.children[3].children[7].textContent,/1 \(не размещ
 goBackBrowser("?category=nature");
 assert.equal(nodes["catalog-list"].children.length,1);
 assert.equal(nodes["catalog-list"].children[0].dataset.assetId,"street_tree");
+assert.equal(nodes["catalog-list"].children[0].children.at(-1).children[0].href,
+ "../street-asset-lab/index.html?model=street_tree");
 assert.equal(nodes["catalog-list"].children[0].dataset.modelNumber,"1",
   "22 copies of a tree is still one model № 001");
 assert.match(nodes["catalog-list"].children[0].children[3].children[5].textContent,/22 экземпляр/);

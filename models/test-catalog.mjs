@@ -33,6 +33,17 @@ assert.equal(filterCatalog(catalog,{category:"character"}).length,2);
 assert.equal(filterCatalog(catalog,{status:"approved"}).length,1);
 assert.equal(filterCatalog(catalog,{category:"street_furniture",status:"testing"}).length,2);
 assert.equal(filterCatalog(catalog,{search:"не существует"}).length,0);
+for(const id of ["street_tree","street_lamp","street_bench"]){
+ const entry=catalog.entries.find(e=>e.id===id);
+ assert.equal(entry.viewer,"street-asset-lab/index.html?model="+id,
+  "each existing asset must open its OWN isolated viewer");
+ assert.ok(entry.scene?.includes("play-lab"),"world preview remains optional");
+ assert.equal(entry.inPlayLab,true,"existing game objects remain installed");
+}
+assert.equal(catalog.entries.find(e=>e.id==="hero_reference").viewer,
+ "character-lab/index.html?model=hero_reference");
+assert.equal(catalog.entries.find(e=>e.id==="hero_city_candidate").viewer,
+ "character-lab/index.html?model=hero_city_candidate");
 assert.equal(folderObjects(catalog,"street_furniture")[2].id,"bus_stop_city_001");
 assert.equal(folderObjects(catalog,"street_furniture")[2].modelNumber,3);
 assert.equal(folderObjects(catalog,"street_furniture")[2].quantity,1);
