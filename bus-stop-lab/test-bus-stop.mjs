@@ -51,8 +51,15 @@ class Box3{
    if(!o.isMesh)return;
    if(o.isInstancedMesh){
     const [w,h,d]=o.geometry.bounds;
-    o.matrices.forEach(m=>add(m.position.x,m.position.y,m.position.z,
-      Math.abs(w*m.scale.x),Math.abs(h*m.scale.y),Math.abs(d*m.scale.z)));
+    o.matrices.forEach(m=>{
+      // A pane rotated 90 degrees faces the street-side axis: its local
+      // width is along Z, not X. Account for this in the fake bounds.
+      const rotated=Math.abs(Math.sin(m.rotation.y))>.9;
+      add(m.position.x,m.position.y,m.position.z,
+       rotated?Math.abs(d*m.scale.z):Math.abs(w*m.scale.x),
+       Math.abs(h*m.scale.y),
+       rotated?Math.abs(w*m.scale.x):Math.abs(d*m.scale.z));
+    });
    }else if(o.geometry.bounds){
     const [w,h,d]=o.geometry.bounds;
     add(o.position.x,o.position.y,o.position.z,w,h,d);
