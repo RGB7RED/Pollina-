@@ -1,0 +1,154 @@
+{
+  "schemaVersion": 1,
+  "project": "MINI CITY",
+  "phase": "4.2.3",
+  "scope": "Developer Studio; not the main game",
+  "disclaimer": "Принятие модели для лаборатории не является выпуском игрового ассета или подтверждением прав на сторонние GLB.",
+  "entries": [
+    {
+      "id": "apartment_house",
+      "name": "Жилая пятиэтажка",
+      "category": "building",
+      "status": "approved",
+      "kind": "procedural",
+      "quantity": 1,
+      "inPlayLab": true,
+      "releaseReady": false,
+      "scopeNote": "Внешний вид принят; дом создан из JS, GLB пока скачивается по кнопке, а не лежит в репозитории.",
+      "sourcePaths": [
+        "building-lab/building.js",
+        "building-lab/materials.js",
+        "building-lab/export-glb.js"
+      ],
+      "viewer": "building-lab/index.html",
+      "viewerLabel": "Осмотреть дом",
+      "scene": "play-lab/index.html?mode=lab",
+      "assetFile": null,
+      "origin": "project",
+      "rightsChecked": true
+    },
+    {
+      "id": "hero_city_candidate",
+      "name": "Городской персонаж (кандидат)",
+      "category": "character",
+      "status": "testing",
+      "kind": "external",
+      "quantity": 1,
+      "inPlayLab": true,
+      "releaseReady": false,
+      "scopeNote": "Ходьба и камеры проверены пользователем. GLB загружается с внешнего GitHub; лицензия и происхождение не подтверждены, релиз запрещён.",
+      "sourcePaths": [
+        "play-lab/game.js",
+        "character-lab/lab.js",
+        "character-lab/motion.mjs"
+      ],
+      "viewer": "character-lab/index.html",
+      "viewerLabel": "Испытать анимации",
+      "scene": "play-lab/index.html?mode=lab",
+      "assetFile": null,
+      "origin": "external",
+      "rightsChecked": false
+    },
+    {
+      "id": "hero_reference",
+      "name": "Анатомический персонаж (резерв)",
+      "category": "character",
+      "status": "development",
+      "kind": "glb",
+      "quantity": 1,
+      "inPlayLab": "fallback",
+      "releaseReady": false,
+      "scopeNote": "Файл GLB хранится в репозитории, но не имеет анимаций. При сбое внешнего персонажа используется только для осмотра.",
+      "sourcePaths": [
+        "character-lab/assets/hero-reference.glb",
+        "character-lab/lab.js"
+      ],
+      "viewer": "character-lab/index.html",
+      "viewerLabel": "Открыть персонажа",
+      "scene": null,
+      "assetFile": "character-lab/assets/hero-reference.glb",
+      "origin": "project",
+      "rightsChecked": null
+    },
+    {
+      "id": "residential_street",
+      "name": "Жилая улица и двор",
+      "category": "environment",
+      "status": "testing",
+      "kind": "procedural",
+      "quantity": 1,
+      "inPlayLab": true,
+      "releaseReady": false,
+      "scopeNote": "108 м дороги, тротуары, разметка, зебра и дворовые дорожки. Детали сцены генерируются кодом; отдельный GLB не создан.",
+      "sourcePaths": [
+        "play-lab/street.js"
+      ],
+      "viewer": "play-lab/index.html?mode=lab",
+      "viewerLabel": "Проверить улицу",
+      "scene": "play-lab/index.html?mode=lab",
+      "assetFile": null,
+      "origin": "project",
+      "rightsChecked": true
+    },
+    {
+      "id": "street_tree",
+      "name": "Дерево городское",
+      "category": "nature",
+      "status": "testing",
+      "kind": "scene_component",
+      "quantity": 22,
+      "inPlayLab": true,
+      "releaseReady": false,
+      "scopeNote": "22 экземпляра процедурного малополигонального дерева на трёх участках. Общие InstancedMesh, нет самостоятельного GLB.",
+      "sourcePaths": [
+        "play-lab/street.js"
+      ],
+      "viewer": "play-lab/index.html?mode=lab",
+      "viewerLabel": "Смотреть в игровой лаборатории",
+      "scene": "play-lab/index.html?mode=lab",
+      "assetFile": null,
+      "origin": "project",
+      "rightsChecked": true
+    },
+    {
+      "id": "street_lamp",
+      "name": "Уличный фонарь",
+      "category": "street_furniture",
+      "status": "testing",
+      "kind": "scene_component",
+      "quantity": 6,
+      "inPlayLab": true,
+      "releaseReady": false,
+      "scopeNote": "6 опор со светящимися элементами; без дополнительных реальных точечных источников света.",
+      "sourcePaths": [
+        "play-lab/street.js"
+      ],
+      "viewer": "play-lab/index.html?mode=lab",
+      "viewerLabel": "Смотреть в игровой лаборатории",
+      "scene": "play-lab/index.html?mode=lab",
+      "assetFile": null,
+      "origin": "project",
+      "rightsChecked": true
+    },
+    {
+      "id": "street_bench",
+      "name": "Дворовая скамейка",
+      "category": "street_furniture",
+      "status": "testing",
+      "kind": "scene_component",
+      "quantity": 4,
+      "inPlayLab": true,
+      "releaseReady": false,
+      "scopeNote": "4 скамейки с простыми коллизиями; пока не являются отдельными переносимыми моделями.",
+      "sourcePaths": [
+        "play-lab/street.js"
+      ],
+      "viewer": "play-lab/index.html?mode=lab",
+      "viewerLabel": "Проверить скамейки",
+      "scene": "play-lab/index.html?mode=lab",
+      "assetFile": null,
+      "origin": "project",
+      "rightsChecked": true
+    }
+  ]
+}
