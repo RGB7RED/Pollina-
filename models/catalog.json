@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "project": "MINI CITY",
-  "phase": "4.3.1A",
+  "phase": "4.3.2",
   "scope": "Developer Studio; not the main game",
   "disclaimer": "Принятие модели для лаборатории не является выпуском игрового ассета или подтверждением прав на сторонние GLB.",
   "entries": [
@@ -43,7 +43,7 @@
         "character-lab/lab.js",
         "character-lab/motion.mjs"
       ],
-      "viewer": "character-lab/index.html",
+      "viewer": "character-lab/index.html?model=hero_city_candidate",
       "viewerLabel": "Испытать анимации",
       "scene": "play-lab/index.html?mode=lab",
       "assetFile": null,
@@ -65,7 +65,7 @@
         "character-lab/assets/hero-reference.glb",
         "character-lab/lab.js"
       ],
-      "viewer": "character-lab/index.html",
+      "viewer": "character-lab/index.html?model=hero_reference",
       "viewerLabel": "Открыть персонажа",
       "scene": null,
       "assetFile": "character-lab/assets/hero-reference.glb",
@@ -105,10 +105,11 @@
       "releaseReady": false,
       "scopeNote": "22 экземпляра процедурного малополигонального дерева на трёх участках. Общие InstancedMesh, нет самостоятельного GLB.",
       "sourcePaths": [
-        "play-lab/street.js"
+        "play-lab/street.js",
+        "street-asset-lab/asset.js"
       ],
-      "viewer": "play-lab/index.html?mode=lab",
-      "viewerLabel": "Смотреть в игровой лаборатории",
+      "viewer": "street-asset-lab/index.html?model=street_tree",
+      "viewerLabel": "Осмотреть дерево",
       "scene": "play-lab/index.html?mode=lab",
       "assetFile": null,
       "origin": "project",
@@ -126,10 +127,11 @@
       "releaseReady": false,
       "scopeNote": "6 опор со светящимися элементами; без дополнительных реальных точечных источников света.",
       "sourcePaths": [
-        "play-lab/street.js"
+        "play-lab/street.js",
+        "street-asset-lab/asset.js"
       ],
-      "viewer": "play-lab/index.html?mode=lab",
-      "viewerLabel": "Смотреть в игровой лаборатории",
+      "viewer": "street-asset-lab/index.html?model=street_lamp",
+      "viewerLabel": "Осмотреть фонарь",
       "scene": "play-lab/index.html?mode=lab",
       "assetFile": null,
       "origin": "project",
@@ -147,10 +149,11 @@
       "releaseReady": false,
       "scopeNote": "4 скамейки с простыми коллизиями; пока не являются отдельными переносимыми моделями.",
       "sourcePaths": [
-        "play-lab/street.js"
+        "play-lab/street.js",
+        "street-asset-lab/asset.js"
       ],
-      "viewer": "play-lab/index.html?mode=lab",
-      "viewerLabel": "Проверить скамейки",
+      "viewer": "street-asset-lab/index.html?model=street_bench",
+      "viewerLabel": "Осмотреть скамейку",
       "scene": "play-lab/index.html?mode=lab",
       "assetFile": null,
       "origin": "project",

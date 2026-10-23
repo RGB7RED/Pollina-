@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#182c35">
 <title>MINI CITY — Автобусная остановка №003</title>
+<link rel="stylesheet" href="../object-viewer/free-flight.css">
 <style>
 :root{color-scheme:dark;font:14px -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;color:#edf6ef;background:#6c8996}
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden}
@@ -47,7 +48,7 @@ button:focus-visible,a:focus-visible{outline:3px solid #d2f0d6;outline-offset:2p
 {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}
 </script>
 </head>
-<body>
+<body class="bus-stop-inspection">
 <main id="stage" aria-label="3D-модель остановочного павильона"></main>
 <div class="hud">
   <section class="card identity">
@@ -69,7 +70,7 @@ button:focus-visible,a:focus-visible{outline:3px solid #d2f0d6;outline-offset:2p
     <div class="status" id="development">В разработке · вне игровой сцены</div>
   </section>
 </div>
-<div class="tips">1 палец — вращать · 2 пальца — масштаб и сдвиг · мышь: левая кнопка — вращение, правая — панорама</div>
+<div class="tips">Осмотр: свайп — поворот, щипок — зум · Свободная камера: стик — движение, свайп — взгляд, ↑/↓ — высота</div>
 <div class="controls" aria-label="Позиции камеры">
   <button type="button" data-view="threequarter" class="active">¾</button>
   <button type="button" data-view="front">Спереди</button>

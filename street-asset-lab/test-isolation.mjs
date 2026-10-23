@@ -1,0 +1,72 @@
+import assert from "node:assert/strict";
+import {readFileSync} from "node:fs";
+import {BUILDING} from "../building-lab/building.js";
+import {planStreet,buildStreet} from "../play-lab/street.js";
+import {ISOLATED_ASSETS,buildIsolatedStreetAsset} from "./asset.js";
+
+// Test the actual builder with a lightweight Three-style instancing API.
+class Vec{
+ constructor(x=0,y=0,z=0){Object.assign(this,{x,y,z});}
+ set(x,y,z){Object.assign(this,{x,y,z});return this;}
+}
+class Object3D{
+ constructor(){this.position=new Vec();this.rotation=new Vec();this.scale=new Vec(1,1,1);
+  this.matrix=null;this.children=[];this.userData={};}
+ updateMatrix(){this.matrix={position:{...this.position},rotation:{...this.rotation},scale:{...this.scale}};}
+ add(o){this.children.push(o);}
+}
+class Geometry{constructor(...args){this.args=args;}}
+class Mesh extends Object3D{constructor(g,m){super();this.geometry=g;this.material=m;}}
+class InstancedMesh extends Mesh{
+ constructor(g,m,count){super(g,m);this.count=count;this.matrices=[];
+  this.instanceMatrix={needsUpdate:false};}
+ setMatrixAt(i,m){this.matrices[i]=structuredClone(m);}
+ computeBoundingSphere(){}
+}
+class Material{constructor(o){Object.assign(this,o);}}
+const THREE={Group:Object3D,Object3D,Mesh,InstancedMesh,
+ PlaneGeometry:class extends Geometry{},BoxGeometry:class extends Geometry{},
+ CylinderGeometry:class extends Geometry{},DodecahedronGeometry:class extends Geometry{},
+ MeshStandardMaterial:Material,MeshBasicMaterial:Material};
+const pads=[-26.35,-8.78,8.78,26.35].map(x=>({x,width:5.5,depth:3.15,centreZ:7.875}));
+const worldPlan=planStreet(BUILDING,pads);
+const world=buildStreet(THREE,worldPlan);
+const catalogs=JSON.parse(readFileSync(new URL("../models/catalog.json",import.meta.url),"utf8"));
+for(const id of ["street_tree","street_lamp","street_bench"]){
+ const spec=ISOLATED_ASSETS[id];
+ const {root, spec:actual}=buildIsolatedStreetAsset(THREE,id);
+ assert.equal(actual,spec);
+ assert.equal(root.userData.isolatedModelId,id);
+ assert.equal(root.userData.worldQuantity,spec.quantity);
+ assert.equal(root.children.length,3,"isolated viewer has exactly one 3-batch model");
+ assert.deepEqual(root.children.map(c=>c.name),spec.parts);
+ assert.ok(root.children.every(mesh=>mesh instanceof InstancedMesh));
+ assert.ok(root.children.every(mesh=>mesh.count===
+   (id==="street_bench"&&mesh.name==="benches-legs"?4:1)),
+  "single bench legitimately has four leg instances");
+ const instances=id==="street_tree"?worldPlan.trees:id==="street_lamp"?worldPlan.lamps:worldPlan.benches;
+ const worldOrigin=instances[0];
+ for(const isolated of root.children){
+   const city=world.children.find(c=>c.name===isolated.name);
+   assert.ok(city,"must re-use the actual world mesh batch "+isolated.name);
+   assert.deepEqual(isolated.geometry.args,city.geometry.args);
+   assert.deepEqual(isolated.material,city.material);
+   const local=isolated.matrices[0],placed=city.matrices[0];
+   assert.deepEqual(local.scale,placed.scale);
+   assert.equal(local.position.y,placed.position.y);
+   assert.ok(Math.abs(local.position.x-(placed.position.x-worldOrigin.x))<.000001);
+   assert.ok(Math.abs(local.position.z-(placed.position.z-worldOrigin.z))<.000001);
+ }
+ const entry=catalogs.entries.find(e=>e.id===id);
+ assert.equal(entry.viewer,"street-asset-lab/index.html?model="+id);
+ assert.equal(entry.inPlayLab,true);
+ assert.equal(entry.quantity,spec.quantity);
+ assert.ok(entry.scene.startsWith("play-lab/index.html"));
+}
+assert.throws(()=>buildIsolatedStreetAsset(THREE,"unknown"),/Unknown isolated asset/);
+// Existing city is exactly the old layout (22 trees, 6 lamps, 4 benches).
+assert.equal(world.children.length,18);
+assert.equal(worldPlan.info.trees,22);
+assert.equal(worldPlan.info.lamps,6);
+assert.equal(worldPlan.info.benches,4);
+console.log("MINI CITY isolated asset PASS: real city source reused, 1 tree/lamp/bench each, no geometry divergence or game mutation");

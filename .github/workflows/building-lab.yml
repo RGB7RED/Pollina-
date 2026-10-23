@@ -15,9 +15,12 @@ on:
       - feat/mini-city-v033-stage424-catalog-folders
       - feat/mini-city-v033-stage425-catalog-as-object-hub
       - feat/mini-city-v033-stage431-bus-stop-lab
+      - feat/mini-city-v033-stage432-isolated-asset-viewers
     paths:
       - 'building-lab/**'
       - 'bus-stop-lab/**'
+      - 'street-asset-lab/**'
+      - 'object-viewer/**'
       - 'character-lab/**'
       - 'lab/**'
       - 'play-lab/**'
@@ -52,10 +55,18 @@ jobs:
           node --check bus-stop-lab/bus-stop.js
           node --check bus-stop-lab/materials.js
           node --check bus-stop-lab/lab.js
+          node --check street-asset-lab/asset.js
+          node --check street-asset-lab/lab.js
+          node --check object-viewer/free-flight.js
       - name: Test stop geometry groups, glazing and mobile budget
         run: node bus-stop-lab/test-bus-stop.mjs
       - name: Test bus-stop camera viewer and navigation
         run: node bus-stop-lab/test-viewer.mjs
+      - name: Test isolated tree lamp bench and free-flight controls
+        run: |
+          node street-asset-lab/test-isolation.mjs
+          node street-asset-lab/test-viewer.mjs
+          node object-viewer/test-free-flight.mjs
       - name: Test stage 4.1 first/third-person movement and house collisions
         run: node play-lab/test-controller.mjs
       - name: Check stage 4.1.1 model orientation and non-reversed swipe

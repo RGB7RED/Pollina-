@@ -1,0 +1,17 @@
+/* Shared camera UI: only inspection labs import this stylesheet. */
+.mc-flight-toolbar{position:fixed;z-index:22;left:max(8px,env(safe-area-inset-left));right:max(8px,env(safe-area-inset-right));bottom:max(9px,env(safe-area-inset-bottom));display:flex;flex-wrap:wrap;justify-content:center;gap:5px;pointer-events:none}
+.mc-flight-toolbar button,.mc-flight-altitude button{pointer-events:auto;appearance:none;border:1px solid #bed7c49c;background:#203740ed;color:#f0f7f0;border-radius:9px;font:750 11px -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;min-height:42px;padding:7px 10px;touch-action:manipulation}
+.mc-flight-toolbar button.active,.mc-flight-altitude button.held{background:#c5e0cf;color:#183830}
+.mc-flight-toolbar button:focus-visible,.mc-flight-altitude button:focus-visible{outline:3px solid #f3f0dc;outline-offset:2px}
+.mc-flight-mobile[hidden]{display:none!important}
+.mc-flight-mobile{position:fixed;inset:0;z-index:21;pointer-events:none}
+.mc-flight-stick{position:absolute;left:max(14px,env(safe-area-inset-left));bottom:max(107px,calc(env(safe-area-inset-bottom) + 100px));width:120px;height:120px;border:2px solid #dfefe7a0;border-radius:50%;background:#203e4260;touch-action:none;pointer-events:auto;user-select:none}
+.mc-flight-knob{position:absolute;width:51px;height:51px;left:50%;top:50%;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle at 32% 28%,#e1f1df,#809e99);border:2px solid #e8f5e1bd}
+.mc-flight-altitude{position:absolute;right:max(13px,env(safe-area-inset-right));bottom:max(113px,calc(env(safe-area-inset-bottom) + 105px));display:flex;flex-direction:column;gap:9px;pointer-events:auto}
+.mc-flight-altitude button{min-width:85px;touch-action:none;user-select:none}
+body:not(.mc-free-enabled) .mc-flight-toolbar button:not(.mc-flight-toggle){display:none}
+body:not(.mc-free-enabled).bus-stop-inspection .mc-flight-toolbar{bottom:max(72px,calc(env(safe-area-inset-bottom) + 68px))}
+body:not(.mc-free-enabled).character-inspection .mc-flight-toolbar{bottom:max(122px,calc(env(safe-area-inset-bottom) + 112px))}
+body.mc-free-enabled .controls,body.mc-free-enabled .bottom{display:none}
+@media(orientation:landscape) and (max-height:510px){.mc-flight-toolbar{bottom:max(4px,env(safe-area-inset-bottom));left:26%;right:23%;gap:3px}.mc-flight-toolbar button{min-height:32px;padding:4px 7px;font-size:10px}.mc-flight-stick{width:95px;height:95px;bottom:max(30px,calc(env(safe-area-inset-bottom) + 28px))}.mc-flight-knob{width:42px;height:42px}.mc-flight-altitude{bottom:max(32px,calc(env(safe-area-inset-bottom) + 30px))}.mc-flight-altitude button{min-height:35px}}
+@media(max-width:390px){.mc-flight-toolbar button{font-size:10px;padding:7px 8px}}

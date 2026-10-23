@@ -2,6 +2,7 @@ import * as THREE from "three";
 import {GLTFLoader} from "three/addons/loaders/GLTFLoader.js";
 import {OrbitControls} from "three/addons/controls/OrbitControls.js";
 import {MotionController} from "./motion.mjs";
+import {mountInspectionFlight} from "../object-viewer/free-flight.js";
 
 // Stage 2 is an isolated animation acceptance test, not an alteration to
 // MINI CITY's public game.js. The model's own authored glTF animation clips
@@ -23,7 +24,7 @@ renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 $("viewport").appendChild(renderer.domElement);
 const controls=new OrbitControls(camera,renderer.domElement);
 controls.target.set(0,1.03,0);
-controls.enableDamping=true;controls.enablePan=false;
+controls.enableDamping=true;controls.enablePan=true;controls.screenSpacePanning=true;
 controls.minDistance=1.4;controls.maxDistance=11;
 controls.minPolarAngle=.13;controls.maxPolarAngle=Math.PI/2-.018;
 controls.update();
@@ -225,6 +226,7 @@ $("reset").addEventListener("click",()=>{
 });
 const keys=new Set();
 window.addEventListener("keydown",e=>{
+  if(flight.active)return;
   if(["KeyW","KeyA","KeyD","ShiftLeft","ShiftRight","ArrowLeft","ArrowRight"].includes(e.code))
     e.preventDefault();
   keys.add(e.code);
@@ -234,6 +236,7 @@ window.addEventListener("keydown",e=>{
   if(e.code==="KeyD"||e.code==="ArrowRight")motion?.setTurning(1);
 });
 window.addEventListener("keyup",e=>{
+  if(flight.active)return;
   keys.delete(e.code);
   if(e.code==="KeyW"||e.code==="ShiftLeft"||e.code==="ShiftRight")
     setMode(keys.has("KeyW")?(keys.has("ShiftLeft")||keys.has("ShiftRight")?"run":"walk"):"idle");
@@ -249,6 +252,10 @@ window.addEventListener("resize",()=>{
   renderer.setSize(innerWidth,innerHeight);
   renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.5));
 });
+const flight=mountInspectionFlight({camera,orbit:controls,canvas:renderer.domElement,
+ resetPose:resetCamera,speed:2.4,onToggle:enabled=>{
+  if(enabled){keys.clear();motion?.setTurning(0);setMode("idle");}
+}});
 const clock=new THREE.Clock();
 let frames=0,frameAt=performance.now();
 function tick(){
@@ -258,13 +265,13 @@ function tick(){
   if(isLoaded&&motion){
     const info=motion.update(dt);
     const delta=root.position.clone().sub(lastRoot);
-    controls.target.add(delta);
-    camera.position.add(delta);
+    // Free-flight is independent of actor movement; only orbit follows it.
+    if(!flight.active){controls.target.add(delta);camera.position.add(delta);}
     lastRoot.copy(root.position);
     $("speed").textContent="Скорость: "+info.speed.toFixed(2)+" м/с · "+info.phase;
     if(info.status)$("motion-status").textContent=info.status;
   }
-  controls.update();
+  if(flight.active)flight.update(dt);else controls.update();
   renderer.render(scene,camera);
   const now=performance.now();
   frames++;
@@ -273,6 +280,10 @@ function tick(){
     frameAt=now;frames=0;
   }
 }
-loadSource("casual");
+// Catalog entries must open THEIR model (not the default candidate).
+const initialModel=new URL(window.location.href).searchParams.get("model");
+const initialSource=initialModel==="hero_reference"?"base":"casual";
+$("model-source").value=initialSource;
+loadSource(initialSource,initialSource==="casual");
 tick();
 window.characterLabStage2Ready=true;

@@ -1,0 +1,26 @@
+// No duplicate preview geometry: use the same buildStreet() that places
+// the actual tree, lamp and bench in the city, but with a ONE-object plan.
+import {buildStreet} from "../play-lab/street.js";
+export const ISOLATED_ASSETS=Object.freeze({
+  street_lamp:Object.freeze({name:"Уличный фонарь",number:1,category:"street_furniture",
+    y:2.60,distance:9.2,height:5.20,quantity:6,parts:["street-lamp-poles","street-lamp-arms","street-lamp-heads"]}),
+  street_bench:Object.freeze({name:"Дворовая скамейка",number:2,category:"street_furniture",
+    y:.80,distance:4.1,height:1.40,quantity:4,parts:["benches-seats","benches-backs","benches-legs"]}),
+  street_tree:Object.freeze({name:"Дерево городское",number:1,category:"nature",
+    y:2.65,distance:8.6,height:5.40,quantity:22,parts:["trees-trunks","trees-canopy-low","trees-canopy-high"]})
+});
+export function buildIsolatedStreetAsset(THREE,id){
+  const spec=ISOLATED_ASSETS[id];
+  if(!spec)throw Error("Unknown isolated asset: "+String(id));
+  const plan={surfaces:[],markings:[],curbs:[],trees:[],lamps:[],benches:[],
+    obstacles:[],info:{trees:0,lamps:0,benches:0,roadLength:0,roadWidth:0}};
+  if(id==="street_lamp"){plan.lamps.push({x:0,z:0});plan.info.lamps=1;}
+  if(id==="street_bench"){plan.benches.push({x:0,z:0});plan.info.benches=1;}
+  if(id==="street_tree"){plan.trees.push({x:0,z:0});plan.info.trees=1;}
+  const root=buildStreet(THREE,plan);
+  root.name="MINI CITY | "+spec.name+" | isolated viewer";
+  root.userData.isolatedModelId=id;
+  root.userData.worldQuantity=spec.quantity;
+  root.userData.inGameByThisViewer=false;
+  return {root,spec};
+}
