@@ -44,7 +44,7 @@ const controller=new PlayerController({
   building:config,pads,extras:streetPlan.obstacles
 });
 $("hud-toggle").addEventListener("click",()=>{
-  const collapsed=$(".brand").classList.toggle("collapsed");
+  const collapsed=document.querySelector(".brand").classList.toggle("collapsed");
   $("hud-toggle").setAttribute("aria-expanded",String(!collapsed));
   $("hud-toggle").textContent=collapsed?"▾ Показать описание":"▴ Свернуть описание";
 });
