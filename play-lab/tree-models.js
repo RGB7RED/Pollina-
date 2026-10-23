@@ -3,10 +3,30 @@
 // Position in metres, shapes and palette are authored; no external textures.
 const P=(name,shape,material,at,scale,rotation=[0,0,0])=>
   ({name,shape,material,at,scale,rotation});
+// Previously the side branches were long cylinders centred OUTSIDE the
+// trunk, with their lower tips visibly hanging beneath the foliage.
+// Author a short tapered fork from its true trunk connection to an actual
+// leaf-covered endpoint. Both ends are explicit and always point upwards.
+const B=(name,material,from,to,thickness=1)=>{
+ const delta=to.map((v,i)=>v-from[i]);
+ const length=Math.hypot(...delta);
+ if(!(length>.10)||delta[1]<=0)
+  throw Error("Tree branches must grow upwards from the trunk: "+name);
+ const centre=from.map((v,i)=>(v+to[i])/2);
+ // Rotate an upright unit cylinder so its local +Y follows the direction.
+ // Three.js default Euler XYZ: Rz controls horizontal X, Rx controls Z.
+ const rotation=[Math.atan2(delta[2],delta[1]),0,
+   -Math.asin(Math.max(-1,Math.min(1,delta[0]/length)))];
+ return {...P(name,"branch",material,centre,
+     [thickness,length,thickness],rotation),
+   branchEnds:Object.freeze({from:Object.freeze(from),to:Object.freeze(to)})};
+};
 const base=[
  P("trees-trunks","trunk","bark",[0,1.22,0],[1,1.04,1]),
- P("trees-branch-left","branch","bark",[-.50,2.65,0],[1,1.14,1],[0,0,-.48]),
- P("trees-branch-right","branch","bark",[.58,2.74,-.06],[1,1.11,1],[0,0,.54]),
+ B("trees-branch-left","bark",[-.06,2.34,0],[-.78,3.45,.04],.94),
+ B("trees-branch-right","bark",[.07,2.34,-.02],[.86,3.47,-.10],.94),
+ // A leafy collar hides the fork root at the trunk/canopy joint.
+ P("trees-canopy-neck","crown","greenDark",[0,3.15,0],[.84,.85,.84]),
  P("trees-canopy-low","crown","greenDark",[-1.05,3.55,.06],[1.54,1.29,1.44]),
  P("trees-canopy-high","crown","greenLight",[.10,4.80,-.18],[1.50,1.47,1.49]),
  P("trees-canopy-left","crown","greenMid",[-1.55,4.58,-.26],[1.20,1.23,1.19]),
@@ -26,9 +46,9 @@ const poplar=[
 ];
 const oak=[
  P("oak-trunk","thickTrunk","oakBark",[0,1.45,0],[1,1,1]),
- P("oak-branch-left","branch","oakBark",[-1.13,2.83,0],[1,1.93,1],[0,0,-.68]),
- P("oak-branch-right","branch","oakBark",[1.18,2.86,.03],[1,1.85,1],[0,0,.66]),
- P("oak-branch-back","branch","oakBark",[.15,2.84,-.95],[1,1.48,1],[.67,0,.05]),
+ B("oak-branch-left","oakBark",[-.12,2.78,0],[-1.49,3.95,.05],1.18),
+ B("oak-branch-right","oakBark",[.13,2.78,.03],[1.48,3.98,.10],1.18),
+ B("oak-branch-back","oakBark",[0,2.82,-.09],[.08,3.87,-1.12],1.05),
  P("oak-crown-center","crown","oakGreen",[0,4.36,0],[2.11,1.65,1.79]),
  P("oak-crown-left","crown","oakLight",[-2.05,4.04,.17],[1.80,1.38,1.50]),
  P("oak-crown-right","crown","oakGreen",[2.05,4.04,-.13],[1.89,1.44,1.63]),
@@ -38,8 +58,8 @@ const oak=[
 ];
 const ornamental=[
  P("ornamental-trunk","slimTrunk","bark",[0,1.22,0],[.85,1.00,.85]),
- P("ornamental-branch-left","branch","bark",[-.47,2.20,0],[.64,.73,.64],[0,0,-.65]),
- P("ornamental-branch-right","branch","bark",[.49,2.29,.04],[.60,.80,.60],[0,0,.65]),
+ B("ornamental-branch-left","bark",[-.03,2.34,0],[-.74,3.12,.05],.62),
+ B("ornamental-branch-right","bark",[.04,2.34,0],[.71,3.13,-.02],.62),
  P("ornamental-crown-center","crown","ornamentalGreen",[0,3.04,0],[1.02,.94,1.07]),
  P("ornamental-crown-left","crown","ornamentalGreen",[-.96,2.87,.12],[.82,.77,.80]),
  P("ornamental-crown-right","crown","ornamentalGreen",[.94,2.95,-.06],[.78,.76,.82]),
@@ -53,8 +73,8 @@ const birch=[
  P("birch-bark-mark-low","barkStripe","birchDark",[0,.82,0],[1,1,1]),
  P("birch-bark-mark-mid","barkStripe","birchDark",[0,1.58,0],[1,1,1]),
  P("birch-bark-mark-high","barkStripe","birchDark",[0,2.33,0],[1,1,1]),
- P("birch-branch-left","branch","birchWhite",[-.69,3.08,0],[.66,1.55,.66],[0,0,-.68]),
- P("birch-branch-right","branch","birchWhite",[.81,3.29,0],[.59,1.62,.59],[0,0,.68]),
+ B("birch-branch-left","birchWhite",[-.03,3.49,0],[-.97,4.47,-.06],.64),
+ B("birch-branch-right","birchWhite",[.04,3.50,0],[1.00,4.58,-.20],.64),
  P("birch-foliage-left","crown","birchGreen",[-1.03,3.99,0],[.98,1.30,.99]),
  P("birch-foliage-right","crown","birchLight",[1.08,4.44,-.25],[.89,1.17,.91]),
  P("birch-foliage-center","crown","birchGreen",[.06,5.03,.07],[.95,1.19,1.02]),
@@ -78,6 +98,15 @@ export const TREE_MODELS=Object.freeze(Object.fromEntries(
   ...item,id,category:"nature",
   parts:Object.freeze(item.parts.map(x=>x.name))
  })])
+));
+// Expose authored junctions to regression tests; no duplicated drawing code.
+export const TREE_BRANCH_SEGMENTS=Object.freeze(Object.fromEntries(
+ Object.entries(TYPES).map(([id,item])=>[id,Object.freeze(
+  item.parts.filter(p=>p.branchEnds).map(p=>Object.freeze({
+   name:p.name,from:p.branchEnds.from,to:p.branchEnds.to,
+   centre:p.at,length:p.scale[1],rotation:p.rotation
+  }))
+ )])
 ));
 const palette={
  bark:0x695044,oakBark:0x514336,
@@ -105,7 +134,8 @@ export function buildTreeMeshes(THREE,root,instances){
   slimTrunk:new THREE.CylinderGeometry(.12,.19,2.44,8),
   birchTrunk:new THREE.CylinderGeometry(.13,.20,3.65,8),
   barkStripe:new THREE.CylinderGeometry(.135,.145,.075,8),
-  branch:new THREE.CylinderGeometry(.070,.13,1.65,6),
+  // Unit-height taper: every variant scales Y to the actual fork length.
+  branch:new THREE.CylinderGeometry(.070,.135,1,7),
   crown:new THREE.DodecahedronGeometry(1,0)
  };
  const meshes=[];
