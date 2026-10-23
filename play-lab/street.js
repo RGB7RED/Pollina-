@@ -2,6 +2,7 @@
 // World units are metres. Kept separate from the approved house geometry
 // and character controller; deterministic placement makes review repeatable.
 import {addGrassToGroup} from "./grass.js";
+import {buildTreeMeshes} from "./tree-models.js";
 export const STREET_LAYOUT=Object.freeze({
   length:108,roadNear:16.05,roadFar:25.15,
   sidewalkNear:[9.55,15.98],sidewalkFar:[25.25,30.2],
@@ -178,13 +179,9 @@ export function buildStreet(THREE,plan){
     m=>[m.x,m.y,m.z,m.width,.008,m.depth]);
   batch("raised-curbs",cube,materials.curb,plan.curbs,
     m=>[m.x,m.y,m.z,m.width,.12,m.depth]);
-  const trunk=new THREE.CylinderGeometry(.20,.28,2.35,6);
-  const crown=new THREE.DodecahedronGeometry(1,0);
-  batch("trees-trunks",trunk,materials.bark,plan.trees,t=>[t.x,1.16,t.z,1,1,1]);
-  batch("trees-canopy-low",crown,materials.leaves,plan.trees,t=>
-    [t.x,3.12,t.z,1.22,1.11,1.19]);
-  batch("trees-canopy-high",crown,materials.leaves2,plan.trees,t=>
-    [t.x+.18,4.16,t.z-.07,.89,.87,.93]);
+  // One source of truth for all five tree models, also used by the
+  // isolated nature catalog viewer. No trees in the standalone street.
+  buildTreeMeshes(THREE,root,plan.trees||[]);
   // Decorative black Petersburg park lantern, matching the approved
   // photo reference. Every detailed element is a SHARED instanced batch,
   // not six separately constructed lanterns.
