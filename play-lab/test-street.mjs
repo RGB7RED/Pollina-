@@ -56,7 +56,7 @@ assert.ok(padBlock.z>9.0,"building entry slabs remain blocking");
 
 // Three-like stub: assert no per-tree mesh allocation and fixed draw budget.
 class Vec{
- constructor(){this.x=0;this.y=0;this.z=0;}
+ constructor(x=0,y=0,z=0){this.x=x;this.y=y;this.z=z;}
  set(x,y,z){this.x=x;this.y=y;this.z=z;return this;}
 }
 class Object3D{
