@@ -88,9 +88,11 @@ export function buildStreet(THREE,plan){
     bark:new THREE.MeshStandardMaterial({color:0x635044,roughness:1}),
     leaves:new THREE.MeshStandardMaterial({color:0x587454,roughness:1,flatShading:true}),
     leaves2:new THREE.MeshStandardMaterial({color:0x728762,roughness:1,flatShading:true}),
-    lamp:new THREE.MeshStandardMaterial({color:0x404c52,roughness:.77,metalness:.12}),
+    lamp:new THREE.MeshStandardMaterial({color:0x171b1e,roughness:.42,metalness:.58}),
+    concrete:new THREE.MeshStandardMaterial({color:0xd7d6cf,roughness:.88,metalness:0}),
+    fastener:new THREE.MeshStandardMaterial({color:0xa6a7a1,roughness:.5,metalness:.55}),
     glow:new THREE.MeshStandardMaterial({color:0xffdfac,emissive:0xffbb70,emissiveIntensity:1.35,roughness:.7}),
-    wood:new THREE.MeshStandardMaterial({color:0x806451,roughness:.96})
+    wood:new THREE.MeshStandardMaterial({color:0x80563c,roughness:.76,metalness:0})
   };
   const plane=(width,depth,material,x,y,z)=>{
     const mesh=new THREE.Mesh(new THREE.PlaneGeometry(width,depth),material);
@@ -111,8 +113,8 @@ export function buildStreet(THREE,plan){
     mesh.frustumCulled=false; // few dozen visible items; avoid bad partial AABBs
     const temp=new THREE.Object3D();
     items.forEach((item,i)=>{
-      const [x,y,z,sx,sy,sz]=positionScale(item);
-      temp.position.set(x,y,z);temp.rotation.set(0,0,0);
+      const [x,y,z,sx,sy,sz,rx=0,ry=0,rz=0]=positionScale(item);
+      temp.position.set(x,y,z);temp.rotation.set(rx,ry,rz);
       temp.scale.set(sx,sy,sz);temp.updateMatrix();
       mesh.setMatrixAt(i,temp.matrix);
     });
@@ -133,24 +135,138 @@ export function buildStreet(THREE,plan){
     [t.x,3.12,t.z,1.22,1.11,1.19]);
   batch("trees-canopy-high",crown,materials.leaves2,plan.trees,t=>
     [t.x+.18,4.16,t.z-.07,.89,.87,.93]);
-  const pole=new THREE.CylinderGeometry(.075,.105,5.20,6);
-  batch("street-lamp-poles",pole,materials.lamp,plan.lamps,t=>
-    [t.x,2.60,t.z,1,1,1]);
-  batch("street-lamp-arms",cube,materials.lamp,plan.lamps,t=>
-    [t.x+.35,5.10,t.z,.80,.10,.12]);
-  // Emissive only; six real-time point lights would be expensive on iPhone.
-  batch("street-lamp-heads",cube,materials.glow,plan.lamps,t=>
-    [t.x+.70,5.01,t.z,.33,.075,.23]);
-  batch("benches-seats",cube,materials.wood,plan.benches,b=>
-    [b.x,.57,b.z,2.03,.13,.56]);
-  batch("benches-backs",cube,materials.wood,plan.benches,b=>
-    [b.x,1.00,b.z-.27,2.03,.81,.12]);
-  const legs=plan.benches.flatMap(b=>[
-    {x:b.x-.72,z:b.z-.16},{x:b.x+.72,z:b.z-.16},
-    {x:b.x-.72,z:b.z+.16},{x:b.x+.72,z:b.z+.16}
-  ]);
-  batch("benches-legs",cube,materials.lamp,legs,l=>
-    [l.x,.28,l.z,.12,.56,.12]);
+  // Decorative black Petersburg park lantern, matching the approved
+  // photo reference. Every detailed element is a SHARED instanced batch,
+  // not six separately constructed lanterns.
+  const lampItems=plan.lamps||[];
+  const benchItems=plan.benches||[];
+  const at=(items)=>items.map(p=>({x:p.x,z:p.z}));
+  const local=(p)=>[p.x,0,p.z,1,1,1];
+  const lampPart=(name,geometry,material=materials.lamp)=>batch(
+    name,geometry,material,at(lampItems),local);
+  if(lampItems.length){
+    const lampPole=new THREE.CylinderGeometry(.057,.089,3.89,10);
+    batch("street-lamp-poles",lampPole,materials.lamp,lampItems,
+      p=>[p.x,2.29,p.z,1,1,1]); // foot begins at 0; top at 4.235
+    const baseLayers=[
+      ["street-lamp-base-foot",new THREE.CylinderGeometry(.215,.24,.12,10),.09],
+      ["street-lamp-base-plinth",new THREE.CylinderGeometry(.145,.19,.49,10),.38],
+      ["street-lamp-base-collar",new THREE.CylinderGeometry(.165,.14,.13,10),.65],
+      ["street-lamp-post-ring",new THREE.CylinderGeometry(.105,.105,.075,10),2.01],
+      ["street-lamp-upper-collar",new THREE.CylinderGeometry(.098,.071,.12,10),4.19]
+    ];
+    for(const [name,geometry,y] of baseLayers)
+      batch(name,geometry,materials.lamp,lampItems,p=>[p.x,y,p.z,1,1,1]);
+    const makeTube=(points,radius=.026,segments=24)=>new THREE.TubeGeometry(
+      new THREE.CatmullRomCurve3(points.map(([x,y,z=0])=>
+        new THREE.Vector3(x,y,z))),segments,radius,5,false);
+    // High sweeping gooseneck: not a straight box. Lantern is suspended
+    // from the end rather than attached horizontally like a streetlight.
+    lampPart("street-lamp-arch",makeTube([
+      [.06,4.27],[.12,4.46],[.33,4.60],[.58,4.64],
+      [.87,4.57],[1.05,4.37],[1.08,4.02]
+    ],.036,28));
+    lampPart("street-lamp-vertical-brace",
+      makeTube([[.19,3.54],[.19,3.94],[.15,4.25]],.027,12));
+    lampPart("street-lamp-cross-brace",
+      makeTube([[.08,3.88],[.21,3.88],[.29,3.97]],.023,9));
+    // Two worked-iron volutes and small forged tips, readable in silhouette.
+    const swirl=(cx,cy,r,startAngle,turns,reverse=false)=>{
+      const pts=[];
+      for(let i=0;i<=28;i++){
+        const t=i/28,angle=startAngle+(reverse?-1:1)*Math.PI*2*turns*t;
+        const rad=r*(1-.80*t);
+        pts.push([cx+rad*Math.cos(angle),cy+rad*Math.sin(angle)]);
+      }
+      return makeTube(pts,.017,42);
+    };
+    lampPart("street-lamp-scroll-large",swirl(.44,4.25,.17,.2,1.55));
+    lampPart("street-lamp-scroll-small",swirl(.23,4.12,.12,1.4,1.45,true));
+    lampPart("street-lamp-hanger",
+      new THREE.CylinderGeometry(.034,.034,.20,8),
+      materials.lamp);
+    // Above hanger is at y=3.97; geometry is centered at origin.
+    // The lampPart version above is a local reusable geometry and has to
+    // be positioned in object space like the other fittings:
+    const hanger=root.children[root.children.length-1];
+    hanger.geometry.translate(1.08,3.94,0);
+    lampPart("street-lamp-lantern-roof",
+      new THREE.ConeGeometry(.303,.23,6,1).translate(1.08,3.91,0));
+    lampPart("street-lamp-lantern-eave",
+      new THREE.CylinderGeometry(.293,.263,.045,6).translate(1.08,3.79,0));
+    const lanternGlass=new THREE.MeshStandardMaterial({
+      color:0xfff2d5,emissive:0xffcb74,emissiveIntensity:.35,
+      roughness:.2,transparent:true,opacity:.52,
+      side:THREE.DoubleSide,depthWrite:false
+    });
+    lampPart("street-lamp-heads",
+      new THREE.CylinderGeometry(.200,.118,.49,6,1,true)
+        .translate(1.08,3.52,0),lanternGlass);
+    lampPart("street-lamp-lantern-base",
+      new THREE.CylinderGeometry(.129,.15,.084,6).translate(1.08,3.24,0));
+    lampPart("street-lamp-lantern-tip",
+      new THREE.ConeGeometry(.065,.15,6).rotateZ(Math.PI)
+        .translate(1.08,3.13,0));
+    // Six strong black glazing ribs form the unmistakable hanging lantern.
+    // Each rib leans toward the narrow base; all bars share one draw call.
+    const ribs=lampItems.flatMap(p=>Array.from({length:6},(_,i)=>{
+      const a=Math.PI*2*i/6;
+      const dx=Math.cos(a),dz=Math.sin(a);
+      return {x:p.x+1.08+dx*.158,y:3.52,z:p.z+dz*.158,
+        dx,dz};
+    }));
+    const ribCylinder=new THREE.CylinderGeometry(.013,.014,.50,5);
+    batch("street-lamp-lantern-ribs",ribCylinder,materials.lamp,ribs,r=>[
+      r.x,r.y,r.z,1,1,1,
+      r.dz*.17,0,-r.dx*.17
+    ]);
+    lampPart("street-lamp-pole-finial",
+      new THREE.ConeGeometry(.078,.18,8).translate(0,4.37,0));
+  }
+  // Park bench as photographed: individual brown wooden lamellae, slightly
+  // tilted backrest, two cast-concrete A-profile side supports. No armrests.
+  if(benchItems.length){
+    const slat=new THREE.BoxGeometry(1,1,1);
+    const seats=benchItems.flatMap(b=>Array.from({length:6},(_,i)=>({
+      x:b.x,z:b.z-.15+i*.105
+    })));
+    batch("benches-seats",slat,materials.wood,seats,
+      s=>[s.x,.485,s.z,1.91,.046,.091]);
+    const backs=benchItems.flatMap(b=>Array.from({length:6},(_,i)=>({
+      x:b.x,y:.62+i*.095,z:b.z-.35-i*.024
+    })));
+    batch("benches-backs",slat,materials.wood,backs,
+      s=>[s.x,s.y,s.z,1.91,.079,.055,-.24,0,0]);
+    // Extruded side profiles read like two genuine sloped white concrete
+    // legs, with a structural notch beneath the seat.
+    const shape=new THREE.Shape();
+    shape.moveTo(-.45,.045);
+    shape.lineTo(-.24,.045);
+    shape.lineTo(-.09,.355);
+    shape.lineTo(.17,.355);
+    shape.lineTo(.35,.045);
+    shape.lineTo(.56,.045);
+    shape.lineTo(.30,.54);
+    shape.lineTo(-.13,.54);
+    shape.lineTo(-.34,.17);
+    shape.closePath();
+    const supportGeo=new THREE.ExtrudeGeometry(shape,{
+      depth:.145,steps:1,bevelEnabled:true,bevelSegments:1,
+      bevelSize:.012,bevelThickness:.012,curveSegments:1
+    });
+    supportGeo.rotateY(Math.PI/2);supportGeo.translate(-.073,0,0);
+    const supports=benchItems.flatMap(b=>[
+      {x:b.x-.80,z:b.z},{x:b.x+.80,z:b.z}
+    ]);
+    batch("benches-concrete-supports",supportGeo,materials.concrete,supports,local);
+    // Tiny fastening caps along the backrest, repeated in one batch.
+    const bolts=benchItems.flatMap(b=>Array.from({length:6},(_,i)=>
+      [-.79,.79].map(x=>({x:b.x+x,y:.62+i*.095,z:b.z-.35-i*.024+.037}))
+    ).flat());
+    const boltGeo=new THREE.SphereGeometry(.013,5,4);
+    batch("benches-fasteners",boltGeo,materials.fastener,bolts,
+      p=>[p.x,p.y,p.z,1,1,1]);
+  }
   root.userData.streetStats={...plan.info,
     obstacleCount:plan.obstacles.length,
     drawGroups:root.children.length};
