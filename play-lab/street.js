@@ -49,8 +49,8 @@ export function planStreet(building,pads=[]){
   const benches=[-30,-12,12,30].map(x=>({x,z:-12.75}));
   const obstacles=[
     ...trees.map((t,i)=>obstruction("tree-"+i,t.x,t.z,.35,.35)),
-    ...lamps.map((t,i)=>obstruction("lamp-"+i,t.x,t.z,.20,.20)),
-    ...benches.map((t,i)=>obstruction("bench-"+i,t.x,t.z,1.13,.48))
+    ...lamps.map((t,i)=>obstruction("lamp-"+i,t.x,t.z,.25,.25)),
+    ...benches.map((t,i)=>obstruction("bench-"+i,t.x,t.z,1.13,.60))
   ];
   // Stop accidental scene changes from placing scenery into walls, door
   // slabs or on the initial player spawn. Collision and art share this plan.
@@ -183,13 +183,7 @@ export function buildStreet(THREE,plan){
     lampPart("street-lamp-scroll-large",swirl(.44,4.25,.17,.2,1.55));
     lampPart("street-lamp-scroll-small",swirl(.23,4.12,.12,1.4,1.45,true));
     lampPart("street-lamp-hanger",
-      new THREE.CylinderGeometry(.034,.034,.20,8),
-      materials.lamp);
-    // Above hanger is at y=3.97; geometry is centered at origin.
-    // The lampPart version above is a local reusable geometry and has to
-    // be positioned in object space like the other fittings:
-    const hanger=root.children[root.children.length-1];
-    hanger.geometry.translate(1.08,3.94,0);
+      new THREE.CylinderGeometry(.034,.034,.20,8).translate(1.08,3.94,0));
     lampPart("street-lamp-lantern-roof",
       new THREE.ConeGeometry(.303,.23,6,1).translate(1.08,3.91,0));
     lampPart("street-lamp-lantern-eave",
