@@ -22,8 +22,8 @@ export function sampleGrassTufts(surfaces,building,pads=[],{buildingPresent=true
     return n-Math.floor(n);
   };
   const occupied=(x,z)=>{
-    if(paved.some(r=>Math.abs(x-r.x)<r.width/2+.45&&
-      Math.abs(z-r.z)<r.depth/2+.45))return true;
+    if(paved.some(r=>Math.abs(x-r.x)<r.width/2+.62&&
+      Math.abs(z-r.z)<r.depth/2+.62))return true;
     if(!buildingPresent)return false;
     if(Math.abs(x)<building.length/2+1.2&&
        Math.abs(z)<building.width/2+1.2)return true;
