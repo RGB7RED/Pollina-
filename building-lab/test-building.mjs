@@ -27,15 +27,29 @@ const result=buildApartmentHouse(THREE);
 const root=result.root,a=root.userData.geometryAudit,stats=result.stats;
 assert.equal(BUILDING.floors,5);assert.equal(BUILDING.entrances,4);
 assert.equal(BUILDING.length,74);assert.equal(BUILDING.width,12.8);
-assert.equal(BUILDING.windowBays,27);assert.equal(STAGES[1],"3.2 Фасад");
+assert.equal(BUILDING.windowBays,28);assert.equal(STAGES[1],"3.2 Фасад");
 assert.equal(root.userData.stage,"3.2");
 assert.equal(a.originalFootprint.length,74);assert.equal(a.originalFootprint.width,12.8);
 assert.equal(planFacade().filter(w=>w.entrance).length,4);
+// Regression for user's visual review: six *real window bays* (not door
+// decorations or painted panes) between each adjacent pair of entrances.
+const street=planFacade().filter(w=>w.side===1);
+const ground=street.filter(w=>w.floor===0);
+const entranceBays=ground.filter(w=>w.entrance).map(w=>w.bay);
+assert.deepEqual(entranceBays,[3,10,17,24],"four evenly spaced entrance bays");
+for(let i=0;i<entranceBays.length-1;i++){
+  for(let floor=0;floor<BUILDING.floors;floor++){
+    const windowsBetween=street.filter(w=>w.floor===floor&&
+      w.bay>entranceBays[i]&&w.bay<entranceBays[i+1]&&!w.entrance);
+    assert.equal(windowsBetween.length,6,
+      "six windows between entrances "+(i+1)+" and "+(i+2)+" on floor "+(floor+1));
+  }
+}
 assert.equal(stats.entrances,4);assert.equal(stats.doorHoles,4);
-assert.equal(stats.windows,286);assert.equal(stats.windowHoles,286);
-assert.equal(a.holes.length,290);
+assert.equal(stats.windows,296);assert.equal(stats.windowHoles,296);
+assert.equal(a.holes.length,300);
 assert.equal(a.holes.filter(h=>h.axis==="end").length,20);
-assert.equal(a.holes.filter(h=>h.axis==="long").length,270);
+assert.equal(a.holes.filter(h=>h.axis==="long").length,280);
 assert.equal(stats.balconies,planFacade().filter(p=>p.balcony).length);
 for(const kind of ["A","B","C","D"])assert.ok(stats.balconyKinds[kind]>=4,"missing balcony "+kind);
 assert.equal(a.balconyPositions.length,stats.balconies);

@@ -13,9 +13,11 @@ export const BUILDING={
   roofRise:3.08,
   roofOverhang:.46,
   roofHip:6.45,
-  windowBays:27,
+  windowBays:28,
   entranceSide:"positive Z",
 };
+// Six ordinary window bays between adjacent entrances, including 1 → 2.
+export const ENTRANCE_BAYS=Object.freeze([3,10,17,24]);
 export const STAGES=["3.1 Форма","3.2 Фасад","3.3 Материалы","3.4 Оптимизация"];
 function deterministic(seed=7331){return ()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296};}
 export function planFacade({length=BUILDING.length,bays=BUILDING.windowBays,floors=BUILDING.floors}={}){
@@ -24,7 +26,7 @@ export function planFacade({length=BUILDING.length,bays=BUILDING.windowBays,floo
   for(const side of [1,-1])for(let floor=0;floor<floors;floor++){
     for(let bay=0;bay<bays;bay++){
       const x=-length/2+1.85+(bay+.5)*step;
-      const entrance=side===1&&floor===0&&[3,9,16,23].includes(bay);
+      const entrance=side===1&&floor===0&&ENTRANCE_BAYS.includes(bay);
       // A real-looking uneven residential rhythm, no fully random facade.
       const balcony=(side===1?[2,6,11,16,21,25]:[4,10,16,22]).includes(bay)
         &&floor>0 && !(bay===11&&floor===2) && !(bay===22&&floor===4);
@@ -297,7 +299,7 @@ export function buildApartmentHouse(THREE,config={}){
     const height=isDoor?2.28:balcony?2.20:1.59;
     const hole=punch("long",side,centre-step/2,centre+step/2,y0,y1,
       centre,openingWidth,low,height,mats.brick,isDoor?"door":"window");
-    if(isDoor)entranceDetail(hole,[3,9,16,23].indexOf(w.bay));
+    if(isDoor)entranceDetail(hole,ENTRANCE_BAYS.indexOf(w.bay));
     else {
       windowDetail(hole,w.variation,balcony);
       if(balcony)balconyDetail(w);
