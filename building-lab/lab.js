@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import {OrbitControls} from "three/addons/controls/OrbitControls.js";
 import {BUILDING,buildApartmentHouse} from "./building.js";
-import {FreeCamera,normalizedStick} from "./free-camera.js";
+import {FreeCamera,normalizedStick,CAMERA_SPEEDS,LOOK_SENSITIVITIES} from "./free-camera.js";
 const $=id=>document.getElementById(id);
 const scene=new THREE.Scene();
 scene.background=new THREE.Color(0x8e9ca9);
@@ -99,7 +99,8 @@ $("building-info").textContent=config.floors+" этажей · "+stats.entrances
 
 /* 3.1.1: ORBIT is retained, FREE is a separate explicit XYZ inspection mode.
    No change to the building geometry, materials or baseline render budget. */
-const free=new FreeCamera(camera,{speed:9,sprint:2.4});
+const free=new FreeCamera(camera);
+let freeWasEntered=false;
 let lookPointer=null,stickPointer=null;
 let lookX=0,lookY=0;
 const stick=$("stick-zone"),knob=$("stick-knob");
@@ -117,15 +118,21 @@ function releaseInputs(){
   free.clearInputs();
   centerStick();
   for(const id of ["fly-up","fly-down"])$(id).classList.remove("held");
-  $("fly-boost").classList.remove("active");
-  $("fly-boost").setAttribute("aria-pressed","false");
+
 }
 function toggleFreeCamera(enabled=!activeFly()){
   if(enabled===activeFly())return;
   // Undo any pointer captures and pressed state before changing modes.
   releaseInputs();
   if(enabled){
-    free.start(controls.target);
+    // Enter near the facade when the orbit camera starts hundreds of metres
+    // away in portrait mode. Switching back never teleports unexpectedly.
+    const p=camera.position;
+    if(!freeWasEntered&&Math.hypot(p.x,p.z)>57){
+      p.set(3.5,9.2,27);
+      free.start({x:3.5,y:8.9,z:6.5});
+    }else free.start(controls.target);
+    freeWasEntered=true;
     controls.enabled=false;
     document.body.classList.add("fly-mode");
     $("freecam-toggle").classList.add("active");
@@ -154,7 +161,7 @@ $("hide-hud").addEventListener("click",()=>{
 $("stick-zone").addEventListener("pointerdown",e=>{
   if(!activeFly()||stickPointer!==null)return;
   e.preventDefault();stickPointer=e.pointerId;
-  stick.setPointerCapture?.(e.pointerId);
+  try{stick.setPointerCapture?.(e.pointerId);}catch(_){/* Safari */}
   moveStick(e);
 });
 function moveStick(e){
@@ -193,20 +200,38 @@ for(const [id,dir] of [["fly-up",1],["fly-down",-1]]){
     });
   }
 }
-$("fly-boost").addEventListener("click",()=>{
-  free.boost=!free.boost;
-  $("fly-boost").classList.toggle("active",free.boost);
-  $("fly-boost").setAttribute("aria-pressed",String(free.boost));
+// Flight settings: three genuinely different speeds and look sensitivities.
+function updateFlightLabels(){
+  $("flight-speed").textContent="⚡ "+CAMERA_SPEEDS[free.speedMode].label;
+  $("flight-look").textContent="🎯 Обзор: "+LOOK_SENSITIVITIES[free.lookMode].label.toLowerCase();
+}
+$("flight-speed").addEventListener("click",()=>{
+  free.setSpeedMode(free.speedMode+1);
+  updateFlightLabels();
 });
+$("flight-look").addEventListener("click",()=>{
+  free.setLookMode(free.lookMode+1);
+  updateFlightLabels();
+});
+function focusFacade(){
+  if(!activeFly())return;
+  releaseInputs();
+  camera.position.set(3.5,9.2,27);
+  free.start({x:3.5,y:8.9,z:6.5});
+  $("view-label").textContent="Ракурс: около фасада";
+}
+$("fly-focus").addEventListener("click",focusFacade);
+updateFlightLabels();
 const stageCanvas=renderer.domElement;
 stageCanvas.addEventListener("pointerdown",e=>{
   if(!activeFly()||lookPointer!==null)return;
   e.preventDefault();lookPointer=e.pointerId;
   lookX=e.clientX;lookY=e.clientY;
-  stageCanvas.setPointerCapture?.(lookPointer);
+  try{stageCanvas.setPointerCapture?.(lookPointer);}catch(_){/* Safari */}
 });
 stageCanvas.addEventListener("pointermove",e=>{
   if(!activeFly()||e.pointerId!==lookPointer)return;
+  e.preventDefault();
   const dx=e.clientX-lookX,dy=e.clientY-lookY;
   free.look(dx,dy);
   lookX=e.clientX;lookY=e.clientY;
@@ -225,15 +250,14 @@ window.addEventListener("keydown",e=>{
 });
 window.addEventListener("keyup",e=>free.keys.delete(e.code));
 window.addEventListener("blur",releaseInputs);
+document.addEventListener("visibilitychange",()=>{
+  if(document.hidden)releaseInputs();
+});
 // Reset is intentionally different by mode: free mode resets to a safe pose
 // and stays free; orbit mode returns to ¾.
 $("reset").addEventListener("click",()=>{
   if(!activeFly())return;
-  free.stop();controls.enabled=true;
-  controls.target.set(0,8,0);setView("threequarter");
-  free.start(controls.target);controls.enabled=false;
-  $("view-label").textContent="Ракурс: свободный";
-  releaseInputs();
+  focusFacade();
 });
 
 const status=$("status");
@@ -241,13 +265,21 @@ if(stats.entrances!==4||stats.balconies<10||stats.windows<200){
  status.hidden=false;status.textContent="Ошибка геометрического контракта";
 }
 function resize(){
- camera.aspect=Math.max(.2,innerWidth/innerHeight);camera.updateProjectionMatrix();
- renderer.setSize(innerWidth,innerHeight);
- applyQuality();setView(viewName);
+  // Do NOT call setView: Safari can fire resize during URL-bar movement or
+  // device rotation. Reframing here caused spontaneous camera teleports.
+  camera.aspect=Math.max(.2,innerWidth/innerHeight);
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight);
+  applyQuality();
 }
 window.addEventListener("resize",resize);
-window.addEventListener("orientationchange",()=>setTimeout(resize,200));
-applyTime();resize();
+window.addEventListener("orientationchange",()=>{
+  releaseInputs();
+  setTimeout(resize,200);
+});
+applyTime();
+resize();
+setView("threequarter");
 let frameAt=performance.now(),frames=0,lastTick=performance.now();
 function animate(){
  requestAnimationFrame(animate);
