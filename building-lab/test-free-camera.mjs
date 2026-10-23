@@ -28,9 +28,9 @@ assert.ok(cam.position.x>before+.5,"strafe moves to the right");
 
 // Smooth acceleration/braking: no instantaneous teleport or snapping.
 free.setStick(0,0);
-const zBefore=cam.position.z;
+const xDuringStrafe=cam.position.x;
 free.update(.016);
-assert.ok(cam.position.z<zBefore,"inertia after release");
+assert.ok(cam.position.x>xDuringStrafe,"inertia after release");
 for(let i=0;i<90;i++)free.update(.016);
 assert.ok(Math.hypot(...Object.values(free.velocity))<.005,"velocity must decay to zero");
 const settled={...cam.position};
