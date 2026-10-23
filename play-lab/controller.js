@@ -83,18 +83,40 @@ export function joystickValue(clientX,clientY,rect,deadzone=.13){
   return {x:x/len*magnitude,z:z/len*magnitude};
 }
 export class PlayerController{
-  constructor({building,pads=[],spawn=DEFAULT_SPAWN,extras=[]}){
-    this.position={x:spawn.x,z:spawn.z};
+  constructor({building,pads=[],spawn=DEFAULT_SPAWN,extras=[],entry=null}){
+    this.entry=entry;
+    this.position={x:spawn.x,z:spawn.z,y:entry?.groundHeight(spawn.x,spawn.z)||0};
     this.spawn={...this.position};
-    // Environment props use the exact same collision solver as the house,
-    // but are opt-in: old 4.1 building-only controller tests stay valid.
-    this.obstacles=[...facadeObstacles(building,pads),
-      ...extras.map(o=>({...o}))];
+    this.entryDoorOpen=false;
+    this.doorBlocker=entry?.door||null;
+    // Older controllers keep the original whole-house collider. The game
+    // opts into the exact first-entry corridor without changing other doors.
+    this.obstacles=[...(entry?entry.buildingObstacles:facadeObstacles(building,pads)),
+      ...(entry?[entry.door]:[]),...extras.map(o=>({...o}))];
     if(collidesAt(spawn.x,spawn.z,this.obstacles))
       throw Error("Spawn must not intersect house or entrance slabs");
     this.lookYaw=0;this.lookPitch=.18;this.heading=modelYawForCamera(0);
     this.view="third";this.axis={x:0,z:0};this.run=false;
     this.speed=0;this.state="idle";this.collided=false;
+  }
+  setEntryDoorOpen(open){
+    if(!this.entry)return false;
+    open=Boolean(open);
+    if(!open&&Math.abs(this.position.x-this.entry.x)<1.05&&
+      Math.abs(this.position.z-this.entry.door.minZ)<.65)
+      return false; // no door closing THROUGH the player
+    if(open===this.entryDoorOpen)return true;
+    this.entryDoorOpen=open;
+    const index=this.obstacles.indexOf(this.doorBlocker);
+    if(open&&index>=0)this.obstacles.splice(index,1);
+    if(!open&&index<0)this.obstacles.push(this.doorBlocker);
+    return true;
+  }
+  canUseEntryDoor(){
+    return !!this.entry&&this.entry.canInteract(this.position.x,this.position.z);
+  }
+  isInsideEntrance(){
+    return !!this.entry&&this.entry.isInside(this.position.x,this.position.z);
   }
   setStick(x,z){this.axis.x=clamp(x,-1,1);this.axis.z=clamp(z,-1,1);}
   look(dx,dy,sensitivity=.0032){
@@ -116,6 +138,10 @@ export class PlayerController{
   toggleView(){this.setView(this.view==="third"?"first":"third");return this.view;}
   reset(){
     this.position={...this.spawn};this.axis={x:0,z:0};
+    if(this.entryDoorOpen){
+      this.entryDoorOpen=false;
+      if(!this.obstacles.includes(this.doorBlocker))this.obstacles.push(this.doorBlocker);
+    }
     this.lookYaw=0;this.lookPitch=.18;this.heading=modelYawForCamera(0);
     this.run=false;this.speed=0;this.collided=false;this.state="idle";
   }
@@ -138,6 +164,7 @@ export class PlayerController{
       const movedX=step.x-this.position.x,movedZ=step.z-this.position.z;
       distance=step.distance;this.collided=step.hit;
       this.position.x=step.x;this.position.z=step.z;
+      this.position.y=this.entry?.groundHeight(step.x,step.z)||0;
       if(distance>1e-5&&this.view==="third"){
         // Wall collisions may remove one component: face the actual travel.
         this.heading=modelYawForTravel(movedX,movedZ);
@@ -147,23 +174,25 @@ export class PlayerController{
     // If walking into the wall, don't play a full-speed running animation.
     this.state=distance<.00002?"idle":this.run?"run":"walk";
     return {state:this.state,view:this.view,collided:this.collided,
-      x:this.position.x,z:this.position.z,speed:dt>0?distance/dt:0,
+      x:this.position.x,z:this.position.z,y:this.position.y,
+      inside:this.isInsideEntrance(),speed:dt>0?distance/dt:0,
       heading:this.heading};
   }
   getCameraPose(){
-    const {x,z}=this.position;
+    const {x,z,y=0}=this.position;
     if(this.view==="first"){
-      const eye={x,y:1.65,z};
+      const eye={x,y:1.65+y,z};
       const c=Math.cos(this.lookPitch);
       return {eye,aim:{
         x:x+Math.sin(this.lookYaw)*c,
         y:eye.y+Math.sin(this.lookPitch),
         z:z-Math.cos(this.lookYaw)*c},mode:"first"};
     }
-    const target={x,y:1.30,z};
-    const dist=5.9,cos=Math.cos(this.lookPitch);
+    const inside=this.isInsideEntrance();
+    const target={x,y:1.30+y,z};
+    const dist=inside?1.90:5.9,cos=Math.cos(this.lookPitch);
     const requested={x:x-Math.sin(this.lookYaw)*dist*cos,
-      y:target.y+Math.sin(this.lookPitch)*dist+1.05,
+      y:target.y+Math.sin(this.lookPitch)*dist+(inside?.12:1.05),
       z:z+Math.cos(this.lookYaw)*dist*cos};
     const limit=cameraObstacleDistance(target,requested,this.obstacles);
     const scale=limit/Math.hypot(requested.x-x,requested.z-z);
