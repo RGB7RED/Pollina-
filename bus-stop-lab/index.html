@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#182c35">
+<title>MINI CITY — Автобусная остановка №003</title>
+<style>
+:root{color-scheme:dark;font:14px -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;color:#edf6ef;background:#6c8996}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden}
+#stage{position:fixed;inset:0;touch-action:none}#stage canvas{display:block;width:100%;height:100%;touch-action:none;outline:0}
+.hud{position:fixed;left:max(9px,env(safe-area-inset-left));right:max(9px,env(safe-area-inset-right));top:max(9px,env(safe-area-inset-top));display:flex;justify-content:space-between;gap:8px;align-items:flex-start;pointer-events:none;z-index:2}
+.card{pointer-events:auto;background:#182d36e8;backdrop-filter:blur(10px);border:1px solid #c4dad267;border-radius:13px;box-shadow:0 9px 24px #0c1d244d;padding:11px 12px}
+.identity{max-width:min(54vw,370px)}.telemetry{max-width:min(44vw,235px);font-variant-numeric:tabular-nums}
+small{font-size:9px;font-weight:850;letter-spacing:.09em;color:#a5d2c0}
+h1{font-size:17px;line-height:1.17;margin:6px 0}
+p{font-size:11px;line-height:1.45;margin:7px 0;color:#cfdfd8}
+nav{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
+nav a{display:inline-flex;text-decoration:none;align-items:center;justify-content:center;color:#e2f3e8;border:1px solid #a6cabc87;border-radius:9px;min-height:39px;padding:7px;font-size:10px;font-weight:750}
+.stat{font-size:11px;line-height:1.62;color:#dfefe5}
+.status{display:inline-block;margin-top:4px;background:#4a465c;color:#e5dcff;border-radius:20px;padding:3px 7px;font-size:10px}
+button{min-height:44px;border:1px solid #b8d6c684;background:#223b42e8;color:#eef8f0;font-weight:750;border-radius:10px;padding:10px 12px;touch-action:manipulation}
+button:focus-visible,a:focus-visible{outline:3px solid #d2f0d6;outline-offset:2px}
+#collapse{font-size:11px;padding:6px 9px;min-height:32px;width:100%;margin-bottom:6px}
+.telemetry.collapsed .stat,.telemetry.collapsed .status{display:none}
+.controls{position:fixed;bottom:max(12px,env(safe-area-inset-bottom));left:max(8px,env(safe-area-inset-left));right:max(8px,env(safe-area-inset-right));z-index:3;display:flex;justify-content:center;gap:7px;flex-wrap:wrap}
+.controls button{background:#1e343ce8}
+.controls button.active{background:#d0e2d3;color:#203a36}
+.tips{position:fixed;bottom:max(80px,calc(env(safe-area-inset-bottom) + 74px));left:max(14px,env(safe-area-inset-left));z-index:1;color:#1a3036;text-shadow:0 1px 2px #d4e6e0b3;font-weight:700;font-size:11px;pointer-events:none;max-width:290px}
+#error{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);max-width:90vw;border-radius:14px;background:#3d2424eb;color:#ffe9e5;padding:17px 22px;z-index:5}
+#error[hidden]{display:none}
+@media(max-width:630px){
+ .hud{left:6px;right:6px;gap:6px}.card{padding:8px 9px}
+ .identity{max-width:53vw}.telemetry{max-width:45vw}
+ h1{font-size:14px}small{font-size:8px}p{font-size:9px}
+ .stat{font-size:10px}.controls{gap:4px}.controls button{font-size:11px;padding:8px 10px}
+ .tips{font-size:9px;max-width:190px;bottom:max(113px,calc(env(safe-area-inset-bottom) + 106px))}
+ nav a{font-size:9px;padding:5px;min-height:40px}
+}
+@media(orientation:landscape) and (max-height:510px){
+ .hud{top:max(4px,env(safe-area-inset-top))}
+ .card{padding:6px 8px}.controls{bottom:max(4px,env(safe-area-inset-bottom))}
+ .controls button{min-height:35px;padding:5px 8px}.tips{display:none}
+}
+</style>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}
+</script>
+</head>
+<body>
+<main id="stage" aria-label="3D-модель остановочного павильона"></main>
+<div class="hud">
+  <section class="card identity">
+    <small>MINI CITY · ЛАБОРАТОРИЯ 4.3.1A</small>
+    <h1>Автобусная остановка №003</h1>
+    <p>Металлический каркас, стекло, изогнутая крыша, скамейка и маршруты.</p>
+    <nav aria-label="Переходы">
+      <a href="../studio/catalog.html?category=street_furniture">← Городские предметы</a>
+      <a href="../studio/index.html">⚙ Студия</a>
+    </nav>
+  </section>
+  <section class="card telemetry" id="telemetry">
+    <button id="collapse" type="button" aria-expanded="true">▾ Характеристики</button>
+    <div class="stat" id="fps">FPS: —</div>
+    <div class="stat" id="drawcalls">Вызовы отрисовки: —</div>
+    <div class="stat" id="triangles">Треугольники модели: —</div>
+    <div class="stat" id="material-count">Материалы: —</div>
+    <div class="stat" id="dimensions">Габариты: —</div>
+    <div class="status" id="development">В разработке · вне игровой сцены</div>
+  </section>
+</div>
+<div class="tips">1 палец — вращать · 2 пальца — масштаб и сдвиг · мышь: левая кнопка — вращение, правая — панорама</div>
+<div class="controls" aria-label="Позиции камеры">
+  <button type="button" data-view="threequarter" class="active">¾</button>
+  <button type="button" data-view="front">Спереди</button>
+  <button type="button" data-view="side">Сбоку</button>
+  <button type="button" data-view="top">Крыша</button>
+  <button type="button" id="lighting">☀️ День</button>
+  <button type="button" id="reset">↻ Сброс</button>
+</div>
+<div id="error" hidden role="alert"></div>
+<script type="module" src="./lab.js"></script>
+</body>
+</html>
