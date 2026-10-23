@@ -1,6 +1,7 @@
 // MINI CITY · Stage 4.2.1 — one mobile-budget residential street segment.
 // World units are metres. Kept separate from the approved house geometry
 // and character controller; deterministic placement makes review repeatable.
+import {addGrassToGroup} from "./grass.js";
 export const STREET_LAYOUT=Object.freeze({
   length:108,roadNear:16.05,roadFar:25.15,
   sidewalkNear:[9.55,15.98],sidewalkFar:[25.25,30.2],
@@ -30,17 +31,17 @@ export function sampleGrassTufts(surfaces,building,pads=[],{buildingPresent=true
       Math.abs(z-p.centreZ)<p.depth/2+.6);
   };
   const result=[];
-  const step=1.45;
+  const step=.94;
   for(let x=-lawn.width/2+2;x<lawn.width/2-2;x+=step){
     for(let z=lawn.z-lawn.depth/2+2;z<lawn.z+lawn.depth/2-2;z+=step){
-      if(hash(x,z,0)>.76)continue; // naturally intermittent bunches
+      if(hash(x,z,0)>.89)continue; // dense turf but still natural gaps
       const px=x+(hash(x,z,1)-.5)*1.0;
       const pz=z+(hash(x,z,2)-.5)*1.0;
       if(occupied(px,pz))continue;
       result.push({
         x:+px.toFixed(4),z:+pz.toFixed(4),
-        height:+(.12+hash(x,z,3)*.20).toFixed(4),
-        width:+(.21+hash(x,z,4)*.19).toFixed(4),
+        height:+(.19+hash(x,z,3)*.27).toFixed(4),
+        width:+(.35+hash(x,z,4)*.20).toFixed(4),
         angle:hash(x,z,5)*Math.PI
       });
     }
@@ -74,16 +75,16 @@ export function planStreet(building,pads=[],options={}){
   // Pedestrian crossing: walking direction across the road is along Z.
   for(const x of [-3.3,-2.2,-1.1,0,1.1,2.2,3.3])
     markings.push(rect("zebra",x,20.60,.64,8.45,-.048));
-  const trees=[
+  const trees=options.furniture===false?[]:[
     ...[-41,-29,-16,16,29,41].map(x=>({x,z:14.40,row:"front"})),
     ...[-44,-32,-20,-8,8,20,32,44].map(x=>({x,z:28.55,row:"opposite"})),
     ...[-42,-30,-18,-6,6,18,30,42].map(x=>({x,z:-20.1,row:"courtyard"}))
   ];
-  const lamps=[
+  const lamps=options.furniture===false?[]:[
     ...[-35,-10,10,35].map(x=>({x,z:15.27,row:"front"})),
     ...[-35,35].map(x=>({x,z:26.15,row:"opposite"}))
   ];
-  const benches=[-30,-12,12,30].map(x=>({x,z:-12.75}));
+  const benches=options.furniture===false?[]:[-30,-12,12,30].map(x=>({x,z:-12.75}));
   const obstacles=[
     ...trees.map((t,i)=>obstruction("tree-"+i,t.x,t.z,.35,.35)),
     ...lamps.map((t,i)=>obstruction("lamp-"+i,t.x,t.z,.25,.25)),
@@ -121,10 +122,7 @@ export function buildStreet(THREE,plan){
   root.name="MINI CITY | 4.2.1 | first street";
   const materials={
     grass:new THREE.MeshStandardMaterial({color:0x668459,roughness:1}),
-    grassBlades:new THREE.MeshStandardMaterial({
-      color:0x4e8641,roughness:1,side:THREE.DoubleSide,
-      depthWrite:true
-    }),
+
     sidewalk:new THREE.MeshStandardMaterial({color:0xaca8a0,roughness:.97}),
     road:new THREE.MeshStandardMaterial({color:0x484e52,roughness:.98}),
     paving:new THREE.MeshStandardMaterial({color:0x99978d,roughness:.97}),
@@ -169,18 +167,9 @@ export function buildStreet(THREE,plan){
     root.add(mesh);
     return mesh;
   }
-  // Low-poly living grass, positioned only on actual green areas.
-  // Two crossed vertical planes make thousands of grass clumps in TWO
-  // instanced draw calls even on mobile Safari.
-  const tufts=plan.grassTufts||[];
-  if(tufts.length){
-    const blade=new THREE.PlaneGeometry(1,1);
-    for(const [name,offset] of [["grass-blades-a",0],["grass-blades-b",Math.PI/2]])
-      batch(name,blade,materials.grassBlades,tufts,p=>[
-        p.x,-.096+p.height*.45,p.z,
-        p.width,p.height,1,0,p.angle+offset,0
-      ]);
-  }
+  // Independently reusable grass asset: seven sculpted leaves per clump,
+  // three palette batches (not hundreds of individual draw calls).
+  addGrassToGroup(THREE,root,plan.grassTufts||[]);
   const cube=new THREE.BoxGeometry(1,1,1);
   batch("lane-and-crosswalk",cube,materials.roadMark,plan.markings,
     m=>[m.x,m.y,m.z,m.width,.008,m.depth]);
