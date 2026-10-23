@@ -59,6 +59,8 @@ jobs:
         run: node models/test-catalog.mjs
       - name: Test search UI and catalog links
         run: node studio/test-catalog.mjs
+      - name: Test asset catalog DOM, filters and error recovery
+        run: node studio/test-catalog-render.mjs
       - name: Test Developer Studio navigation
         run: node studio/test-navigation.mjs
       - name: Check stage 4.1 mobile gameplay UI
