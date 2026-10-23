@@ -15,7 +15,20 @@ class Object3D{
  updateMatrix(){this.matrix={position:{...this.position},rotation:{...this.rotation},scale:{...this.scale}};}
  add(o){this.children.push(o);}
 }
-class Geometry{constructor(...args){this.args=args;}}
+class Geometry{
+ constructor(...args){this.args=args;this.transforms=[];}
+ translate(...a){this.transforms.push(["translate",...a]);return this;}
+ rotateX(a){this.transforms.push(["rotateX",a]);return this;}
+ rotateY(a){this.transforms.push(["rotateY",a]);return this;}
+ rotateZ(a){this.transforms.push(["rotateZ",a]);return this;}
+}
+class Shape{
+ constructor(){this.commands=[];}
+ moveTo(...p){this.commands.push(["moveTo",...p]);}
+ lineTo(...p){this.commands.push(["lineTo",...p]);}
+ closePath(){this.commands.push(["closePath"]);}
+}
+class CatmullRomCurve3{constructor(points){this.points=points;}}
 class Mesh extends Object3D{constructor(g,m){super();this.geometry=g;this.material=m;}}
 class InstancedMesh extends Mesh{
  constructor(g,m,count){super(g,m);this.count=count;this.matrices=[];
@@ -24,10 +37,13 @@ class InstancedMesh extends Mesh{
  computeBoundingSphere(){}
 }
 class Material{constructor(o){Object.assign(this,o);}}
-const THREE={Group:Object3D,Object3D,Mesh,InstancedMesh,
+const THREE={Group:Object3D,Object3D,Mesh,InstancedMesh,Vector3:Vec,
+ Shape,CatmullRomCurve3,
  PlaneGeometry:class extends Geometry{},BoxGeometry:class extends Geometry{},
  CylinderGeometry:class extends Geometry{},DodecahedronGeometry:class extends Geometry{},
- MeshStandardMaterial:Material,MeshBasicMaterial:Material};
+ ConeGeometry:class extends Geometry{},SphereGeometry:class extends Geometry{},
+ TubeGeometry:class extends Geometry{},ExtrudeGeometry:class extends Geometry{},
+ MeshStandardMaterial:Material,MeshBasicMaterial:Material,DoubleSide:2};
 const pads=[-26.35,-8.78,8.78,26.35].map(x=>({x,width:5.5,depth:3.15,centreZ:7.875}));
 const worldPlan=planStreet(BUILDING,pads);
 const world=buildStreet(THREE,worldPlan);
@@ -52,6 +68,7 @@ for(const id of ["street_tree","street_lamp","street_bench"]){
    const city=world.children.find(c=>c.name===isolated.name);
    assert.ok(city,"must re-use the actual world mesh batch "+isolated.name);
    assert.deepEqual(isolated.geometry.args,city.geometry.args);
+   assert.deepEqual(isolated.geometry.transforms,city.geometry.transforms);
    assert.deepEqual(isolated.material,city.material);
    const local=isolated.matrices[0],placed=city.matrices[0];
    assert.deepEqual(local.scale,placed.scale);
@@ -68,6 +85,10 @@ for(const id of ["street_tree","street_lamp","street_bench"]){
 assert.throws(()=>buildIsolatedStreetAsset(THREE,"unknown"),/Unknown isolated asset/);
 // Existing city is exactly the old layout (22 trees, 6 lamps, 4 benches).
 assert.equal(world.children.length,35);
+assert.equal(world.children.find(m=>m.name==="benches-seats").count,4*6);
+assert.equal(world.children.find(m=>m.name==="benches-concrete-supports").count,4*2);
+assert.equal(world.children.find(m=>m.name==="street-lamp-lantern-ribs").count,6*6);
+assert.equal(world.children.find(m=>m.name==="street-lamp-arch").count,6);
 assert.equal(worldPlan.info.trees,22);
 assert.equal(worldPlan.info.lamps,6);
 assert.equal(worldPlan.info.benches,4);

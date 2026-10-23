@@ -80,9 +80,27 @@ class InstancedMesh extends Mesh{
 }
 class MeshStandardMaterial{constructor(o){Object.assign(this,o);}}
 class MeshBasicMaterial{constructor(o){Object.assign(this,o);}}
-const THREE={Group:Object3D,Object3D,Mesh,InstancedMesh,
- PlaneGeometry:class{},BoxGeometry:class{},CylinderGeometry:class{},
- DodecahedronGeometry:class{},MeshStandardMaterial,MeshBasicMaterial};
+class Geometry{
+ constructor(...args){this.args=args;this.transforms=[];}
+ translate(...xyz){this.transforms.push(["translate",...xyz]);return this;}
+ rotateX(v){this.transforms.push(["rotateX",v]);return this;}
+ rotateY(v){this.transforms.push(["rotateY",v]);return this;}
+ rotateZ(v){this.transforms.push(["rotateZ",v]);return this;}
+}
+class Shape{
+ constructor(){this.commands=[];}
+ moveTo(...xy){this.commands.push(["moveTo",...xy]);}
+ lineTo(...xy){this.commands.push(["lineTo",...xy]);}
+ closePath(){this.commands.push(["closePath"]);}
+}
+class CatmullRomCurve3{constructor(points){this.points=points;}}
+const THREE={Group:Object3D,Object3D,Mesh,InstancedMesh,Vector3:Vec,
+ Shape,CatmullRomCurve3,
+ PlaneGeometry:class extends Geometry{},BoxGeometry:class extends Geometry{},
+ CylinderGeometry:class extends Geometry{},ConeGeometry:class extends Geometry{},
+ SphereGeometry:class extends Geometry{},ExtrudeGeometry:class extends Geometry{},
+ TubeGeometry:class extends Geometry{},DodecahedronGeometry:class extends Geometry{},
+ MeshStandardMaterial,MeshBasicMaterial,DoubleSide:2};
 const rendered=buildStreet(THREE,plan);
 assert.equal(rendered.userData.streetStats.trees,22);
 assert.equal(rendered.userData.streetStats.drawGroups,35,
@@ -102,6 +120,24 @@ assert.equal(instanced.find(m=>m.name==="benches-seats").count,24);
 assert.equal(instanced.find(m=>m.name==="benches-backs").count,24);
 assert.equal(instanced.find(m=>m.name==="benches-concrete-supports").count,8);
 assert.equal(instanced.find(m=>m.name==="benches-fasteners").count,48);
+const arched=instanced.find(m=>m.name==="street-lamp-arch").geometry.args[0].points;
+assert.ok(arched.length>=6&&Math.max(...arched.map(p=>p.y))>4.5,
+ "fixture must hang from a realistically curved arch above the post");
+assert.ok(arched.some(p=>p.x>1.0),"lamp needs a long curved offset arm");
+for(const name of ["street-lamp-scroll-large","street-lamp-scroll-small"]){
+ const curve=instanced.find(m=>m.name===name).geometry.args[0].points;
+ assert.ok(curve.length>=25,"each forged volute is a real curve: "+name);
+}
+const concrete=instanced.find(m=>m.name==="benches-concrete-supports");
+assert.ok(concrete.geometry.args[0].commands.length>=9,
+ "concrete side supports must be contoured geometry, not two cubes");
+assert.equal(concrete.material.color,0xd7d6cf);
+assert.equal(instanced.find(m=>m.name==="benches-seats").material.color,0x80563c);
+assert.equal(instanced.find(m=>m.name==="street-lamp-poles").material.color,0x171b1e);
+assert.equal(plan.obstacles.find(x=>x.name==="bench-0").maxZ-
+  plan.obstacles.find(x=>x.name==="bench-0").minZ,1.2);
+assert.equal(plan.obstacles.find(x=>x.name==="lamp-0").maxX-
+  plan.obstacles.find(x=>x.name==="lamp-0").minX,.5);
 assert.ok(rendered.children.length<=40,
  "street furniture mobile draw call overhead is bounded");
 console.log("MINI CITY 4.2.1 street PASS: 108m road, safe zebra, 22 trees, 6 detailed park lamps, 4 concrete benches, collisions, 35 groups");
