@@ -45,8 +45,8 @@ export function validateCatalog(catalog){
     if(typeof item.name!=="string"||!item.name.trim()||
       typeof item.scopeNote!=="string"||!item.scopeNote.trim())
       throw Error("Missing asset name or disclaimer: "+label);
-    if(!(item.category in CATEGORIES)||!(item.status in STATUS)||
-      !(item.kind in KIND))throw Error("Unknown asset classification: "+label);
+    if(!Object.hasOwn(CATEGORIES,item.category)||!Object.hasOwn(STATUS,item.status)||
+      !Object.hasOwn(KIND,item.kind))throw Error("Unknown asset classification: "+label);
     if(!Number.isInteger(item.quantity)||item.quantity<1)
       throw Error("Invalid scene quantity: "+label);
     if(![true,false,"fallback"].includes(item.inPlayLab))
