@@ -1,0 +1,77 @@
+import assert from "node:assert/strict";
+import {BUILDING} from "../building-lab/building.js";
+import {PlayerController,facadeObstacles,collidesAt,resolveStep,cameraObstacleDistance,
+ joystickValue,VIEW_MODES,RUN_SPEED,WALK_SPEED,PLAYER_RADIUS} from "./controller.js";
+
+const pad=(x)=>({x,width:5.5,depth:3.15,centreZ:7.875});
+const pads=[-26.3625,-8.7875,8.7875,26.3625].map(pad);
+const obstacles=facadeObstacles(BUILDING,pads);
+assert.equal(obstacles.length,5,"house shell plus four entrance pads");
+assert.ok(collidesAt(0,0,obstacles),"centre of house blocks pedestrians");
+assert.ok(!collidesAt(0,13.2,obstacles),"spawn in clear sidewalk");
+assert.ok(collidesAt(pads[2].x,9.2,obstacles),"entrance pad blocks walking through riser");
+let c=new PlayerController({building:BUILDING,pads});
+assert.equal(c.view,"third");
+assert.deepEqual(VIEW_MODES,["third","first"]);
+assert.equal(c.state,"idle");
+assert.equal(c.position.x,0);
+assert.equal(c.position.z,13.2);
+assert.throws(()=>new PlayerController({building:BUILDING,pads,spawn:{x:0,z:0}}),
+ /Spawn must not intersect/);
+assert.deepEqual(joystickValue(50,50,{left:0,top:0,width:100,height:100}),{x:0,z:0});
+assert.ok(joystickValue(100,50,{left:0,top:0,width:100,height:100}).x>.99);
+c.setStick(0,1);
+let result=c.update(.05);
+assert.equal(result.state,"walk");
+assert.ok(c.position.z<13.2,"forward moves toward front wall");
+let startingZ=c.position.z;
+for(let i=0;i<250;i++)c.update(.05);
+assert.ok(c.position.z>=BUILDING.width/2+PLAYER_RADIUS-1e-6,
+ "collisions block house wall even after long movement");
+assert.ok(c.position.z<startingZ);
+assert.equal(c.update(.05).state,"idle","walking against wall must not animate a run");
+c.setStick(1,0);
+let initialX=c.position.x;
+for(let i=0;i<120;i++)c.update(.05);
+assert.ok(c.position.x>initialX+1,"wall sliding along X should be possible");
+assert.ok(!collidesAt(c.position.x,c.position.z,obstacles));
+c.reset();
+c.setStick(0,1);c.setRun(true);
+for(let i=0;i<12;i++)c.update(.05);
+assert.equal(c.state,"run");assert.ok(c.position.z<13.2);
+const runDistance=13.2-c.position.z;
+c.reset();c.setStick(0,1);
+for(let i=0;i<12;i++)c.update(.05);
+assert.ok(runDistance>13.2-c.position.z+.3,"run should be notably faster than walk");
+assert.equal(RUN_SPEED,3.35);assert.equal(WALK_SPEED,1.45);
+c.reset();
+const poseThird=c.getCameraPose();
+assert.equal(poseThird.mode,"third");
+assert.ok(poseThird.eye.z>c.position.z);
+assert.ok(poseThird.eye.y>1.30);
+c.toggleView();
+assert.equal(c.view,"first");
+assert.equal(c.getCameraPose().eye.y,1.65);
+assert.equal(c.getCameraPose().eye.z,c.position.z);
+c.look(-100,60);
+assert.ok(c.lookYaw>0,"dragging left rotates view right");
+c.setStick(0,1);
+result=c.update(.05);
+assert.equal(c.heading,c.lookYaw,"first-person body aligns with camera yaw");
+assert.ok(c.getCameraPose().aim.x>c.position.x);
+c.toggleView();assert.equal(c.view,"third");
+c.setView("first");c.reset();
+assert.equal(c.view,"first","reset preserves chosen viewpoint");
+assert.equal(c.position.z,13.2);
+assert.throws(()=>c.setView("bird"),/Unknown camera/);
+// A large frame step cannot walk through a building or teleport beyond bounds.
+const far=resolveStep({x:0,z:15},0,-20,obstacles);
+assert.ok(far.z>=BUILDING.width/2+PLAYER_RADIUS);
+const bounds=resolveStep({x:55,z:25},20,20,obstacles);
+assert.ok(bounds.x<=56-PLAYER_RADIUS && bounds.z<=32-PLAYER_RADIUS);
+// Third-person camera is shortened when the house is behind the player.
+const shortened=cameraObstacleDistance({x:0,z:7.2},{x:0,z:-4},obstacles);
+assert.ok(shortened<3,"camera must not clip behind walls");
+const clear=cameraObstacleDistance({x:0,z:13.2},{x:0,z:20},obstacles);
+assert.ok(clear>6,"camera has normal space away from walls");
+console.log("MINI CITY 4.1 controller PASS: 2 camera modes, movement, running, wall+pad collision, sliding, reset, stick");
