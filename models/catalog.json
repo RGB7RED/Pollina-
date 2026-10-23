@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "project": "MINI CITY",
-  "phase": "4.2.4",
+  "phase": "4.3.1A",
   "scope": "Developer Studio; not the main game",
   "disclaimer": "Принятие модели для лаборатории не является выпуском игрового ассета или подтверждением прав на сторонние GLB.",
   "entries": [
@@ -156,6 +156,28 @@
       "origin": "project",
       "rightsChecked": true,
       "modelNumber": 2
+    },
+    {
+      "id": "bus_stop_city_001",
+      "modelNumber": 3,
+      "name": "Автобусная остановка",
+      "category": "street_furniture",
+      "status": "development",
+      "kind": "procedural",
+      "quantity": 1,
+      "inPlayLab": false,
+      "releaseReady": false,
+      "sourcePaths": [
+        "bus-stop-lab/bus-stop.js",
+        "bus-stop-lab/materials.js"
+      ],
+      "viewer": "bus-stop-lab/index.html",
+      "viewerLabel": "Осмотреть остановку",
+      "scene": null,
+      "assetFile": null,
+      "origin": "project",
+      "rightsChecked": true,
+      "scopeNote": "Один процедурный прототип в отдельной 3D-лаборатории; в игровой сцене остановка не установлена. Визуальная приёмка ожидается."
     }
   ],
   "folderMode": "categories"
