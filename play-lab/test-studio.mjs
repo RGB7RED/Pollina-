@@ -74,7 +74,7 @@ class Node{
  fire(event){if(!this.events[event])throw Error("unbound "+event+" on "+this.id);
   this.events[event]();}
 }
-const ids=["mode-toggle","devtools","devtools-toggle","devtools-body",
+const ids=["mode-toggle","play-title","devtools","devtools-toggle","devtools-body",
  "dev-collisions","dev-perf","dev-resources","dev-player","dev-hit",
  "dev-objects","dev-route"];
 const nodes=Object.fromEntries(ids.map(id=>[id,new Node(id)]));
@@ -121,6 +121,7 @@ try{
  nodes["mode-toggle"].fire("click");
  assert.equal(studio.mode,"game");
  assert.equal(nodes.devtools.hidden,true);
+ assert.equal(nodes["play-title"].textContent,"MINI CITY");
  assert.equal(studio.collisionsShown,false);
  assert.equal(scene.children[0].visible,false);
  assert.match(fakeWindow.location.search,/mode=game/);
