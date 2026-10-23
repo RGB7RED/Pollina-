@@ -47,7 +47,7 @@
     "labAndGameShareRuntime": true
   },
   "developerStudio": {
-    "stage": "4.2.2",
+    "stage": "4.2.3",
     "home": "studio/index.html",
     "objectLab": "lab/index.html",
     "gameLab": "play-lab/index.html?mode=lab",
@@ -64,6 +64,11 @@
     ],
     "sameRuntimeScene": true,
     "sceneIsolatedFromMain": true,
-    "productionReady": false
+    "productionReady": false,
+    "catalog": "studio/catalog.html",
+    "catalogData": "models/catalog.json",
+    "catalogUtils": "models/catalog-utils.js",
+    "registryIsReadOnly": true,
+    "objectCount": 7
   }
 }

@@ -18,6 +18,9 @@ for(const target of [
 assert.match(home,/Лаборатория объектов/);
 assert.match(home,/Лаборатория игры/);
 assert.match(home,/Играть/);
+assert.match(home,/href="\.\/catalog\.html"/);
+assert.match(objectLab,/href="\.\.\/studio\/catalog\.html"/);
+assert.match(play,/href="\.\.\/studio\/catalog\.html"/);
 assert.match(home,/<meta name="viewport"/);
 assert.match(home,/env\(safe-area-inset-bottom\)/);
 assert.ok(!links.some(x=>x.startsWith("http")),

@@ -22,6 +22,11 @@ h2{font-size:21px;margin:14px 0 3px}
 .cta{margin-top:auto;align-self:flex-start;border-radius:10px;background:#c4d9c9;color:#193431;font-size:12px;font-weight:850;padding:10px 12px}
 .pill{display:inline-block;border:1px solid #93ac9c70;padding:6px 11px;border-radius:99px;color:#d3e2d5;font-size:11px}
 .note{border-top:1px solid #b4cabc42;padding-top:15px}
+.library-banner{margin:16px 0 24px;border:1px solid #b4d4ba77;background:linear-gradient(135deg,#274941,#1e373d);border-radius:17px;padding:16px 18px 22px}
+.library-banner h2{margin:0;font-size:19px}
+.library-banner p{margin:8px 0 18px}
+.library-banner .cta{display:inline-flex;text-decoration:none;min-height:42px;align-items:center}
+.library-banner a:focus-visible{outline:2px solid #e1fbe2;outline-offset:3px}
 @media(max-width:770px){.grid{grid-template-columns:1fr}.card{min-height:180px!important}.card p{margin-bottom:14px}a.card{padding:16px 18px}h2{margin-top:9px}}
 @media(prefers-reduced-motion:reduce){a.card{transition:none}}
 </style>
@@ -32,7 +37,7 @@ h2{font-size:21px;margin:14px 0 3px}
     <small>MINI CITY / DEVELOPER STUDIO</small>
     <h1>Пульт разработки</h1>
     <p>Один проект — три способа работы. Создавай отдельные объекты, проверяй их совместную работу или запускай игровую сцену без инструментов разработчика.</p>
-    <span class="pill">Версия 4.2.2 · мобильная тестовая сборка</span>
+    <span class="pill">Версия 4.2.3 · мобильная тестовая сборка</span>
   </header>
   <nav class="grid" aria-label="Выбор рабочего режима">
     <a class="card" href="../lab/index.html">
@@ -54,6 +59,11 @@ h2{font-size:21px;margin:14px 0 3px}
       <span class="cta">Начать игру →</span>
     </a>
   </nav>
+  <section class="library-banner" aria-label="Библиотека игровых объектов">
+    <h2>📦 Каталог игровых объектов</h2>
+    <p>Общий реестр готовности: модели, процедурные объекты, количество экземпляров, ссылки на исходники и испытательные сцены. Первые 7 типов уже зарегистрированы.</p>
+    <a class="cta" href="./catalog.html">Открыть каталог 4.2.3 →</a>
+  </section>
   <p class="note">Лаборатория игры и игровой режим запускают <strong>один и тот же код сцены</strong> и одни модели — изменяется только интерфейс. Режим можно переключать прямо во время игры. Это отдельный прототип, а не основная ветка города.</p>
 </main>
 </body>

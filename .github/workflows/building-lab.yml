@@ -11,12 +11,14 @@ on:
       - feat/mini-city-v033-stage41-playable-dual-camera
       - feat/mini-city-v033-stage421-first-street
       - feat/mini-city-v033-stage422-developer-studio
+      - feat/mini-city-v033-stage423-asset-catalog
     paths:
       - 'building-lab/**'
       - 'character-lab/**'
       - 'lab/**'
       - 'play-lab/**'
       - 'studio/**'
+      - 'models/**'
       - '.github/workflows/building-lab.yml'
   workflow_dispatch:
 jobs:
@@ -41,6 +43,8 @@ jobs:
           node --check play-lab/animation.js
           node --check play-lab/street.js
           node --check play-lab/studio.js
+          node --check models/catalog-utils.js
+          node --check studio/catalog.js
       - name: Test stage 4.1 first/third-person movement and house collisions
         run: node play-lab/test-controller.mjs
       - name: Check stage 4.1.1 model orientation and non-reversed swipe
@@ -51,6 +55,12 @@ jobs:
         run: node play-lab/test-street.mjs
       - name: Test same-scene Developer Studio and collision overlay
         run: node play-lab/test-studio.mjs
+      - name: Validate real object catalog and source paths
+        run: node models/test-catalog.mjs
+      - name: Test search UI and catalog links
+        run: node studio/test-catalog.mjs
+      - name: Test asset catalog DOM, filters and error recovery
+        run: node studio/test-catalog-render.mjs
       - name: Test Developer Studio navigation
         run: node studio/test-navigation.mjs
       - name: Check stage 4.1 mobile gameplay UI
