@@ -1,4 +1,4 @@
-name: MINI CITY Building Lab 3.4
+name: MINI CITY Labs and Developer Studio
 on:
   push:
     branches:
@@ -10,11 +10,13 @@ on:
       - feat/mini-city-v033-stage34-asset-export-lab-switch
       - feat/mini-city-v033-stage41-playable-dual-camera
       - feat/mini-city-v033-stage421-first-street
+      - feat/mini-city-v033-stage422-developer-studio
     paths:
       - 'building-lab/**'
       - 'character-lab/**'
       - 'lab/**'
       - 'play-lab/**'
+      - 'studio/**'
       - '.github/workflows/building-lab.yml'
   workflow_dispatch:
 jobs:
@@ -38,6 +40,7 @@ jobs:
           node --check play-lab/controller.js
           node --check play-lab/animation.js
           node --check play-lab/street.js
+          node --check play-lab/studio.js
       - name: Test stage 4.1 first/third-person movement and house collisions
         run: node play-lab/test-controller.mjs
       - name: Check stage 4.1.1 model orientation and non-reversed swipe
@@ -46,6 +49,10 @@ jobs:
         run: node play-lab/test-animation.mjs
       - name: Test stage 4.2.1 street layout, instancing and collision
         run: node play-lab/test-street.mjs
+      - name: Test same-scene Developer Studio and collision overlay
+        run: node play-lab/test-studio.mjs
+      - name: Test Developer Studio navigation
+        run: node studio/test-navigation.mjs
       - name: Check stage 4.1 mobile gameplay UI
         run: node play-lab/test-viewer.mjs
       - name: Check real wall openings, balcony variants and entrances
