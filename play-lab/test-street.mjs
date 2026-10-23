@@ -9,6 +9,25 @@ const pads=[-26.35,-8.78,8.78,26.35].map(x=>
 const plan=planStreet(BUILDING,pads);
 const twin=planStreet(BUILDING,pads);
 assert.deepEqual(plan,twin,"same city block every refresh");
+const standalone=planStreet(BUILDING,[],{buildingPresent:false});
+assert.ok(plan.info.grassTufts>1500 && plan.info.grassTufts<3500,
+ "grass density stays bounded for iPhone");
+assert.equal(plan.info.grassTufts,plan.grassTufts.length);
+assert.ok(standalone.grassTufts.length>plan.grassTufts.length,
+ "standalone street has grass on the empty space where the house would be");
+for(const tuft of plan.grassTufts){
+ assert.ok(Number.isFinite(tuft.x)&&Number.isFinite(tuft.z));
+ assert.ok(tuft.height>.10&&tuft.height<=.321);
+ assert.ok(tuft.width>.20&&tuft.width<=.401);
+ assert.ok(Math.abs(tuft.x)>=BUILDING.length/2+1.2||
+   Math.abs(tuft.z)>=BUILDING.width/2+1.2,
+   "grass may not grow through the residential building");
+ for(const surface of plan.surfaces.filter(p=>p.kind!=="grass")){
+   assert.ok(!(Math.abs(tuft.x-surface.x)<surface.width/2+.45&&
+      Math.abs(tuft.z-surface.z)<surface.depth/2+.45),
+      "grass may not grow on paving, paths or roads: "+surface.kind);
+ }
+}
 assert.equal(plan.info.roadLength,108);
 assert.equal(Math.round(plan.info.roadWidth*10),91);
 assert.equal(plan.info.trees,22);
@@ -103,12 +122,14 @@ const THREE={Group:Object3D,Object3D,Mesh,InstancedMesh,Vector3:Vec,
  MeshStandardMaterial,MeshBasicMaterial,DoubleSide:2};
 const rendered=buildStreet(THREE,plan);
 assert.equal(rendered.userData.streetStats.trees,22);
-assert.equal(rendered.userData.streetStats.drawGroups,36,
- "7 static planes, 2 street batches, 3 tree batches, 19 lantern and 5 bench batches");
+assert.equal(rendered.userData.streetStats.drawGroups,38,
+ "7 planes, 2 grass batches, 2 road batches, 3 trees, 19 lantern and 5 bench batches");
 const instanced=rendered.children.filter(o=>o instanceof InstancedMesh);
-assert.equal(instanced.length,29);
+assert.equal(instanced.length,31);
 assert.ok(instanced.every(m=>m.instanceMatrix.needsUpdate));
 assert.ok(instanced.every(m=>m.matrices.length===m.count));
+assert.equal(instanced.find(m=>m.name==="grass-blades-a").count,plan.info.grassTufts);
+assert.equal(instanced.find(m=>m.name==="grass-blades-b").count,plan.info.grassTufts);
 assert.equal(instanced.find(m=>m.name==="trees-trunks").count,22);
 assert.equal(instanced.find(m=>m.name==="trees-canopy-low").count,22);
 assert.equal(instanced.find(m=>m.name==="trees-canopy-high").count,22);
@@ -141,4 +162,4 @@ assert.ok(Math.abs(plan.obstacles.find(x=>x.name==="lamp-0").maxX-
   plan.obstacles.find(x=>x.name==="lamp-0").minX-.5)<1e-6);
 assert.ok(rendered.children.length<=40,
  "street furniture mobile draw call overhead is bounded");
-console.log("MINI CITY 4.2.1 street PASS: 108m road, safe zebra, 22 trees, 6 detailed park lamps, 4 concrete benches, collisions, 36 groups");
+console.log("MINI CITY 4.2.1 street PASS: 108m road, safe zebra, 22 trees, 6 detailed park lamps, 4 concrete benches, collisions, 38 groups");
