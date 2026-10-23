@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "project": "MINI CITY",
+  "stage": "3.4",
+  "building": {
+    "id": "apartment_house",
+    "source": "building-lab/building.js",
+    "materials": "building-lab/materials.js",
+    "viewer": "building-lab/index.html",
+    "exportModule": "building-lab/export-glb.js",
+    "downloadFilename": "apartment_house.glb",
+    "binaryCommitted": false,
+    "format": "glTF 2.0 / GLB on-demand",
+    "dimensionsMetres": [
+      74,
+      12.8,
+      17.64
+    ],
+    "housesInMainGame": 0
+  },
+  "character": {
+    "localReference": "character-lab/assets/hero-reference.glb",
+    "localReferenceAnimated": false,
+    "viewer": "character-lab/index.html",
+    "externalAnimatedCandidateBundled": false,
+    "releaseApproved": false
+  },
+  "laboratoryHub": "lab/index.html",
+  "integration": {
+    "mainGameChanged": false,
+    "needsVisualE2E": true,
+    "needsFPSOnIphone": true,
+    "needsImportValidation": true
+  }
+}
