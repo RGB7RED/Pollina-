@@ -25,12 +25,12 @@ assert.doesNotMatch(js,/\.\/game\.js|\.\/district\.js/,"lab must not depend on e
 const free=readFileSync(new URL("./free-camera.js",import.meta.url),"utf8");
 new Script(free.replace(/^export /gm,""),{filename:"building-lab/free-camera.js"});
 for(const id of ["freecam-toggle","freecam-panel","stick-zone","stick-knob","fly-up",
-  "fly-down","fly-boost","free-reticle","free-hint","hide-hud","telemetry","free-position"]){
+  "fly-down","flight-speed","flight-look","fly-focus","free-reticle","free-hint","hide-hud","telemetry","free-position"]){
   assert.match(html,new RegExp('id="'+id+'"'),"missing freecam UI "+id);
   if(!["freecam-panel","free-reticle","free-hint","fly-up","fly-down"].includes(id))
     assert.ok(js.includes('$("'+id+'")'),"no JS freecam binding for "+id);
 }
-assert.match(js,/import \{FreeCamera,normalizedStick\} from "\.\/free-camera\.js"/);
+assert.match(js,/import \{FreeCamera,normalizedStick,CAMERA_SPEEDS,LOOK_SENSITIVITIES\} from "\.\/free-camera\.js"/);
 assert.match(js,/function toggleFreeCamera/);
 assert.match(js,/stageCanvas\.addEventListener\("pointermove"/);
 assert.match(js,/\["fly-up",1\],\["fly-down",-1\]/);
@@ -39,5 +39,16 @@ assert.match(js,/free\.update\(dt\)/);
 assert.match(js,/if\(activeFly\(\)\)\{/);
 assert.match(free,/export class FreeCamera/);
 assert.match(free,/targetAt/);
-console.log("Building lab 3.1.1 contracts PASS: ORBIT and XYZ FREE camera, joystick, touch swipe, FPS");
+assert.match(js,/function focusFacade\(/);
+assert.match(js,/function updateFlightLabels\(/);
+assert.match(js,/if\(!freeWasEntered&&Math\.hypot\(p\.x,p\.z\)>57\)/);
+assert.match(js,/if\(document\.hidden\)releaseInputs\(\)/);
+const resize=js.slice(js.indexOf("function resize(){"),js.indexOf('window.addEventListener("resize",resize)'));
+assert.doesNotMatch(resize,/setView\(/,"Safari resize must preserve camera XYZ");
+assert.match(free,/targetYaw/);
+assert.match(free,/Math\.exp\(-19\*dt\)/);
+assert.match(free,/deadzone=\.13/);
+assert.match(free,/ahead\*sp\+rise/);
+assert.doesNotMatch(html,/id="fly-boost"/,"removed old quick-only speed");
+console.log("Building lab 3.1.2 contracts PASS: 3D camera, touch controls, near-facade focus, Safari resize stability");
 

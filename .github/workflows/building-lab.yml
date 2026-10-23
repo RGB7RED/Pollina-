@@ -4,6 +4,7 @@ on:
     branches:
       - feat/mini-city-v033-stage3-building-blockout
       - feat/mini-city-v033-stage311-freecam
+      - feat/mini-city-v033-stage312-camera-fix
     paths:
       - 'building-lab/**'
       - '.github/workflows/building-lab.yml'

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
 <meta name="theme-color" content="#202f38">
-<title>MINI CITY · Building Lab 3.1.1 · Free Camera</title>
+<title>MINI CITY · Building Lab 3.1.2 · Camera Rework</title>
 <style>
 :root{color-scheme:dark;--panel:rgba(22,35,43,.88);--line:rgba(231,231,218,.21);--cream:#eaece8;--mint:#b9d2cb;--gold:#edc6a8}
 *{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;color:var(--cream);background:#576974}
@@ -59,6 +59,25 @@ body.fly-mode .tips{display:none}
  body.fly-mode .controls button{min-height:34px;padding:4px 7px}
  #free-hint{top:calc(max(4px,env(safe-area-inset-top)) + 70px);font-size:9px}
 }
+
+/* 3.1.2: choose precision/travel speed and look sensitivity without
+   consuming the right-hand vertical altitude touch area. */
+.fly-only{display:none}
+body.fly-mode .controls .fly-only{display:inline-block}
+.fly-buttons{z-index:7}
+.fly-buttons button{background:rgba(24,48,52,.91)}
+#flight-speed,#flight-look,#fly-focus{border-color:#b6d5c9a8}
+body.fly-mode #free-hint{display:block}
+@media(max-width:600px){
+  body.fly-mode .controls{left:max(7px,env(safe-area-inset-left));right:max(7px,env(safe-area-inset-right));justify-content:center;max-width:none}
+  body.fly-mode .controls button{min-height:38px;font-size:10px;padding:7px 9px}
+  #fly-focus{font-weight:850}
+}
+@media(orientation:landscape) and (max-height:530px){
+  body.fly-mode .controls{left:31%;right:26%;bottom:max(4px,env(safe-area-inset-bottom));max-width:none;gap:4px}
+  body.fly-mode .controls button{min-height:30px;padding:3px 7px;font-size:9px}
+  #free-hint{display:none!important}
+}
 </style>
 <script type="importmap">
 {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}
@@ -68,7 +87,7 @@ body.fly-mode .tips{display:none}
 <div id="stage" aria-label="3D-модель жилого кирпичного дома"></div>
 <div class="hud">
   <section class="card ident">
-    <small>MINI CITY / BUILDING LAB</small><h1>Дом · Этап 3.1.1</h1>
+    <small>MINI CITY / BUILDING LAB</small><h1>Дом · Этап 3.1.2</h1>
     <div class="desc">Кирпичная пятиэтажка по архитектурному референсу. Проверяем <strong>геометрию и силуэт</strong>, материалы пока черновые.</div>
     <div class="tag">BLOCKOUT · ЕЩЁ НЕ ФИНАЛЬНАЯ ГРАФИКА</div>
   </section>
@@ -85,12 +104,11 @@ body.fly-mode .tips{display:none}
 <div class="tips">Свайп — поворот · Щипок — приближение<br>Свободная камера позволяет двигаться в пространстве по X/Y/Z.</div>
 <div id="freecam-panel" aria-label="Свободное перемещение камеры">
   <div id="free-reticle">+</div>
-  <div id="free-hint">Стик — вперёд/в стороны · Свайп по сцене — смотреть · ↑/↓ — высота</div>
+  <div id="free-hint">Стик — полёт по направлению взгляда · Свайп — поворот · ↑/↓ — точная высота</div>
   <div id="stick-zone" aria-label="Стик перемещения"><div id="stick-knob"></div></div>
   <div class="fly-buttons">
     <button id="fly-up">↑ Высота</button>
     <button id="fly-down">↓ Высота</button>
-    <button id="fly-boost" aria-pressed="false">⇧ Быстро</button>
   </div>
 </div>
 <div class="controls">
@@ -100,6 +118,9 @@ body.fly-mode .tips{display:none}
 <button class="orbit-only" data-view="top">Сверху</button>
 <button class="orbit-only" id="time">🌆 Вечер</button>
 <button class="orbit-only" id="quality">⚙ Среднее</button>
+<button id="flight-speed" class="fly-only">⚡ Обычная</button>
+<button id="flight-look" class="fly-only">🎯 Обзор: нормально</button>
+<button id="fly-focus" class="fly-only">⌖ К фасаду</button>
 <button id="freecam-toggle" aria-pressed="false">✥ Свободная камера</button>
 <button id="reset">↻ Сброс</button>
 </div>
