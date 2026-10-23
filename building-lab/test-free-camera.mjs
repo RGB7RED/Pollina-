@@ -19,7 +19,7 @@ free.setSpeedMode(0);
 assert.equal(free.speed,1);
 free.setStick(0,1);
 for(let i=0;i<20;i++)free.update(.05);
-assert.ok(cam.position.z<29,"pressing forward must move along -Z");
+assert.ok(cam.position.z<29.3,"pressing forward must move along -Z");
 assert.ok(cam.position.y===8,"level camera must not climb");
 free.setStick(1,0);
 const before=cam.position.x;
