@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#20343d">
+<title>MINI CITY 4.1.1 — Управление и камера исправлены</title>
+<style>
+:root{color-scheme:dark;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;color:#ecf2eb}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#506675}
+#stage{position:fixed;inset:0;touch-action:none}
+#stage canvas{display:block;width:100%;height:100%;outline:0;touch-action:none}
+.hud{position:fixed;top:max(12px,env(safe-area-inset-top));left:max(10px,env(safe-area-inset-left));right:max(10px,env(safe-area-inset-right));display:flex;justify-content:space-between;align-items:flex-start;gap:8px;pointer-events:none;z-index:7}
+.card{background:#1d3037dd;border:1px solid #bed3c363;backdrop-filter:blur(11px);border-radius:14px;padding:11px 12px;box-shadow:0 8px 28px #101f254d;pointer-events:auto}
+.brand{max-width:min(49vw,300px)}.menu{max-width:min(47vw,270px);text-align:right}
+small{font-size:9px;letter-spacing:.14em;font-weight:850;color:#aecfc4}
+h1{font-size:17px;margin:5px 0 5px}
+p{margin:3px 0;font-size:10px;line-height:1.42;color:#d0deda}
+.nav{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.nav a{color:#e0efe3;border:1px solid #bdd9cb5f;border-radius:8px;text-decoration:none;font-size:10px;padding:6px 8px;min-height:31px;display:inline-flex;align-items:center}
+button{font:750 12px -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:#233f48ea;border:1px solid #bed4cc97;color:#eff4ee;border-radius:11px;padding:10px 13px;min-height:43px;touch-action:manipulation;cursor:pointer}
+button:disabled{opacity:.4}button.active{background:#c1d8cb;color:#1a3737}
+#camera-mode{width:100%;font-size:12px}
+#reset{font-size:10px;padding:6px 9px;min-height:31px}
+#fps{display:block;font-size:10px;line-height:1.5;color:#d4e1d9}
+#status{position:fixed;z-index:8;left:50%;bottom:max(180px,calc(env(safe-area-inset-bottom) + 190px));transform:translateX(-50%);
+ background:#20343de8;border:1px solid #b6cbbf8a;border-radius:12px;padding:10px 13px;
+ font-size:11px;line-height:1.3;max-width:min(90vw,430px);text-align:center;pointer-events:auto}
+#status[hidden]{display:none}
+#retry{display:none;margin:7px auto 0}
+#retry:not([hidden]){display:block}
+#reticle{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+ color:#e0f4e7bb;text-shadow:0 1px 7px #1d3638;font-size:27px;pointer-events:none;display:none}
+body.first-person #reticle{display:block}
+#stick{position:fixed;left:max(17px,env(safe-area-inset-left));bottom:max(26px,calc(env(safe-area-inset-bottom) + 23px));
+ width:135px;height:135px;border:2px solid #d0e1d2b2;background:#203d3f40;
+ border-radius:50%;z-index:6;touch-action:none;user-select:none}
+#stick-knob{position:absolute;left:50%;top:50%;width:59px;height:59px;transform:translate(-50%,-50%);
+ background:radial-gradient(circle at 33% 27%,#dfefe2,#739c94);border:2px solid #ecf7e8a5;
+ border-radius:50%;box-shadow:0 4px 15px #1627286d}
+#actions{position:fixed;right:max(16px,env(safe-area-inset-right));bottom:max(40px,calc(env(safe-area-inset-bottom) + 36px));
+ z-index:6;display:flex;flex-direction:column;gap:9px;align-items:stretch}
+#actions button{min-width:90px}
+#tips{position:fixed;bottom:max(165px,calc(env(safe-area-inset-bottom) + 164px));left:17px;
+ font-size:10px;color:#24383d;text-shadow:0 1px 1px #e5e9e6b8;max-width:220px;pointer-events:none}
+@media(max-width:620px){
+ .hud{top:max(7px,env(safe-area-inset-top));left:7px;right:7px;gap:5px}
+ .card{padding:8px;border-radius:12px}h1{font-size:14px}
+ small{font-size:8px}p{font-size:9px}
+ .nav a{font-size:9px;padding:4px 6px;min-height:30px}
+ #stick{width:118px;height:118px}
+ #stick-knob{width:50px;height:50px}
+ #actions button{min-width:80px;font-size:11px}
+ #tips{bottom:max(151px,calc(env(safe-area-inset-bottom) + 143px));font-size:9px;max-width:140px}
+}
+@media(orientation:landscape) and (max-height:500px){
+ .hud{top:4px}
+ .card{padding:6px 8px} .brand{max-width:43vw}
+ #stick{width:104px;height:104px;bottom:10px}
+ #actions{bottom:10px;gap:5px}
+ #actions button{min-height:35px;padding:6px 9px}
+ #tips{display:none}
+}
+</style>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}
+</script>
+</head>
+<body>
+<main id="stage" aria-label="Игровая сцена: человек возле пятиэтажного дома"></main>
+<div class="hud">
+  <section class="card brand">
+    <small>MINI CITY / PLAY LAB</small>
+    <h1>Первый игровой участок · 4.1.1</h1>
+    <p>Дом + персонаж. Можно ходить вокруг здания. Столкновения со стенами и плитами.</p>
+    <nav class="nav" aria-label="Навигация по лабораториям">
+      <a href="../lab/index.html">Объекты</a>
+      <a href="../building-lab/index.html">Дом</a>
+      <a href="../character-lab/index.html">Персонаж</a>
+    </nav>
+  </section>
+  <section class="card menu">
+    <button id="camera-mode" aria-pressed="false">🎥 От третьего лица</button>
+    <p id="camera-hint">Нажми, чтобы включить вид от первого лица.</p>
+    <span id="fps">FPS: —</span>
+    <p id="actor-status">Персонаж загружается…</p>
+    <button id="reset">↻ На старт</button>
+  </section>
+</div>
+<div id="status" role="status">Загрузка настоящих моделей…<button id="retry" hidden>Повторить загрузку</button></div>
+<div id="reticle">+</div>
+<div id="tips">Стик — ходьба<br>Свайп — поворот камеры<br>ПК: WASD, Shift, F — смена вида</div>
+<div id="stick" aria-label="Экранный джойстик перемещения"><div id="stick-knob"></div></div>
+<div id="actions"><button id="run" aria-pressed="false">⚡ Бег: ВЫКЛ</button><button id="switch-view">👁 Вид от 1-го лица</button></div>
+<script type="module" src="./game.js"></script>
+</body>
+</html>

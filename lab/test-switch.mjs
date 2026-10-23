@@ -21,7 +21,7 @@ const checkLinks=(html,home,current,other)=>{
 };
 checkLinks(house,"../lab/index.html","./index.html","../character-lab/index.html");
 checkLinks(actor,"../lab/index.html","./index.html","../building-lab/index.html");
-for(const target of ["../building-lab/index.html","../character-lab/index.html"])
+for(const target of ["../building-lab/index.html","../character-lab/index.html","../play-lab/index.html"])
   assert.ok(hub.includes('href="'+target+'"'),"lab hub missing link: "+target);
 assert.equal(normalizedLink("https://x.test/commit/building-lab/index.html",
   "../character-lab/index.html"),"/commit/character-lab/index.html");
@@ -32,4 +32,6 @@ assert.equal(normalizedLink("https://x.test/commit/lab/index.html",
 assert.ok(!hub.includes('target="_blank"'),"switch without opening new Safari tab");
 assert.ok(!house.includes('target="_blank"')&&!actor.includes('target="_blank"'));
 assert.match(house,/id="export-glb"/);
+assert.ok(house.includes('href="../play-lab/index.html"'));
+assert.ok(actor.includes('href="../play-lab/index.html"'));
 console.log("Cross-lab object selector PASS: hub, house -> character, character -> house, pinned commit-safe relative URLs");
