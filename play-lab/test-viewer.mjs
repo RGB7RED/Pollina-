@@ -21,7 +21,13 @@ assert.match(js,/import \{buildApartmentHouse\} from "\.\.\/building-lab\/buildi
 assert.match(js,/import \{applyFacadeFinishes\} from "\.\.\/building-lab\/materials\.js"/);
 assert.match(js,/import \{ActorAnimator\} from "\.\/animation\.js"/);
 assert.match(js,/import \{PlayerController,joystickValue,PLAYER_HEIGHT\} from "\.\/controller\.js"/);
-assert.match(js,/new PlayerController\(\{building:config,pads\}\)/);
+assert.match(js,/new PlayerController\(\{[\s\S]*building:config,pads,extras:streetPlan\.obstacles[\s\S]*\}\)/);
+assert.match(js,/import \{planStreet,buildStreet\} from "\.\/street\.js"/);
+assert.match(js,/planStreet\(config,pads\)/);
+assert.match(js,/buildStreet\(THREE,streetPlan\)/);
+assert.match(html,/id="world-info"/);
+assert.match(html,/id="hud-toggle"/);
+assert.match(js,/\.classList\.toggle\("collapsed"\)/);
 assert.match(js,/actorPivot\.rotation\.y=state\.heading/);
 assert.match(js,/renderer\.render\(scene,camera\)/);
 assert.match(js,/renderer\.setPixelRatio\(Math\.min\(devicePixelRatio\|\|1,1\.15\)\)/);

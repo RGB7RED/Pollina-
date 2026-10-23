@@ -9,6 +9,7 @@ on:
       - feat/mini-city-v033-stage33-materials-light
       - feat/mini-city-v033-stage34-asset-export-lab-switch
       - feat/mini-city-v033-stage41-playable-dual-camera
+      - feat/mini-city-v033-stage421-first-street
     paths:
       - 'building-lab/**'
       - 'character-lab/**'
@@ -36,12 +37,15 @@ jobs:
           node --check play-lab/game.js
           node --check play-lab/controller.js
           node --check play-lab/animation.js
+          node --check play-lab/street.js
       - name: Test stage 4.1 first/third-person movement and house collisions
         run: node play-lab/test-controller.mjs
       - name: Check stage 4.1.1 model orientation and non-reversed swipe
         run: node play-lab/test-directions.mjs
       - name: Check stage 4.1 actual animation clip wiring
         run: node play-lab/test-animation.mjs
+      - name: Test stage 4.2.1 street layout, instancing and collision
+        run: node play-lab/test-street.mjs
       - name: Check stage 4.1 mobile gameplay UI
         run: node play-lab/test-viewer.mjs
       - name: Check real wall openings, balcony variants and entrances
