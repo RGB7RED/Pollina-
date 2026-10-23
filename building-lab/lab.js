@@ -1,11 +1,12 @@
 import * as THREE from "three";
 import {OrbitControls} from "three/addons/controls/OrbitControls.js";
 import {BUILDING,buildApartmentHouse} from "./building.js";
+import {applyFacadeFinishes} from "./materials.js";
 import {FreeCamera,normalizedStick,CAMERA_SPEEDS,LOOK_SENSITIVITIES} from "./free-camera.js";
 const $=id=>document.getElementById(id);
 const scene=new THREE.Scene();
-scene.background=new THREE.Color(0x8e9ca9);
-scene.fog=new THREE.Fog(0x8e9ca9,185,395);
+scene.background=new THREE.Color(0x6c8294);
+scene.fog=new THREE.Fog(0x6c8294,185,395);
 const camera=new THREE.PerspectiveCamera(43,Math.max(.2,innerWidth/innerHeight),.15,650);
 const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:"high-performance"});
 renderer.outputColorSpace=THREE.SRGBColorSpace;
@@ -17,22 +18,31 @@ const controls=new OrbitControls(camera,renderer.domElement);
 controls.enableDamping=true;controls.dampingFactor=.075;controls.enablePan=true;
 controls.minDistance=7;controls.maxDistance=285;controls.maxPolarAngle=Math.PI/2-.025;
 controls.target.set(0,8,0);controls.update();
-const ambient=new THREE.HemisphereLight(0xb6cbdd,0x626f67,2.1);
+const ambient=new THREE.HemisphereLight(0xb6cbdd,0x56615b,1.48);
 scene.add(ambient);
-const sun=new THREE.DirectionalLight(0xffb993,2.7);
-sun.position.set(-17,30,20);sun.castShadow=true;
+const sun=new THREE.DirectionalLight(0xffb993,1.95);
+sun.position.set(-28,17,21);sun.castShadow=true;
 sun.shadow.mapSize.set(1024,1024);
 sun.shadow.camera.left=-72;sun.shadow.camera.right=72;
 sun.shadow.camera.top=46;sun.shadow.camera.bottom=-46;
 sun.shadow.camera.near=1;sun.shadow.camera.far=95;
 sun.shadow.normalBias=.055;sun.target.position.set(0,6,0);
 scene.add(sun,sun.target);
-const fill=new THREE.DirectionalLight(0xc5d6dd,1.05);
+const fill=new THREE.DirectionalLight(0xc5d6dd,.68);
 fill.position.set(35,17,-20);scene.add(fill);
-const eveningLamp=new THREE.PointLight(0xffb56e,12,13,2);
-eveningLamp.position.set(-15,3.7,13);scene.add(eveningLamp);
 const {root,stats,config,roofTop}=buildApartmentHouse(THREE);
+const finishes=applyFacadeFinishes(THREE,root);
 scene.add(root);
+// Two subtle, non-shadow-casting porch lights. Four real-time point lights
+// on mobile would cost substantially more per pixel for little visual gain.
+const entryXs=root.userData.geometryAudit.doorPositions;
+const porchLights=[entryXs[1],entryXs[2]].map(x=>{
+  const light=new THREE.PointLight(0xffb56e,3.7,6.5,2);
+  light.position.set(x,2.9,config.width/2+1.1);
+  light.castShadow=false;
+  scene.add(light);
+  return light;
+});
 function plane(w,h,color,x,y,z){
   const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),
     new THREE.MeshStandardMaterial({color,roughness:.99}));
@@ -55,13 +65,14 @@ const modes=[
  {label:"Высокое",pixelRatio:1.65,shadows:true,map:1536}
 ];
 const lighting=[
- {label:"🌆 Вечер",background:0x8e9ca9,ambient:2.1,sun:2.7,fill:1.05,lamps:true,exposure:1.17},
- {label:"☁️ Дневной осмотр",background:0xb9c4c5,ambient:2.6,sun:2,fill:1.1,lamps:false,exposure:1.23}
+ {label:"🌆 Вечер",background:0x6c8294,ambient:1.48,sun:1.95,fill:.68,lamps:true,exposure:1.20},
+ {label:"☁️ Дневной осмотр",background:0xb3c0c6,ambient:2.20,sun:2.35,fill:1.0,lamps:false,exposure:1.15}
 ];
 function applyTime(){
  const l=lighting[timeIndex];scene.background.setHex(l.background);scene.fog.color.setHex(l.background);
  ambient.intensity=l.ambient;sun.intensity=l.sun;fill.intensity=l.fill;
- eveningLamp.visible=l.lamps;renderer.toneMappingExposure=l.exposure;
+ for(const lamp of porchLights)lamp.visible=l.lamps;
+ renderer.toneMappingExposure=l.exposure;
  $("time").textContent=l.label;
 }
 function applyQuality(){
@@ -95,7 +106,7 @@ document.querySelectorAll("[data-view]").forEach(b=>b.addEventListener("click",(
 $("time").addEventListener("click",()=>{timeIndex=(timeIndex+1)%lighting.length;applyTime();});
 $("quality").addEventListener("click",()=>{qualityIndex=(qualityIndex+1)%modes.length;applyQuality();});
 $("reset").addEventListener("click",()=>{if(activeFly())return;controls.target.set(0,8,0);setView("threequarter");});
-$("building-info").textContent=config.floors+" этажей · "+stats.entrances+" подъезда · "+stats.balconies+" балконов";
+$("building-info").textContent=config.floors+" этажей · "+stats.entrances+" подъезда · "+stats.balconies+" балконов · "+finishes.textures+" текстуры";
 
 /* 3.1.1: ORBIT is retained, FREE is a separate explicit XYZ inspection mode.
    No change to the building geometry, materials or baseline render budget. */

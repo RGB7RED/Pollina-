@@ -1,4 +1,4 @@
-name: MINI CITY Building Lab 3.2
+name: MINI CITY Building Lab 3.3
 on:
   push:
     branches:
@@ -6,6 +6,7 @@ on:
       - feat/mini-city-v033-stage311-freecam
       - feat/mini-city-v033-stage312-camera-fix
       - feat/mini-city-v033-stage32-facade
+      - feat/mini-city-v033-stage33-materials-light
     paths:
       - 'building-lab/**'
       - '.github/workflows/building-lab.yml'
@@ -25,8 +26,11 @@ jobs:
           node --check building-lab/building.js
           node --check building-lab/lab.js
           node --check building-lab/free-camera.js
+          node --check building-lab/materials.js
       - name: Check real wall openings, balcony variants and entrances
         run: node building-lab/test-building.mjs
+      - name: Check authored textures, roof UVs and world-aligned brick shader
+        run: node building-lab/test-materials.mjs
       - name: Test XYZ free camera and joystick math
         run: node building-lab/test-free-camera.mjs
       - name: Check browser controls and mobile UI wiring
