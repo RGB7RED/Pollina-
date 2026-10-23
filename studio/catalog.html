@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#172a31">
-<title>MINI CITY — Каталог объектов 4.2.3</title>
+<title>MINI CITY — Папки и модели 4.2.4</title>
 <style>
 :root{color-scheme:dark;font:14px -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;color:#e8f4ea;background:#13272e}
 *{box-sizing:border-box}
@@ -25,6 +25,27 @@ summary{cursor:pointer}
 label{display:flex;flex-direction:column;gap:6px;color:#c3d7cc;font-size:11px}
 input,select{width:100%;height:44px;min-height:44px;border:1px solid #a2bfb67f;border-radius:10px;background:#223c43;color:#f4f9f0;padding:0 11px;font-size:14px}
 input:focus-visible,select:focus-visible,a:focus-visible,button:focus-visible{outline:2px solid #d2f4d4;outline-offset:2px}
+
+/* Level 1: folders. Level 2: genuinely different, numbered models. */
+.folder-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.folder-card{width:100%;text-align:left;display:flex;gap:15px;align-items:center;
+ background:linear-gradient(150deg,#2d504d,#234047);color:#f0f8f1;
+ border:1px solid #a6d2b3a3;border-radius:17px;min-height:118px;padding:18px 18px;cursor:pointer}
+.folder-card:hover{border-color:#e1f6d9;background:#305750}
+.folder-card .folder-icon{font-size:34px;flex:none}
+.folder-card .folder-name{display:block;font-size:20px;font-weight:820}
+.folder-card .folder-count{font-size:12px;color:#c0d8c9;display:block;margin-top:7px}
+.folder-arrow{margin-left:auto;color:#d9f1dd;font-size:23px}
+#folder-section[hidden],#object-section[hidden]{display:none!important}
+.breadcrumb{display:flex;align-items:center;flex-wrap:wrap;gap:9px;margin:19px 0}
+#folder-back{background:#28464a;color:#f1f8f0;border:1px solid #b6d8c681;min-height:42px}
+#folder-title{font-size:clamp(24px,5vw,31px);margin:15px 0 4px}
+#folder-summary{font-size:12px;color:#bfdbce;margin:0 0 17px}
+.model-label{background:#d1e5d1;color:#203a34;border-radius:8px;font-weight:900;
+  font-variant-numeric:tabular-nums;font-size:12px;padding:6px 9px;white-space:nowrap}
+.model-hint{margin-top:11px;color:#abd1c2;font-size:11px}
+.card-head .icon{flex:none}
+@media(max-width:720px){.folder-grid{grid-template-columns:1fr}.folder-card{min-height:93px;padding:13px 16px}}
 .catalog-info{display:flex;justify-content:space-between;gap:12px;align-items:center;margin:17px 2px 13px;color:#bdd5ca;font-size:12px}
 .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
 .card{min-width:0;background:linear-gradient(153deg,#2b444bef,#1c3239ed);border:1px solid #a1c7b067;border-radius:18px;padding:17px 17px 16px}
@@ -63,9 +84,9 @@ button{cursor:pointer;min-height:40px;background:#c7dacd;color:#16342f;border:0;
   <a href="../play-lab/index.html?mode=game">🎮 Играть</a>
 </nav>
 <header>
-  <span class="kicker">MINI CITY / DEVELOPER STUDIO / 4.2.3</span>
+  <span class="kicker">MINI CITY / DEVELOPER STUDIO / 4.2.4</span>
   <h1>Каталог объектов</h1>
-  <p class="intro">Единый реестр моделей и элементов сцены. Здесь видно, что уже существует, где хранится исходник, что проверяется и что пока нельзя выпускать в игру. Карточки ведут в существующие лаборатории — новые 3D-модели ради каталога не создаются.</p>
+  <p class="intro">Сначала выбери папку — например, «Здания» или «Персонажи». Внутри находятся <strong>отдельные пронумерованные модели</strong>, которые отличаются друг от друга. Каждый номер закреплён за конкретной моделью, а не за её копией на карте.</p>
 </header>
 <section class="metrics" aria-label="Состояние библиотеки">
   <div class="metric"><strong id="metric-total">—</strong><span>Видов объектов</span></div>
@@ -73,34 +94,46 @@ button{cursor:pointer;min-height:40px;background:#c7dacd;color:#16342f;border:0;
   <div class="metric"><strong id="metric-testing">—</strong><span>На испытаниях</span></div>
   <div class="metric"><strong id="metric-development">—</strong><span>В разработке</span></div>
 </section>
-<section class="toolbar" aria-label="Поиск и фильтрация объектов">
-  <label>Название или исходник
-    <input id="catalog-search" type="search" placeholder="Например: дерево, дом, GLB" autocomplete="off">
-  </label>
-  <label>Категория
-    <select id="catalog-category"><option value="all">Все категории</option></select>
-  </label>
-  <label>Состояние
-    <select id="catalog-status">
-      <option value="all">Все состояния</option>
-      <option value="development">В разработке</option>
-      <option value="testing">На испытаниях</option>
-      <option value="approved">Принят для лаборатории</option>
-    </select>
-  </label>
-</section>
-<div class="catalog-info">
-  <strong id="results-count" role="status" aria-live="polite">Загрузка каталога…</strong>
-  <span>Принято ≠ готово к релизу</span>
-</div>
 <div class="error" id="catalog-error" role="alert" hidden>
   <p id="catalog-error-text">Каталог не удалось загрузить.</p>
   <button id="catalog-retry" type="button">Повторить</button>
 </div>
-<p id="catalog-empty" class="empty" hidden>Объекты не найдены. Измени фильтры.</p>
-<section class="grid" id="catalog-list" aria-label="Карточки игровых объектов"></section>
+<section id="folder-section" aria-label="Каталоги категорий">
+  <div class="catalog-info">
+    <strong id="folder-count" role="status" aria-live="polite">Загрузка папок…</strong>
+    <span>Нажми папку, чтобы увидеть модели</span>
+  </div>
+  <div class="folder-grid" id="folder-list"></div>
+</section>
+<section id="object-section" aria-label="Модели выбранной категории" hidden>
+  <div class="breadcrumb" aria-label="Навигация внутри каталога">
+    <button id="folder-back" type="button">← Все каталоги</button>
+    <span id="folder-path">Каталог / …</span>
+  </div>
+  <h2 id="folder-title">Объекты</h2>
+  <p id="folder-summary">Каждый номер — самостоятельная модель или тип объекта.</p>
+  <div class="toolbar" aria-label="Фильтрация моделей внутри папки">
+    <label>Найти модель в этой папке
+      <input id="catalog-search" type="search" placeholder="Номер, название или исходник" autocomplete="off">
+    </label>
+    <label>Состояние модели
+      <select id="catalog-status">
+        <option value="all">Все состояния</option>
+        <option value="development">В разработке</option>
+        <option value="testing">На испытаниях</option>
+        <option value="approved">Принят для лаборатории</option>
+      </select>
+    </label>
+  </div>
+  <div class="catalog-info">
+    <strong id="results-count" role="status" aria-live="polite">Загрузка моделей…</strong>
+    <span>Принято ≠ готово к релизу</span>
+  </div>
+  <p id="catalog-empty" class="empty" hidden>В этой папке пока нет моделей с такими параметрами.</p>
+  <div class="grid" id="catalog-list" aria-label="Пронумерованные модели"></div>
+</section>
 <footer class="footer">
-  <p>🟢 «Принят для лаборатории» означает визуальное или функциональное принятие в тестовой сцене — <strong>не релиз</strong>. Сторонние GLB проходят отдельную проверку лицензии. Количество на карточке означает экземпляры текущей сцены, а не отдельные GLB-файлы.</p>
+  <p><strong>№ 001</strong> в папке «Здания» и <strong>№ 001</strong> в папке «Персонажи» — разные модели. Например, 22 дерева на улице — это 22 экземпляра <strong>одной модели дерева № 001</strong>, а не 22 уникальные модели. Когда создадим новое дерево с другим внешним видом, оно получит № 002.</p><p>🟢 «Принят для лаборатории» — не готовность к релизу. Сторонние GLB требуют проверки происхождения и прав.</p>
   <p>Новые объекты регистрируются через <code>models/catalog.json</code> в GitHub после разработки в отдельной лаборатории. На этой странице нет кнопки редактирования проекта: статусы и файлы не изменяются без новой проверенной версии в Git.</p>
 </footer>
 </main>
