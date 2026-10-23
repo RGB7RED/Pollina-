@@ -25,6 +25,7 @@ assert.match(js,/encodeHouseGLB\(THREE,root\)/);
 assert.match(html,/id="export-glb"/);
 assert.match(html,/id="export-message"/);
 assert.match(html,/href="\.\.\/character-lab\/index\.html"/);
+assert.match(html,/href="\.\.\/studio\/catalog\.html\?category=building"/);
 assert.match(html,/href="\.\/index\.html" aria-current="page"/);
 assert.match(js,/porchLights\.map|for\(const lamp of porchLights\)/);
 assert.match(js,/import \{BUILDING,buildApartmentHouse\} from "\.\/building\.js"/);
