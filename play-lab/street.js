@@ -10,7 +10,44 @@ const rect=(kind,x,z,width,depth,y=0)=>({kind,x,z,width,depth,y});
 const obstruction=(name,x,z,rx,rz)=>({
   name,minX:x-rx,maxX:x+rx,minZ:z-rz,maxZ:z+rz
 });
-export function planStreet(building,pads=[]){
+// Grass is authored once in the street plan and reused by the game and the
+// standalone street viewer. No textures, browser APIs or random frame state.
+export function sampleGrassTufts(surfaces,building,pads=[],{buildingPresent=true}={}){
+  const lawn=surfaces.find(p=>p.kind==="grass");
+  if(!lawn)return [];
+  const paved=surfaces.filter(p=>p.kind!=="grass");
+  const hash=(x,z,k=0)=>{
+    const n=Math.sin(x*127.1+z*311.7+k*74.7)*43758.5453;
+    return n-Math.floor(n);
+  };
+  const occupied=(x,z)=>{
+    if(paved.some(r=>Math.abs(x-r.x)<r.width/2+.45&&
+      Math.abs(z-r.z)<r.depth/2+.45))return true;
+    if(!buildingPresent)return false;
+    if(Math.abs(x)<building.length/2+1.2&&
+       Math.abs(z)<building.width/2+1.2)return true;
+    return pads.some(p=>Math.abs(x-p.x)<p.width/2+.6&&
+      Math.abs(z-p.centreZ)<p.depth/2+.6);
+  };
+  const result=[];
+  const step=1.45;
+  for(let x=-lawn.width/2+2;x<lawn.width/2-2;x+=step){
+    for(let z=lawn.z-lawn.depth/2+2;z<lawn.z+lawn.depth/2-2;z+=step){
+      if(hash(x,z,0)>.76)continue; // naturally intermittent bunches
+      const px=x+(hash(x,z,1)-.5)*1.0;
+      const pz=z+(hash(x,z,2)-.5)*1.0;
+      if(occupied(px,pz))continue;
+      result.push({
+        x:+px.toFixed(4),z:+pz.toFixed(4),
+        height:+(.12+hash(x,z,3)*.20).toFixed(4),
+        width:+(.21+hash(x,z,4)*.19).toFixed(4),
+        angle:hash(x,z,5)*Math.PI
+      });
+    }
+  }
+  return result;
+}
+export function planStreet(building,pads=[],options={}){
   if(!Number.isFinite(building?.length)||!Number.isFinite(building?.width))
     throw Error("House dimensions are required to plan a street");
   const c=STREET_LAYOUT;
@@ -66,10 +103,14 @@ export function planStreet(building,pads=[]){
        13.2>=o.minZ-.36&&13.2<=o.maxZ+.36)
       throw Error("Street furnishing intersects player spawn: "+o.name);
   }
-  return {surfaces,markings,trees,lamps,benches,obstacles,
+  const grassTufts=sampleGrassTufts(surfaces,building,pads,{
+    buildingPresent:options.buildingPresent!==false
+  });
+  return {surfaces,markings,trees,lamps,benches,obstacles,grassTufts,
     curbs:[rect("curb",0,c.roadNear,c.length,.18,.025),
       rect("curb",0,c.roadFar,c.length,.18,.025)],
     info:{trees:trees.length,lamps:lamps.length,benches:benches.length,
+      grassTufts:grassTufts.length,
       roadLength:c.length,roadWidth:c.roadFar-c.roadNear}};
 }
 
@@ -79,7 +120,11 @@ export function buildStreet(THREE,plan){
   const root=new THREE.Group();
   root.name="MINI CITY | 4.2.1 | first street";
   const materials={
-    grass:new THREE.MeshStandardMaterial({color:0x6f846d,roughness:1}),
+    grass:new THREE.MeshStandardMaterial({color:0x668459,roughness:1}),
+    grassBlades:new THREE.MeshStandardMaterial({
+      color:0x4e8641,roughness:1,side:THREE.DoubleSide,
+      depthWrite:true
+    }),
     sidewalk:new THREE.MeshStandardMaterial({color:0xaca8a0,roughness:.97}),
     road:new THREE.MeshStandardMaterial({color:0x484e52,roughness:.98}),
     paving:new THREE.MeshStandardMaterial({color:0x99978d,roughness:.97}),
@@ -123,6 +168,18 @@ export function buildStreet(THREE,plan){
     mesh.computeBoundingSphere();
     root.add(mesh);
     return mesh;
+  }
+  // Low-poly living grass, positioned only on actual green areas.
+  // Two crossed vertical planes make thousands of grass clumps in TWO
+  // instanced draw calls even on mobile Safari.
+  const tufts=plan.grassTufts||[];
+  if(tufts.length){
+    const blade=new THREE.PlaneGeometry(1,1);
+    for(const [name,offset] of [["grass-blades-a",0],["grass-blades-b",Math.PI/2]])
+      batch(name,blade,materials.grassBlades,tufts,p=>[
+        p.x,-.096+p.height*.45,p.z,
+        p.width,p.height,1,0,p.angle+offset,0
+      ]);
   }
   const cube=new THREE.BoxGeometry(1,1,1);
   batch("lane-and-crosswalk",cube,materials.roadMark,plan.markings,
