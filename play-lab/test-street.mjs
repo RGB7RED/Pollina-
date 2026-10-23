@@ -10,15 +10,15 @@ const plan=planStreet(BUILDING,pads);
 const twin=planStreet(BUILDING,pads);
 assert.deepEqual(plan,twin,"same city block every refresh");
 const standalone=planStreet(BUILDING,[],{buildingPresent:false});
-assert.ok(plan.info.grassTufts>18000 && plan.info.grassTufts<23000,
+assert.ok(plan.info.grassTufts>24000 && plan.info.grassTufts<29000,
  "grass density stays bounded for iPhone");
 assert.equal(plan.info.grassTufts,plan.grassTufts.length);
 assert.ok(standalone.grassTufts.length>plan.grassTufts.length,
  "standalone street has grass on the empty space where the house would be");
 for(const tuft of plan.grassTufts){
  assert.ok(Number.isFinite(tuft.x)&&Number.isFinite(tuft.z));
- assert.ok(tuft.height>=.22&&tuft.height<=.401);
- assert.ok(tuft.width>=.98&&tuft.width<=1.281);
+ assert.ok(tuft.height>=.18&&tuft.height<=.311);
+ assert.ok(tuft.width>=1&&tuft.width<=1.221);
  assert.ok(Math.abs(tuft.x)>=BUILDING.length/2+1.2||
    Math.abs(tuft.z)>=BUILDING.width/2+1.2,
    "grass may not grow through the residential building");
@@ -175,9 +175,9 @@ assert.ok(instanced.every(m=>m.matrices.length===m.count));
 const patches=instanced.filter(m=>m.name.startsWith("grass-patch-"));
 assert.equal(patches.length,3);
 assert.equal(patches.reduce((s,m)=>s+m.count,0),plan.info.grassTufts);
-assert.ok(patches.every(m=>m.geometry.index.count===7*4*3));
+assert.ok(patches.every(m=>m.geometry.index.count===8*4*3));
 assert.ok(patches.every(m=>m.geometry.normalsComputed));
-assert.deepEqual(patches.map(m=>m.material.color),[0x3e7e34,0x619745,0x87a95b]);
+assert.deepEqual(patches.map(m=>m.material.color),[0x4c8e41,0x6ca651,0x94b96d]);
 assert.equal(instanced.find(m=>m.name==="trees-trunks").count,22);
 assert.equal(instanced.find(m=>m.name==="trees-canopy-low").count,22);
 assert.equal(instanced.find(m=>m.name==="trees-canopy-high").count,22);

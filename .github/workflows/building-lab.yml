@@ -19,6 +19,7 @@ on:
       - feat/mini-city-v033-stage433-bench-lamp-references
       - feat/mini-city-v033-stage434-independent-street-grass
       - feat/mini-city-v033-stage435-isolated-street-detailed-grass
+      - feat/mini-city-v033-stage437-fine-lighter-grass
     paths:
       - 'building-lab/**'
       - 'bus-stop-lab/**'
