@@ -1,8 +1,24 @@
 import assert from "node:assert/strict";
 import {readFileSync,existsSync} from "node:fs";
-import {validateCatalog,filterCatalog,catalogCounts,CATEGORIES,STATUS} from "./catalog-utils.js";
+import {validateCatalog,filterCatalog,catalogCounts,CATEGORIES,STATUS,
+ catalogFolders,folderObjects,modelLabel} from "./catalog-utils.js";
 const catalog=JSON.parse(readFileSync(new URL("./catalog.json",import.meta.url),"utf8"));
 assert.equal(validateCatalog(catalog),catalog);
+assert.equal(catalog.schemaVersion,2);
+assert.deepEqual(catalogFolders(catalog).map(f=>[f.id,f.count]),[
+ ["building",1],["character",2],["environment",1],
+ ["nature",1],["street_furniture",2]
+]);
+assert.deepEqual(folderObjects(catalog,"character").map(e=>e.modelNumber),[1,2]);
+assert.deepEqual(folderObjects(catalog,"street_furniture").map(e=>e.modelNumber),[1,2]);
+assert.deepEqual(folderObjects(catalog,"building").map(e=>e.id),["apartment_house"]);
+assert.deepEqual(folderObjects(catalog,"imaginary"),[]);
+assert.equal(modelLabel(1),"№ 001");
+assert.equal(modelLabel(12),"№ 012");
+// Numbering represents unique designs, NOT copies placed in the street.
+assert.equal(folderObjects(catalog,"nature").length,1);
+assert.equal(folderObjects(catalog,"nature")[0].quantity,22);
+assert.equal(folderObjects(catalog,"nature")[0].modelNumber,1);
 const counts=catalogCounts(catalog);
 assert.deepEqual(counts,{
   total:7,
@@ -17,6 +33,8 @@ assert.equal(filterCatalog(catalog,{category:"character"}).length,2);
 assert.equal(filterCatalog(catalog,{status:"approved"}).length,1);
 assert.equal(filterCatalog(catalog,{category:"street_furniture",status:"testing"}).length,2);
 assert.equal(filterCatalog(catalog,{search:"не существует"}).length,0);
+assert.equal(folderObjects(catalog,"character",{search:"№ 002"}).length,1);
+assert.equal(folderObjects(catalog,"character",{status:"testing"}).length,1);
 assert.equal(Object.keys(CATEGORIES).length,5);
 assert.equal(Object.keys(STATUS).length,3);
 assert.ok(catalog.entries.every(e=>!e.releaseReady),
@@ -52,4 +70,15 @@ assert.throws(()=>validateCatalog(changed("street_tree",{
 const duplicate=structuredClone(catalog);
 duplicate.entries.push({...duplicate.entries[0]});
 assert.throws(()=>validateCatalog(duplicate),/duplicated asset id/);
-console.log("MINI CITY 4.2.3 registry PASS: 7 real entries, 7 viewers, sources exist, no fake binaries or release approvals, filters validated");
+assert.throws(()=>validateCatalog(changed("hero_reference",{modelNumber:1})),
+  /Duplicated model number within folder/);
+assert.throws(()=>validateCatalog(changed("hero_reference",{modelNumber:0})),
+  /Invalid model number/);
+assert.throws(()=>validateCatalog(changed("hero_reference",{modelNumber:"002"})),
+  /Invalid model number/);
+const crossFolderSameNumber=structuredClone(catalog);
+assert.equal(crossFolderSameNumber.entries[0].modelNumber,
+  crossFolderSameNumber.entries[1].modelNumber,
+  "same number is allowed across distinct folders");
+assert.equal(validateCatalog(crossFolderSameNumber),crossFolderSameNumber);
+console.log("MINI CITY 4.2.3 registry PASS: 7 real numbered entries, 5 folders, sources exist, no fake binaries or release approvals, filters validated");
