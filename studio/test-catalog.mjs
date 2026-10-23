@@ -21,6 +21,8 @@ assert.match(html,/id="object-section"[^>]*hidden/);
 assert.match(html,/name="viewport"/);
 assert.match(html,/safe-area-inset-bottom/);
 assert.match(html,/href="\.\/index\.html"/);
+assert.match(html,/href="\.\/catalog\.html"/);
+assert.doesNotMatch(html,/href="\.\.\/lab\/index\.html"/);
 assert.match(html,/href="\.\.\/play-lab\/index\.html\?mode=lab"/);
 assert.match(html,/href="\.\.\/play-lab\/index\.html\?mode=game"/);
 assert.match(html,/type="module" src="\.\/catalog\.js"/);

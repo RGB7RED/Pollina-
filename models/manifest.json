@@ -25,7 +25,7 @@
     "externalAnimatedCandidateBundled": false,
     "releaseApproved": false
   },
-  "laboratoryHub": "lab/index.html",
+  "laboratoryHub": "studio/catalog.html",
   "integration": {
     "mainGameChanged": false,
     "needsVisualE2E": true,
@@ -47,9 +47,9 @@
     "labAndGameShareRuntime": true
   },
   "developerStudio": {
-    "stage": "4.2.4",
+    "stage": "4.2.5",
     "home": "studio/index.html",
-    "objectLab": "lab/index.html",
+    "objectLab": "studio/catalog.html",
     "gameLab": "play-lab/index.html?mode=lab",
     "game": "play-lab/index.html?mode=game",
     "sharedSceneModule": "play-lab/game.js",
@@ -73,6 +73,11 @@
     "catalogHierarchy": "category → numbered distinct models",
     "catalogSchemaVersion": 2,
     "folderCount": 5,
-    "modelNumberScope": "within category; persistent; not instance count"
+    "modelNumberScope": "within category; persistent; not instance count",
+    "legacyObjectLab": "lab/index.html",
+    "objectViewers": [
+      "building-lab/index.html",
+      "character-lab/index.html"
+    ]
   }
 }
