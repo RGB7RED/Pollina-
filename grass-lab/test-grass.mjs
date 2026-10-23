@@ -60,11 +60,11 @@ for(let i=0;i<7;i++){
  const k=i*18;
  const ox=(positions[k]+positions[k+3])/2,oz=(positions[k+2]+positions[k+5])/2;
  const tx=(positions[k+12]+positions[k+15])/2,tz=(positions[k+14]+positions[k+17])/2;
- assert.ok(Math.hypot(tx-ox,tz-oz)>.12);
+ assert.ok(Math.hypot(tx-ox,tz-oz)>.17);
  assert.ok(positions[k+13]>.7&&positions[k+13]<=1.01);
 }
 const plan=planStreet(BUILDING);
-assert.ok(plan.grassTufts.length>5000&&plan.grassTufts.length<10000);
+assert.ok(plan.grassTufts.length>18000&&plan.grassTufts.length<23000);
 assert.deepEqual(plan.grassTufts,planStreet(BUILDING).grassTufts);
 const group={children:[],add(m){this.children.push(m);}};
 const meshes=addGrassToGroup(THREE,group,plan.grassTufts);

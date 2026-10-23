@@ -10,15 +10,15 @@ const plan=planStreet(BUILDING,pads);
 const twin=planStreet(BUILDING,pads);
 assert.deepEqual(plan,twin,"same city block every refresh");
 const standalone=planStreet(BUILDING,[],{buildingPresent:false});
-assert.ok(plan.info.grassTufts>5000 && plan.info.grassTufts<10000,
+assert.ok(plan.info.grassTufts>18000 && plan.info.grassTufts<23000,
  "grass density stays bounded for iPhone");
 assert.equal(plan.info.grassTufts,plan.grassTufts.length);
 assert.ok(standalone.grassTufts.length>plan.grassTufts.length,
  "standalone street has grass on the empty space where the house would be");
 for(const tuft of plan.grassTufts){
  assert.ok(Number.isFinite(tuft.x)&&Number.isFinite(tuft.z));
- assert.ok(tuft.height>.18&&tuft.height<=.461);
- assert.ok(tuft.width>.34&&tuft.width<=.551);
+ assert.ok(tuft.height>=.22&&tuft.height<=.401);
+ assert.ok(tuft.width>=.98&&tuft.width<=1.281);
  assert.ok(Math.abs(tuft.x)>=BUILDING.length/2+1.2||
    Math.abs(tuft.z)>=BUILDING.width/2+1.2,
    "grass may not grow through the residential building");
@@ -28,6 +28,41 @@ for(const tuft of plan.grassTufts){
       "grass may not grow on paving, paths or roads: "+surface.kind);
  }
 }
+// Spatial density test: >97% of sampled lawn points lie within 46 cm
+// of a tuft centre. Visual opacity still requires actual Safari testing.
+const cells=new Map(),cellKey=(x,z)=>Math.floor(x)+":"+Math.floor(z);
+for(const tuft of plan.grassTufts){
+ const key=cellKey(tuft.x,tuft.z);
+ if(!cells.has(key))cells.set(key,[]);
+ cells.get(key).push(tuft);
+}
+const paving=plan.surfaces.filter(p=>p.kind!=="grass");
+const onPaving=(x,z)=>paving.some(p=>Math.abs(x-p.x)<p.width/2+.45&&
+ Math.abs(z-p.z)<p.depth/2+.45);
+let greenSamples=0,nearbyTufts=0;
+for(let x=-64;x<=64;x+=1){
+ for(let z=-41.5;z<=41.5;z+=1){
+  if(onPaving(x,z))continue;
+  if(Math.abs(x)<BUILDING.length/2+1.2&&Math.abs(z)<BUILDING.width/2+1.2)continue;
+  if(pads.some(p=>Math.abs(x-p.x)<p.width/2+.6&&
+    Math.abs(z-p.centreZ)<p.depth/2+.6))continue;
+  greenSamples++;
+  const bx=Math.floor(x),bz=Math.floor(z);
+  let covered=false;
+  for(let dx=-1;dx<=1&&!covered;dx++){
+   for(let dz=-1;dz<=1&&!covered;dz++){
+    for(const tuft of cells.get((bx+dx)+":"+(bz+dz))||[]){
+      const rx=tuft.x-x,rz=tuft.z-z;
+      if(rx*rx+rz*rz<=.46*.46){covered=true;break;}
+    }
+   }
+  }
+  if(covered)nearbyTufts++;
+ }
+}
+assert.ok(greenSamples>3000);
+assert.ok(nearbyTufts/greenSamples>.97,
+ "dense tuft centres should cover >97% of lawn samples within 46 cm");
 assert.equal(plan.info.roadLength,108);
 assert.equal(Math.round(plan.info.roadWidth*10),91);
 assert.equal(plan.info.trees,22);
