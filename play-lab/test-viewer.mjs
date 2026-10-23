@@ -4,8 +4,10 @@ import {Script} from "node:vm";
 const read=p=>readFileSync(new URL(p,import.meta.url),"utf8");
 const html=read("./index.html"),js=read("./game.js");
 const controller=read("./controller.js"),animation=read("./animation.js");
+const studio=read("./studio.js");
 new Script(js.replace(/^import[^\n]*\n/gm,""),{filename:"game.js"});
 new Script(controller.replace(/^export /gm,""),{filename:"controller.js"});
+new Script(studio.replace(/^export /gm,""),{filename:"studio.js"});
 new Script(animation.replace(/^import[^\n]*\n/gm,"").replace(/^export /gm,""),
   {filename:"animation.js"});
 for(const id of ["stage","fps","actor-status","status","retry","stick","stick-knob",
@@ -27,6 +29,18 @@ assert.match(js,/planStreet\(config,pads\)/);
 assert.match(js,/buildStreet\(THREE,streetPlan\)/);
 assert.match(html,/id="world-info"/);
 assert.match(html,/id="hud-toggle"/);
+for(const id of ["mode-toggle","play-title","devtools","devtools-toggle",
+ "devtools-body","dev-collisions","dev-perf","dev-resources","dev-player",
+ "dev-hit","dev-objects","dev-route"]){
+ assert.match(html,new RegExp('id="'+id+'"'),"missing dev UI "+id);
+}
+assert.match(js,/import \{DeveloperStudio\} from "\.\/studio\.js"/);
+assert.match(js,/new DeveloperStudio\(/);
+assert.match(js,/studio\.update\(\{fps:measuredFps,state\}\)/);
+assert.match(html,/href="\.\.\/studio\/index\.html"/);
+assert.match(html,/body\.game-mode \.brand p/);
+assert.match(studio,/window\.history\.pushState/);
+assert.match(studio,/class DeveloperStudio/);
 assert.match(js,/\.classList\.toggle\("collapsed"\)/);
 assert.match(js,/actorPivot\.rotation\.y=state\.heading/);
 assert.match(js,/renderer\.render\(scene,camera\)/);
