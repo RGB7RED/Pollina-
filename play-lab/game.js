@@ -3,6 +3,7 @@ import {GLTFLoader} from "three/addons/loaders/GLTFLoader.js";
 import {buildApartmentHouse} from "../building-lab/building.js";
 import {applyFacadeFinishes} from "../building-lab/materials.js";
 import {ActorAnimator} from "./animation.js";
+import {planStreet,buildStreet} from "./street.js";
 import {PlayerController,joystickValue,PLAYER_HEIGHT} from "./controller.js";
 
 // Separate playable prototype. It neither changes MINI CITY's main game
@@ -32,24 +33,19 @@ scene.add(sun);
 const {root:house,config}=buildApartmentHouse(THREE);
 applyFacadeFinishes(THREE,house);
 scene.add(house);
-function ground(w,d,color,x,y,z){
- const mesh=new THREE.Mesh(new THREE.PlaneGeometry(w,d),
-   new THREE.MeshStandardMaterial({color,roughness:.98}));
- mesh.rotation.x=-Math.PI/2;mesh.position.set(x,y,z);mesh.receiveShadow=true;
- scene.add(mesh);return mesh;
-}
-ground(130,85,0x718275,0,-.10,0);
-ground(94,5.6,0xadaaa3,0,-.075,config.width/2+5.45);
-ground(96,9,0x515459,0,-.065,config.width/2+12.9);
-const lineMaterial=new THREE.MeshBasicMaterial({color:0xc3c1b7});
-for(let x=-44;x<=44;x+=8){
- const mark=new THREE.Mesh(new THREE.PlaneGeometry(2.3,.09),lineMaterial);
- mark.rotation.x=-Math.PI/2;mark.position.set(x,-.055,config.width/2+12.9);
- scene.add(mark);
-}
-const actorPivot=new THREE.Group();scene.add(actorPivot);
+// Stage 4.2.1: the approved building is NOT duplicated. Replace temporary
+// blank road/ground with one deterministic street plan and batched furnishing.
 const pads=house.userData.geometryAudit.entryPads;
-const controller=new PlayerController({building:config,pads});
+const streetPlan=planStreet(config,pads);
+const street=buildStreet(THREE,streetPlan);
+scene.add(street);
+const actorPivot=new THREE.Group();scene.add(actorPivot);
+const controller=new PlayerController({
+  building:config,pads,extras:streetPlan.obstacles
+});
+$("world-info").textContent="Улица 108 м · "+streetPlan.info.trees+
+  " деревьев · "+streetPlan.info.lamps+" фонарей · "+
+  streetPlan.info.benches+" скамейки";
 actorPivot.position.set(controller.position.x,0,controller.position.z);
 let actor=null,animator=null,ready=false,activeRequest=0;
 const loader=new GLTFLoader();
