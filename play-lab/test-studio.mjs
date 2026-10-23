@@ -36,7 +36,7 @@ class Obj{
 class Batch{
   constructor(g,m,n){this.geometry=g;this.material=m;this.count=n;
     this.matrices=[];this.instanceMatrix={needsUpdate:false};}
-  setMatrixAt(i,m){this.matrices[i]=m;}
+  setMatrixAt(i,m){this.matrices[i]=m.clone();}
   computeBoundingSphere(){this.boundsComputed=true;}
 }
 const THREE={BoxGeometry:class{},MeshBasicMaterial:class{constructor(o){Object.assign(this,o)}},
