@@ -25,8 +25,8 @@ assert.equal(grass.category,"nature");
 assert.equal(grass.inPlayLab,true);
 assert.equal(grass.assetFile,null);
 assert.deepEqual(catalog.entries.filter(e=>e.category==="nature").map(e=>e.modelNumber),[1,2]);
-assert.equal(BLADES_PER_TUFT,7);
-assert.equal(TRIANGLES_PER_TUFT,28);
+assert.equal(BLADES_PER_TUFT,8);
+assert.equal(TRIANGLES_PER_TUFT,32);
 class BufferGeometry{
  constructor(){this.attributes={};}
  setAttribute(k,v){this.attributes[k]=v;}
@@ -52,11 +52,17 @@ class InstancedMesh{
 }
 const THREE={BufferGeometry,Float32BufferAttribute,Object3D,InstancedMesh,MeshStandardMaterial:Material,DoubleSide:2};
 const geo=createGrassTuftGeometry(THREE);
-assert.equal(geo.attributes.position.count,42);
-assert.equal(geo.index.count,84);
+assert.equal(geo.attributes.position.count,48);
+assert.equal(geo.index.count,96);
 assert.equal(geo.normals,true);
+const a=geo.attributes.position.array;
+for(let n=0;n<BLADES_PER_TUFT;n++){
+ const i=n*18;
+ const width=Math.hypot(a[i+3]-a[i],a[i+5]-a[i+2]);
+ assert.ok(width>=.10&&width<=.13,"thin individual grass leaves");
+}
 const positions=geo.attributes.position.array;
-for(let i=0;i<7;i++){
+for(let i=0;i<8;i++){
  const k=i*18;
  const ox=(positions[k]+positions[k+3])/2,oz=(positions[k+2]+positions[k+5])/2;
  const tx=(positions[k+12]+positions[k+15])/2,tz=(positions[k+14]+positions[k+17])/2;
@@ -64,7 +70,7 @@ for(let i=0;i<7;i++){
  assert.ok(positions[k+13]>.7&&positions[k+13]<=1.01);
 }
 const plan=planStreet(BUILDING);
-assert.ok(plan.grassTufts.length>18000&&plan.grassTufts.length<23000);
+assert.ok(plan.grassTufts.length>24000&&plan.grassTufts.length<29000);
 assert.deepEqual(plan.grassTufts,planStreet(BUILDING).grassTufts);
 const group={children:[],add(m){this.children.push(m);}};
 const meshes=addGrassToGroup(THREE,group,plan.grassTufts);
@@ -72,7 +78,7 @@ assert.equal(meshes.length,3);
 assert.deepEqual(meshes.map(m=>m.name),["grass-patch-deep","grass-patch-fresh","grass-patch-sun"]);
 assert.deepEqual(meshes.map(m=>m.material.color),GRASS_PALETTE.map(p=>p.color));
 assert.equal(meshes.reduce((n,m)=>n+m.count,0),plan.grassTufts.length);
-assert.ok(meshes.every(m=>m.geometry.index.count===84));
+assert.ok(meshes.every(m=>m.geometry.index.count===96));
 assert.ok(meshes.every(m=>m.matrices.length===m.count));
 assert.equal(addGrassToGroup(THREE,group,[]).length,0);
 console.log("MINI CITY 4.3.5 GRASS PASS: actual bent blades, 3 colors, 3 draw batches, density, Nature #002");

@@ -1,14 +1,14 @@
 // MINI CITY 4.3.5 — reusable authored grass mesh for city, road-only
 // inspector and dedicated grass laboratory. No textures, RNG, Web APIs.
 export const GRASS_PALETTE=Object.freeze([
-  {name:"deep",color:0x3e7e34},
-  {name:"fresh",color:0x619745},
-  {name:"sun",color:0x87a95b}
+  {name:"deep",color:0x4c8e41},
+  {name:"fresh",color:0x6ca651},
+  {name:"sun",color:0x94b96d}
 ]);
-export const BLADES_PER_TUFT=7;
+export const BLADES_PER_TUFT=8;
 export const TRIANGLES_PER_TUFT=BLADES_PER_TUFT*4;
 
-// Seven tapered leaves with a middle bend and a narrow pointed tip.
+// Eight thinner tapered leaves with a middle bend and a narrow pointed tip.
 // This is actual 3D leaf geometry, NOT crossed opaque rectangles.
 export function createGrassTuftGeometry(THREE){
   const positions=[],indices=[];
@@ -17,10 +17,10 @@ export function createGrassTuftGeometry(THREE){
     const a=n*Math.PI*(3-Math.sqrt(5)); // phyllotactic spread
     const c=Math.cos(a),s=Math.sin(a);
     const sideX=-s,sideZ=c;
-    const rr=.10+(n%3)*.105;
+    const rr=.09+(n%3)*.095;
     const height=.73+(n%4)*.086;
-    const bend=.19+(n%2)*.085;
-    const width=.195-(n%3)*.018;
+    const bend=.18+(n%2)*.070;
+    const width=.126-(n%3)*.009;
     const cx=c*rr,cz=s*rr;
     const start=positions.length/3;
     for(const [t,r] of [[0,1],[.55,.53],[1,.012]]){

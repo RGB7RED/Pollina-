@@ -55,18 +55,18 @@ assert.equal(separate.obstacles.length,0);
 assert.deepEqual([separate.info.trees,separate.info.lamps,separate.info.benches],[0,0,0]);
 assert.match(html,/0 домов и городских предметов|без домов и городских предметов/);
 assert.ok(separate.grassTufts.length>city.grassTufts.length);
-assert.ok(separate.grassTufts.length>21000 && separate.grassTufts.length<26000);
+assert.ok(separate.grassTufts.length>29000 && separate.grassTufts.length<34000);
 assert.ok(separate.grassTufts.some(p=>Math.abs(p.x)<10&&Math.abs(p.z)<5),
  "standalone street grows grass where the absent house would be");
 for(const tuft of separate.grassTufts){
- assert.ok(tuft.height>=.22&&tuft.height<=.40);
+ assert.ok(tuft.height>=.18&&tuft.height<=.31);
  for(const r of separate.surfaces.filter(s=>s.kind!=="grass"))
   assert.ok(Math.abs(tuft.x-r.x)>=r.width/2+.45||
     Math.abs(tuft.z-r.z)>=r.depth/2+.45,"grass on asphalt or sidewalk");
 }
 assert.match(grassSource,/addGrassToGroup\(THREE,root,plan\.grassTufts/);
 const detailedGrass=read("../play-lab/grass.js");
-assert.match(detailedGrass,/BLADES_PER_TUFT=7/);
+assert.match(detailedGrass,/BLADES_PER_TUFT=8/);
 assert.match(detailedGrass,/THREE\.DoubleSide/);
 assert.match(detailedGrass,/grass-patch-/);
 console.log("MINI CITY street/house isolation PASS: independent viewers, street grass, paving exclusion, mobile camera and shared city");
