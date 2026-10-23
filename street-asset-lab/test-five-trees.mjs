@@ -97,7 +97,7 @@ assert.equal(uniqueSilhouettes.size,5,
 const plan=planStreet(BUILDING);
 assert.equal(plan.info.trees,22);
 const world=buildStreet(THREE,plan);
-const batches=world.children.filter(x=>x.name.startsWith("trees-"));
+const batches=world.children.filter(x=>x.name?.startsWith("trees-"));
 assert.equal(batches.length,TREE_MODELS.street_tree.parts.length);
 assert.ok(batches.every(m=>m.count===22));
 assert.equal(world.children.length,46);
