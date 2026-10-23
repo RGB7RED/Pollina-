@@ -10,6 +10,12 @@ export const DEFAULT_SPAWN=Object.freeze({x:0,z:13.2});
 export const VIEW_MODES=Object.freeze(["third","first"]);
 const clamp=(n,lo,hi)=>Math.max(lo,Math.min(hi,n));
 const smooth=(current,target,response,dt)=>current+(target-current)*(1-Math.exp(-response*dt));
+// Urban GLB faces local +Z; camera zero yaw points toward world -Z.
+// Three.js local +Z transformed by heading points to (sin,cos) in XZ.
+export function modelYawForTravel(dx,dz){return Math.atan2(dx,dz);}
+export function modelYawForCamera(lookYaw){
+  return modelYawForTravel(Math.sin(lookYaw),-Math.cos(lookYaw));
+}
 
 export function facadeObstacles(building,pads=[]){
   const halfX=building.length/2,halfZ=building.width/2;
@@ -83,13 +89,13 @@ export class PlayerController{
     this.obstacles=facadeObstacles(building,pads);
     if(collidesAt(spawn.x,spawn.z,this.obstacles))
       throw Error("Spawn must not intersect house or entrance slabs");
-    this.lookYaw=0;this.lookPitch=.18;this.heading=0;
+    this.lookYaw=0;this.lookPitch=.18;this.heading=modelYawForCamera(0);
     this.view="third";this.axis={x:0,z:0};this.run=false;
     this.speed=0;this.state="idle";this.collided=false;
   }
   setStick(x,z){this.axis.x=clamp(x,-1,1);this.axis.z=clamp(z,-1,1);}
   look(dx,dy,sensitivity=.0032){
-    this.lookYaw-=clamp(dx,-90,90)*sensitivity;
+    this.lookYaw+=clamp(dx,-90,90)*sensitivity;
     this.lookPitch=clamp(this.lookPitch-dy*sensitivity,-.78,.95);
   }
   setRun(v){this.run=Boolean(v);}
@@ -97,12 +103,17 @@ export class PlayerController{
     if(!VIEW_MODES.includes(view))throw Error("Unknown camera mode "+view);
     if(view===this.view)return;
     this.view=view;
-    if(view==="first"){this.lookYaw=this.heading;this.lookPitch=0;}
+    if(view==="first"){
+      // Preserve current view direction when switching; body heading and
+      // camera yaw belong to opposite local-forward conventions.
+      this.heading=modelYawForCamera(this.lookYaw);
+      this.lookPitch=0;
+    }
   }
   toggleView(){this.setView(this.view==="third"?"first":"third");return this.view;}
   reset(){
     this.position={...this.spawn};this.axis={x:0,z:0};
-    this.lookYaw=0;this.lookPitch=.18;this.heading=0;
+    this.lookYaw=0;this.lookPitch=.18;this.heading=modelYawForCamera(0);
     this.run=false;this.speed=0;this.collided=false;this.state="idle";
   }
   update(dt){
@@ -121,13 +132,15 @@ export class PlayerController{
       const dx=(side*Math.cos(this.lookYaw)+ahead*Math.sin(this.lookYaw))*this.speed*dt;
       const dz=(side*Math.sin(this.lookYaw)-ahead*Math.cos(this.lookYaw))*this.speed*dt;
       const step=resolveStep(this.position,dx,dz,this.obstacles);
+      const movedX=step.x-this.position.x,movedZ=step.z-this.position.z;
       distance=step.distance;this.collided=step.hit;
       this.position.x=step.x;this.position.z=step.z;
       if(distance>1e-5&&this.view==="third"){
-        this.heading=Math.atan2(dx,-dz);
+        // Wall collisions may remove one component: face the actual travel.
+        this.heading=modelYawForTravel(movedX,movedZ);
       }
     }
-    if(this.view==="first")this.heading=this.lookYaw;
+    if(this.view==="first")this.heading=modelYawForCamera(this.lookYaw);
     // If walking into the wall, don't play a full-speed running animation.
     this.state=distance<.00002?"idle":this.run?"run":"walk";
     return {state:this.state,view:this.view,collided:this.collided,
