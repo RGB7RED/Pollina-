@@ -17,10 +17,10 @@ export function createGrassTuftGeometry(THREE){
     const a=n*Math.PI*(3-Math.sqrt(5)); // phyllotactic spread
     const c=Math.cos(a),s=Math.sin(a);
     const sideX=-s,sideZ=c;
-    const rr=.06+(n%3)*.085;
+    const rr=.10+(n%3)*.105;
     const height=.73+(n%4)*.086;
-    const bend=.16+(n%2)*.065;
-    const width=.090-(n%3)*.010;
+    const bend=.19+(n%2)*.085;
+    const width=.195-(n%3)*.018;
     const cx=c*rr,cz=s*rr;
     const start=positions.length/3;
     for(const [t,r] of [[0,1],[.55,.53],[1,.012]]){
