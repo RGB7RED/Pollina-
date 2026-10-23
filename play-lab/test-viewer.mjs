@@ -33,7 +33,7 @@ assert.match(js,/planStreet\(config,pads\)/);
 assert.match(js,/buildStreet\(THREE,streetPlan\)/);
 assert.match(html,/id="world-info"/);
 assert.match(html,/id="entry-action"/);
-assert.match(html,/KeyE/);
+assert.match(js,/KeyE/);
 assert.match(js,/planPlayableEntrance\(config,pads\)/);
 assert.match(js,/setEntryDoorOpen/);
 assert.match(js,/actorPivot.position.set\(state.x,state.y,state.z\)/);
