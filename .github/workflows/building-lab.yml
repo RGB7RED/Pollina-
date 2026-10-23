@@ -1,10 +1,11 @@
-name: MINI CITY Building Lab 3.1
+name: MINI CITY Building Lab 3.2
 on:
   push:
     branches:
       - feat/mini-city-v033-stage3-building-blockout
       - feat/mini-city-v033-stage311-freecam
       - feat/mini-city-v033-stage312-camera-fix
+      - feat/mini-city-v033-stage32-facade
     paths:
       - 'building-lab/**'
       - '.github/workflows/building-lab.yml'
@@ -24,7 +25,7 @@ jobs:
           node --check building-lab/building.js
           node --check building-lab/lab.js
           node --check building-lab/free-camera.js
-      - name: Check hipped roof, windows and balcony blockout
+      - name: Check real wall openings, balcony variants and entrances
         run: node building-lab/test-building.mjs
       - name: Test XYZ free camera and joystick math
         run: node building-lab/test-free-camera.mjs

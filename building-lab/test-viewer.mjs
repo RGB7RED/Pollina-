@@ -14,6 +14,8 @@ for(const mode of ["front","threequarter","end","top"]){
  assert.ok(js.includes(mode),"mode "+mode+" missing from camera");
 }
 assert.match(html,/three@0\.170\.0/);
+assert.match(html,/Дом · Этап 3\.2/);
+assert.match(html,/АРХИТЕКТУРА 3\.2/);
 assert.match(html,/type="module" src="\.\/lab\.js"/);
 assert.match(js,/import \{OrbitControls\}/);
 assert.match(js,/import \{BUILDING,buildApartmentHouse\} from "\.\/building\.js"/);
