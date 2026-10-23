@@ -85,6 +85,7 @@ export function buildApartmentHouse(THREE,config={}){
     chimney:new THREE.MeshStandardMaterial({color:0x795e57,roughness:1}),
     foundation:new THREE.MeshStandardMaterial({color:0x87847c,roughness:.98}),
     entryPad:new THREE.MeshStandardMaterial({color:0x898780,roughness:.98}),
+    entryRamp:new THREE.MeshStandardMaterial({color:0x91918a,roughness:.96}),
     vent:new THREE.MeshStandardMaterial({color:0x9ca3a1,roughness:.83}),
     ventDark:new THREE.MeshStandardMaterial({color:0x4b5656,roughness:.88})
   };
@@ -218,10 +219,10 @@ export function buildApartmentHouse(THREE,config={}){
       // The first 1.2 m exterior ramp climbs onto the existing .50 m pad;
       // a small sloping sill then joins the +.70 m indoor floor.
       const firstRampDepth=Math.hypot(1.23,.50);
-      box(1.52,.085,firstRampDepth,mats.entryPad,x,.25,10.035,
+      box(1.52,.085,firstRampDepth,mats.entryRamp,x,.25,10.035,
         Math.atan2(.50,1.23));
       const sillDepth=Math.hypot(.87,.20);
-      box(1.52,.075,sillDepth,mats.entryPad,x,.60,6.665,
+      box(1.52,.075,sillDepth,mats.entryRamp,x,.60,6.665,
         Math.atan2(.20,.87));
       const floorMid=(3.35+face)/2;
       box(1.70,.12,face-3.35,mats.foundation,x,.64,floorMid);
