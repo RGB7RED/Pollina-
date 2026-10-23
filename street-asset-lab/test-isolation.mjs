@@ -98,7 +98,7 @@ assert.equal(world.children.find(m=>m.name==="benches-seats").count,4*6);
 assert.equal(world.children.find(m=>m.name==="benches-concrete-supports").count,4*2);
 assert.equal(world.children.find(m=>m.name==="street-lamp-lantern-ribs").count,6*6);
 assert.equal(world.children.find(m=>m.name==="street-lamp-arch").count,6);
-assert.equal(world.children.filter(m=>m.name.startsWith("trees-")).length,10);
+assert.equal(world.children.filter(m=>m.name?.startsWith("trees-")).length,10);
 assert.equal(worldPlan.info.trees,22);
 assert.equal(worldPlan.info.lamps,6);
 assert.equal(worldPlan.info.benches,4);
