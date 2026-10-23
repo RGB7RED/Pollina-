@@ -14,10 +14,13 @@ for(const mode of ["front","threequarter","end","top"]){
  assert.ok(js.includes(mode),"mode "+mode+" missing from camera");
 }
 assert.match(html,/three@0\.170\.0/);
-assert.match(html,/Дом · Этап 3\.2/);
-assert.match(html,/АРХИТЕКТУРА 3\.2/);
+assert.match(html,/Дом · Этап 3\.3/);
+assert.match(html,/МАТЕРИАЛЫ И СВЕТ 3\.3/);
 assert.match(html,/type="module" src="\.\/lab\.js"/);
 assert.match(js,/import \{OrbitControls\}/);
+assert.match(js,/import \{applyFacadeFinishes\} from "\.\/materials\.js"/);
+assert.match(js,/applyFacadeFinishes\(THREE,root\)/);
+assert.match(js,/porchLights\.map|for\(const lamp of porchLights\)/);
 assert.match(js,/import \{BUILDING,buildApartmentHouse\} from "\.\/building\.js"/);
 assert.match(js,/sun\.shadow\.mapSize\.set/);
 assert.match(js,/renderer\.info\.render\.calls/);
@@ -52,5 +55,5 @@ assert.match(free,/Math\.exp\(-19\*dt\)/);
 assert.match(free,/deadzone=\.13/);
 assert.match(free,/ahead\*sp\+rise/);
 assert.doesNotMatch(html,/id="fly-boost"/,"removed old quick-only speed");
-console.log("Building lab 3.1.2 contracts PASS: 3D camera, touch controls, near-facade focus, Safari resize stability");
+console.log("Building lab 3.3 contracts PASS: materials, lighting, camera and mobile UI");
 
