@@ -135,6 +135,9 @@ assert.equal(nodes["catalog-list"].children.length,1);
 goBackBrowser("?category=unknown");
 assert.equal(nodes["folder-section"].hidden,false,
   "invalid deep links safely fall back to folder root");
+const street=api.makeCatalogCard(catalog.entries.find(e=>e.id==="residential_street"));
+assert.equal(street.children.at(-1).children[0].href,"../street-lab/index.html");
+assert.equal(street.children.at(-1).children[1].href,"../play-lab/index.html?mode=lab");
 const house=api.makeCatalogCard(catalog.entries[0]);
 assert.equal(house.children.at(-1).children[0].href,"../building-lab/index.html");
 assert.equal(house.children.at(-1).children[1].href,"../play-lab/index.html?mode=lab");

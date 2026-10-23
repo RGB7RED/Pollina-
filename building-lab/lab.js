@@ -49,16 +49,10 @@ function plane(w,h,color,x,y,z){
     new THREE.MeshStandardMaterial({color,roughness:.99}));
   m.rotation.x=-Math.PI/2;m.position.set(x,y,z);m.receiveShadow=true;scene.add(m);return m;
 }
-plane(146,84,0x758178,0,-.08,0);
-plane(92,5.7,0x969b98,0,-.054,config.width/2+5.5);
-plane(98,8.5,0x495257,0,-.046,config.width/2+13);
-const markings=new THREE.Group();scene.add(markings);
-const white=new THREE.MeshBasicMaterial({color:0xc8c6ba});
-for(let x=-43;x<=43;x+=7){
-  const lane=new THREE.Mesh(new THREE.PlaneGeometry(2.4,.08),white);
-  lane.rotation.x=-Math.PI/2;lane.position.set(x,-.04,config.width/2+13);
-  markings.add(lane);
-}
+// Standalone HOUSE inspection: a plain neutral presentation floor only.
+// The entire road, sidewalks, grass and street furniture belong to
+// street-lab / play-lab, never to the building's own asset viewer.
+plane(146,84,0x939d9a,0,-.08,0);
 let timeIndex=0,qualityIndex=1,viewName="threequarter";
 const modes=[
  {label:"Низкое",pixelRatio:.85,shadows:false,map:512},
