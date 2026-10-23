@@ -78,7 +78,7 @@ assert.ok(free.yaw>initialYaw+.8,"yaw tracks finger");
 const xBefore=cam.position.x;
 free.setStick(0,1);
 for(let i=0;i<20;i++)free.update(.05);
-assert.ok(cam.position.x>xBefore+.9,"turning changes flight direction");
+assert.ok(cam.position.x<xBefore-.9,"looking left changes forward flight toward -X");
 
 // Speed modes and keyboard vertical control.
 free.setStick(0,0);free.setSpeedMode(2);
