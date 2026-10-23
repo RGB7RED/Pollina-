@@ -73,7 +73,7 @@ for(const id of treeIds){
    trunkPose.position.y+trunk.geometry.args[2]*trunkPose.scale.y/2;
  const forks=TREE_BRANCH_SEGMENTS[id];
  assert.equal(forks.length,root.children.filter(x=>x.name.includes("branch")).length);
- const foliage=root.children.filter(x=>/canopy|foliage/.test(x.name)&&
+ const foliage=root.children.filter(x=>/canopy|foliage|crown/.test(x.name)&&
    !x.name.includes("flowers"));
  for(const fork of forks){
    const mesh=root.children.find(x=>x.name===fork.name);
