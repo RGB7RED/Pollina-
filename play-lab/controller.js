@@ -88,11 +88,14 @@ export class PlayerController{
     this.position={x:spawn.x,z:spawn.z,y:entry?.groundHeight(spawn.x,spawn.z)||0};
     this.spawn={...this.position};
     this.entryDoorOpen=false;
+    this.innerDoorOpen=false;
     this.doorBlocker=entry?.door||null;
+    this.innerDoorBlocker=entry?.innerDoor||null;
     // Older controllers keep the original whole-house collider. The game
     // opts into the exact first-entry corridor without changing other doors.
     this.obstacles=[...(entry?entry.buildingObstacles:facadeObstacles(building,pads)),
-      ...(entry?[entry.door]:[]),...extras.map(o=>({...o}))];
+      ...(entry?[entry.door,...(entry.innerDoor?[entry.innerDoor]:[])]:[]),
+      ...extras.map(o=>({...o}))];
     if(collidesAt(spawn.x,spawn.z,this.obstacles))
       throw Error("Spawn must not intersect house or entrance slabs");
     this.lookYaw=0;this.lookPitch=.18;this.heading=modelYawForCamera(0);
@@ -112,8 +115,43 @@ export class PlayerController{
     if(!open&&index<0)this.obstacles.push(this.doorBlocker);
     return true;
   }
+  setInnerDoorOpen(open){
+    if(!this.innerDoorBlocker||!this.entry)return false;
+    open=Boolean(open);
+    if(open===this.innerDoorOpen)return true;
+    if(!open&&Math.abs(this.position.x-this.entry.x)<1.05&&
+      Math.abs(this.position.z-this.entry.innerDoorZ)<.68)
+      return false; // do not shut an indoor door through the player
+    this.innerDoorOpen=open;
+    const index=this.obstacles.indexOf(this.innerDoorBlocker);
+    if(open&&index>=0)this.obstacles.splice(index,1);
+    if(!open&&index<0)this.obstacles.push(this.innerDoorBlocker);
+    return true;
+  }
   canUseEntryDoor(){
     return !!this.entry&&this.entry.canInteract(this.position.x,this.position.z);
+  }
+  canUseInnerDoor(){
+    return !!this.entry&&!!this.innerDoorBlocker&&
+      this.entry.canInteractInner(this.position.x,this.position.z);
+  }
+  nearestDoor(){
+    const {x,z}=this.position;
+    const outer=this.canUseEntryDoor()?
+      {id:"outer",label:"Входная дверь",open:this.entryDoorOpen,
+        distance:Math.hypot(x-this.entry.x,z-(this.entry.facade-.12))}:null;
+    const inner=this.canUseInnerDoor()?
+      {id:"inner",label:"Внутренняя дверь",open:this.innerDoorOpen,
+        distance:Math.hypot(x-this.entry.x,z-this.entry.innerDoorZ)}:null;
+    if(outer&&inner)return inner.distance<outer.distance?inner:outer;
+    return inner||outer;
+  }
+  toggleNearestDoor(){
+    const which=this.nearestDoor();
+    if(!which)return false;
+    return which.id==="outer"?
+      this.setEntryDoorOpen(!this.entryDoorOpen):
+      this.setInnerDoorOpen(!this.innerDoorOpen);
   }
   isInsideEntrance(){
     return !!this.entry&&this.entry.isInside(this.position.x,this.position.z);
@@ -141,6 +179,11 @@ export class PlayerController{
     if(this.entryDoorOpen){
       this.entryDoorOpen=false;
       if(!this.obstacles.includes(this.doorBlocker))this.obstacles.push(this.doorBlocker);
+    }
+    if(this.innerDoorOpen){
+      this.innerDoorOpen=false;
+      if(!this.obstacles.includes(this.innerDoorBlocker))
+        this.obstacles.push(this.innerDoorBlocker);
     }
     this.lookYaw=0;this.lookPitch=.18;this.heading=modelYawForCamera(0);
     this.run=false;this.speed=0;this.collided=false;this.state="idle";
@@ -175,7 +218,9 @@ export class PlayerController{
     this.state=distance<.00002?"idle":this.run?"run":"walk";
     return {state:this.state,view:this.view,collided:this.collided,
       x:this.position.x,z:this.position.z,y:this.position.y,
-      inside:this.isInsideEntrance(),speed:dt>0?distance/dt:0,
+      inside:this.isInsideEntrance(),
+      entranceZone:this.entry?.zone(this.position.x,this.position.z)||"street",
+      speed:dt>0?distance/dt:0,
       heading:this.heading};
   }
   getCameraPose(){
