@@ -5,7 +5,7 @@ export const ISOLATED_ASSETS=Object.freeze({
   street_lamp:Object.freeze({name:"Уличный фонарь",number:1,category:"street_furniture",
     y:2.55,distance:9.4,height:4.7,quantity:6,parts:["street-lamp-poles","street-lamp-base-foot","street-lamp-base-plinth","street-lamp-base-collar","street-lamp-post-ring","street-lamp-upper-collar","street-lamp-arch","street-lamp-vertical-brace","street-lamp-cross-brace","street-lamp-scroll-large","street-lamp-scroll-small","street-lamp-hanger","street-lamp-lantern-roof","street-lamp-lantern-eave","street-lamp-heads","street-lamp-lantern-base","street-lamp-lantern-tip","street-lamp-lantern-ribs","street-lamp-pole-finial"]}),
   street_bench:Object.freeze({name:"Дворовая скамейка",number:2,category:"street_furniture",
-    y:.66,distance:4.2,height:1.10,quantity:4,parts:["benches-seats","benches-backs","benches-concrete-supports","benches-fasteners"]}),
+    y:.66,distance:4.2,height:1.10,quantity:4,parts:["benches-seats","benches-backs","benches-back-rails","benches-concrete-supports","benches-fasteners"]}),
   street_tree:Object.freeze({name:"Дерево городское",number:1,category:"nature",
     y:2.65,distance:8.6,height:5.40,quantity:22,parts:["trees-trunks","trees-canopy-low","trees-canopy-high"]})
 });

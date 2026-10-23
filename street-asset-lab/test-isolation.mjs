@@ -58,7 +58,7 @@ for(const id of ["street_tree","street_lamp","street_bench"]){
  assert.deepEqual(root.children.map(c=>c.name),spec.parts);
  assert.ok(root.children.every(mesh=>mesh instanceof InstancedMesh));
  const counts={"benches-seats":6,"benches-backs":6,
- "benches-concrete-supports":2,"benches-fasteners":12,
+ "benches-back-rails":2,"benches-concrete-supports":2,"benches-fasteners":12,
  "street-lamp-lantern-ribs":6};
  assert.ok(root.children.every(mesh=>mesh.count===(counts[mesh.name]||1)),
   "each batch must contain only the selected object's real parts");
@@ -84,7 +84,7 @@ for(const id of ["street_tree","street_lamp","street_bench"]){
 }
 assert.throws(()=>buildIsolatedStreetAsset(THREE,"unknown"),/Unknown isolated asset/);
 // Existing city is exactly the old layout (22 trees, 6 lamps, 4 benches).
-assert.equal(world.children.length,35);
+assert.equal(world.children.length,36);
 assert.equal(world.children.find(m=>m.name==="benches-seats").count,4*6);
 assert.equal(world.children.find(m=>m.name==="benches-concrete-supports").count,4*2);
 assert.equal(world.children.find(m=>m.name==="street-lamp-lantern-ribs").count,6*6);

@@ -103,10 +103,10 @@ const THREE={Group:Object3D,Object3D,Mesh,InstancedMesh,Vector3:Vec,
  MeshStandardMaterial,MeshBasicMaterial,DoubleSide:2};
 const rendered=buildStreet(THREE,plan);
 assert.equal(rendered.userData.streetStats.trees,22);
-assert.equal(rendered.userData.streetStats.drawGroups,35,
- "7 static planes, 2 street batches, 3 tree batches, 19 lantern and 4 bench batches");
+assert.equal(rendered.userData.streetStats.drawGroups,36,
+ "7 static planes, 2 street batches, 3 tree batches, 19 lantern and 5 bench batches");
 const instanced=rendered.children.filter(o=>o instanceof InstancedMesh);
-assert.equal(instanced.length,28);
+assert.equal(instanced.length,29);
 assert.ok(instanced.every(m=>m.instanceMatrix.needsUpdate));
 assert.ok(instanced.every(m=>m.matrices.length===m.count));
 assert.equal(instanced.find(m=>m.name==="trees-trunks").count,22);
@@ -118,6 +118,7 @@ assert.equal(instanced.find(m=>m.name==="street-lamp-lantern-ribs").count,36);
 assert.equal(instanced.find(m=>m.name==="street-lamp-arch").count,6);
 assert.equal(instanced.find(m=>m.name==="benches-seats").count,24);
 assert.equal(instanced.find(m=>m.name==="benches-backs").count,24);
+assert.equal(instanced.find(m=>m.name==="benches-back-rails").count,8);
 assert.equal(instanced.find(m=>m.name==="benches-concrete-supports").count,8);
 assert.equal(instanced.find(m=>m.name==="benches-fasteners").count,48);
 const arched=instanced.find(m=>m.name==="street-lamp-arch").geometry.args[0].points;
@@ -140,4 +141,4 @@ assert.ok(Math.abs(plan.obstacles.find(x=>x.name==="lamp-0").maxX-
   plan.obstacles.find(x=>x.name==="lamp-0").minX-.5)<1e-6);
 assert.ok(rendered.children.length<=40,
  "street furniture mobile draw call overhead is bounded");
-console.log("MINI CITY 4.2.1 street PASS: 108m road, safe zebra, 22 trees, 6 detailed park lamps, 4 concrete benches, collisions, 35 groups");
+console.log("MINI CITY 4.2.1 street PASS: 108m road, safe zebra, 22 trees, 6 detailed park lamps, 4 concrete benches, collisions, 36 groups");

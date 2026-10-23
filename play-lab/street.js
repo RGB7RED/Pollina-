@@ -91,6 +91,7 @@ export function buildStreet(THREE,plan){
     lamp:new THREE.MeshStandardMaterial({color:0x171b1e,roughness:.42,metalness:.58}),
     concrete:new THREE.MeshStandardMaterial({color:0xd7d6cf,roughness:.88,metalness:0}),
     fastener:new THREE.MeshStandardMaterial({color:0xa6a7a1,roughness:.5,metalness:.55}),
+    trimWood:new THREE.MeshStandardMaterial({color:0x4b3529,roughness:.82,metalness:.07}),
     glow:new THREE.MeshStandardMaterial({color:0xffdfac,emissive:0xffbb70,emissiveIntensity:1.35,roughness:.7}),
     wood:new THREE.MeshStandardMaterial({color:0x80563c,roughness:.76,metalness:0})
   };
@@ -231,6 +232,13 @@ export function buildStreet(THREE,plan){
     })));
     batch("benches-backs",slat,materials.wood,backs,
       s=>[s.x,s.y,s.z,1.91,.079,.055,-.24,0,0]);
+    // Slender rear braces actually support the slanted wooden backrest.
+    // The wood boards do not float unsupported above the concrete sides.
+    const backRails=benchItems.flatMap(b=>[-.80,.80].map(x=>({
+      x:b.x+x,z:b.z-.42
+    })));
+    batch("benches-back-rails",slat,materials.trimWood,backRails,
+      p=>[p.x,.81,p.z,.05,.67,.063,-.24,0,0]);
     // Extruded side profiles read like two genuine sloped white concrete
     // legs, with a structural notch beneath the seat.
     const shape=new THREE.Shape();
