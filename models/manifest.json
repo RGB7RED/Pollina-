@@ -33,7 +33,7 @@
     "needsImportValidation": true
   },
   "playableScene": {
-    "stage": "4.1",
+    "stage": "4.2.2",
     "path": "play-lab/index.html",
     "controller": "play-lab/controller.js",
     "animation": "play-lab/animation.js",
@@ -43,6 +43,27 @@
     "houseCollision": true,
     "entranceSlabCollision": true,
     "externalAnimatedCandidate": true,
+    "productionReady": false,
+    "labAndGameShareRuntime": true
+  },
+  "developerStudio": {
+    "stage": "4.2.2",
+    "home": "studio/index.html",
+    "objectLab": "lab/index.html",
+    "gameLab": "play-lab/index.html?mode=lab",
+    "game": "play-lab/index.html?mode=game",
+    "sharedSceneModule": "play-lab/game.js",
+    "presentationModule": "play-lab/studio.js",
+    "debugFeatures": [
+      "FPS and draw calls",
+      "triangles",
+      "GPU resources",
+      "avatar position",
+      "collision diagnostics",
+      "collision bounds"
+    ],
+    "sameRuntimeScene": true,
+    "sceneIsolatedFromMain": true,
     "productionReady": false
   }
 }
