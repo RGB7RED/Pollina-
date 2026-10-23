@@ -134,7 +134,7 @@ export function buildApartmentHouse(THREE,config={}){
     wallBox(axis,lining,height,.17,mats.reveal,right-lining/2,(bottom+top)/2,recess);
     wallBox(axis,openingWidth,lining,.17,mats.reveal,centre,top-lining/2,recess);
     wallBox(axis,openingWidth,lining,.17,mats.reveal,centre,bottom+lining/2,recess);
-    return {axis,side,centre,width:openingWidth,bottom,top,height};
+    return {axis,side,centre,width:openingWidth,bottom,top,height,kind};
   }
   function windowDetail(hole,variation,isBalcony=false){
     const {axis,side,centre,width,bottom,top,height}=hole;
