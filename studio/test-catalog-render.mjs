@@ -117,7 +117,7 @@ assert.equal(nodes["catalog-list"].children.length,1);
 assert.equal(nodes["catalog-list"].children[0].dataset.assetId,"street_tree");
 assert.equal(nodes["catalog-list"].children[0].dataset.modelNumber,"1",
   "22 copies of a tree is still one model № 001");
-assert.match(nodes["catalog-list"].children[0].children[3].children[2].textContent,/22 экземпляр/);
+assert.match(nodes["catalog-list"].children[0].children[3].children[5].textContent,/22 экземпляр/);
 // Reopening with a deep link must restore same folder.
 api.updateCatalogView(catalog);
 assert.equal(nodes["catalog-list"].children.length,1);
