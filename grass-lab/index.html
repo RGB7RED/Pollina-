@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#19352b">
+<title>MINI CITY — Трава №002 · 3D-лаборатория</title>
+<link rel="stylesheet" href="../object-viewer/free-flight.css">
+<style>
+:root{color-scheme:dark;font:14px -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;color:#eef5e9;background:#72977d}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden}
+#stage{position:fixed;inset:0;touch-action:none}#stage canvas{display:block;width:100%;height:100%;touch-action:none}
+.hud{position:fixed;z-index:5;top:max(8px,env(safe-area-inset-top));left:max(8px,env(safe-area-inset-left));right:max(8px,env(safe-area-inset-right));display:flex;justify-content:space-between;gap:7px;align-items:flex-start;pointer-events:none}
+.card{padding:10px 12px;border-radius:12px;border:1px solid #b6d8be88;background:#193c34e6;backdrop-filter:blur(10px);pointer-events:auto}
+.meta{max-width:56vw}.stats{max-width:43vw;font-size:11px;line-height:1.65}
+small{font-size:9px;color:#c1edbd;font-weight:900;letter-spacing:.08em}
+h1{font-size:17px;margin:6px 0}p{font-size:11px;color:#c9dfce;line-height:1.5;margin:5px 0}
+nav{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
+nav a{display:inline-flex;min-height:38px;align-items:center;padding:5px 8px;text-decoration:none;color:#f0f9ed;border:1px solid #bed7bf99;border-radius:9px;font-size:10px}
+button{color:#eef5ea;background:#244c3de8;border:1px solid #bddac49e;border-radius:10px;padding:9px 11px;min-height:42px;font-weight:750;touch-action:manipulation}
+button.active{background:#d6eed9;color:#16462c}
+.controls{position:fixed;z-index:7;left:8px;right:8px;bottom:max(64px,calc(env(safe-area-inset-bottom) + 59px));display:flex;flex-wrap:wrap;justify-content:center;gap:6px}
+#collapse{font-size:10px;min-height:32px;padding:5px 7px}
+.collapsed .detail{display:none}
+@media(max-width:650px){.hud{left:6px;right:6px}.card{padding:8px}.meta{max-width:55vw}.stats{max-width:44vw;font-size:9px}h1{font-size:14px}p{font-size:9px}nav a{font-size:9px}.controls{gap:4px}.controls button{font-size:10px;padding:7px 9px}}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
+</head>
+<body>
+<main id="stage" aria-label="3D-образец плотной городской травы, без других объектов"></main>
+<div class="hud">
+<section class="card meta"><small>MINI CITY · РАСТИТЕЛЬНОСТЬ / 4.3.5</small>
+<h1>№002 — Газонная трава</h1>
+<p>Самостоятельная модель: отдельные изогнутые листья, три естественных оттенка. Без дома, дороги, деревьев и мебели.</p>
+<nav><a href="../studio/catalog.html?category=nature">← Растительность</a>
+<a href="../street-lab/index.html">🛣️ Улица отдельно</a>
+<a href="../play-lab/index.html?mode=lab">🛠️ Весь город</a></nav>
+</section>
+<section class="card stats" id="telemetry">
+<button id="collapse" type="button" aria-expanded="true">▾ Характеристики</button>
+<div class="detail" id="fps">FPS: —</div>
+<div class="detail" id="calls">Вызовы: —</div>
+<div class="detail" id="triangles">Треугольники: —</div>
+<div class="detail" id="tufts">Пучки: —</div>
+<div class="detail" id="blades">Листья: —</div>
+<div class="detail" id="status">Один вид травы · на испытаниях</div>
+</section>
+</div>
+<div class="controls"><button type="button" data-view="threequarter" class="active">Общий вид</button>
+<button type="button" data-view="detail">Детали</button>
+<button type="button" data-view="top">Сверху</button>
+<button type="button" id="reset">↻ Сброс</button></div>
+<script type="module" src="./lab.js"></script>
+</body></html>
