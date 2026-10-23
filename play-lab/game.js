@@ -4,6 +4,7 @@ import {buildApartmentHouse} from "../building-lab/building.js";
 import {applyFacadeFinishes} from "../building-lab/materials.js";
 import {ActorAnimator} from "./animation.js";
 import {planStreet,buildStreet} from "./street.js";
+import {planPlayableEntrance} from "./entrance.js";
 import {DeveloperStudio} from "./studio.js";
 import {PlayerController,joystickValue,PLAYER_HEIGHT} from "./controller.js";
 
@@ -31,18 +32,20 @@ sun.shadow.camera.left=-65;sun.shadow.camera.right=65;
 sun.shadow.camera.top=48;sun.shadow.camera.bottom=-48;
 sun.shadow.camera.near=1;sun.shadow.camera.far=115;sun.shadow.normalBias=.035;
 scene.add(sun);
-const {root:house,config}=buildApartmentHouse(THREE);
+const {root:house,config,doorPivot}=buildApartmentHouse(THREE);
+if(!doorPivot)throw Error("First entrance hinged door is missing");
 applyFacadeFinishes(THREE,house);
 scene.add(house);
 // Stage 4.2.1: the approved building is NOT duplicated. Replace temporary
 // blank road/ground with one deterministic street plan and batched furnishing.
 const pads=house.userData.geometryAudit.entryPads;
+const entry=planPlayableEntrance(config,pads);
 const streetPlan=planStreet(config,pads);
 const street=buildStreet(THREE,streetPlan);
 scene.add(street);
 const actorPivot=new THREE.Group();scene.add(actorPivot);
 const controller=new PlayerController({
-  building:config,pads,extras:streetPlan.obstacles
+  building:config,pads,extras:streetPlan.obstacles,entry
 });
 // Same renderer, map, actor, controls and GLB in both modes. Only the
 // developer presentation layer is toggled; no second Three.js scene.
@@ -54,7 +57,7 @@ $("hud-toggle").addEventListener("click",()=>{
   $("hud-toggle").setAttribute("aria-expanded",String(!collapsed));
   $("hud-toggle").textContent=collapsed?"▾ Показать описание":"▴ Свернуть описание";
 });
-$("world-info").textContent="Улица 108 м · "+streetPlan.info.trees+
+$("world-info").textContent="Подъезд №1: дверь открывается без перехода · улица 108 м · "+streetPlan.info.trees+
   " деревьев · "+streetPlan.info.lamps+" фонарей · "+
   streetPlan.info.benches+" скамейки";
 actorPivot.position.set(controller.position.x,0,controller.position.z);
@@ -191,6 +194,25 @@ stage.addEventListener("pointermove",e=>{
 });
 for(const event of ["pointerup","pointercancel","lostpointercapture"])
  stage.addEventListener(event,e=>{if(e.pointerId===pointerLook)pointerLook=null;});
+const entryAction=$("entry-action");
+function updateEntryAction(){
+  const near=controller.canUseEntryDoor();
+  entryAction.hidden=!near;
+  entryAction.textContent=controller.entryDoorOpen?
+    "🚪 Закрыть дверь":"🚪 Открыть дверь";
+  entryAction.setAttribute("aria-pressed",String(controller.entryDoorOpen));
+  entryAction.title="Подъезд №1 · E";
+}
+function toggleEntryDoor(){
+  if(!controller.canUseEntryDoor())return;
+  if(controller.setEntryDoorOpen(!controller.entryDoorOpen)){
+    updateEntryAction();
+    studio.refreshCollisions();
+  }else $("actor-status").textContent=
+    "Сначала отойди от дверного проёма, чтобы закрыть дверь";
+}
+entryAction.addEventListener("click",toggleEntryDoor);
+updateEntryAction();
 $("run").addEventListener("click",()=>{
  const on=!controller.run;
  controller.setRun(on);
@@ -199,19 +221,23 @@ $("run").addEventListener("click",()=>{
  $("run").textContent=on?"⚡ Бег: ВКЛ":"⚡ Бег: ВЫКЛ";
 });
 function resetActor(){
- controller.reset();releaseControls();
+ controller.reset();
+ doorPivot.rotation.y=0;
+ studio.refreshCollisions();
+ releaseControls();
  actorPivot.position.set(controller.position.x,0,controller.position.z);
  if(animator)animator.play("idle");
  updateViewControls();
 }
 $("reset").addEventListener("click",resetActor);
 const moveKeys=new Set(["KeyW","KeyA","KeyS","KeyD","ArrowUp","ArrowDown",
- "ArrowLeft","ArrowRight","ShiftLeft","ShiftRight","KeyF","KeyR"]);
+ "ArrowLeft","ArrowRight","ShiftLeft","ShiftRight","KeyF","KeyR","KeyE"]);
 window.addEventListener("keydown",e=>{
  if(!moveKeys.has(e.code))return;
  e.preventDefault();
  if(!e.repeat&&e.code==="KeyF")toggleView();
  if(!e.repeat&&e.code==="KeyR")resetActor();
+ if(!e.repeat&&e.code==="KeyE")toggleEntryDoor();
  heldKeys.add(e.code);
 });
 window.addEventListener("keyup",e=>heldKeys.delete(e.code));
@@ -242,7 +268,12 @@ function animate(){
   controller.setRun(mobileRun||heldKeys.has("ShiftLeft")||heldKeys.has("ShiftRight"));
  }else controller.setStick(0,0);
  const state=controller.update(dt);
- actorPivot.position.set(state.x,0,state.z);
+ // Same scene, same player. Elevation follows exterior ramp, threshold
+ // and first-floor vestibule smoothly; no teleport or world replacement.
+ const openAngle=controller.entryDoorOpen?Math.PI*.47:0;
+ doorPivot.rotation.y+=(openAngle-doorPivot.rotation.y)*(1-Math.exp(-12*dt));
+ actorPivot.position.set(state.x,state.y,state.z);
+ updateEntryAction();
  actorPivot.rotation.y=state.heading;
  if(animator){
   animator.play(state.state);
@@ -264,7 +295,9 @@ function animate(){
    " · "+(controller.view==="first"?"1-е лицо":"3-е лицо");
   studio.update({fps:measuredFps,state});
   if(ready){
-   $("actor-status").textContent=state.collided?"Стена: проход закрыт":
+   $("actor-status").textContent=state.inside?
+      "Внутри подъезда №1 · первая площадка (лестница на следующем этапе)":
+      state.collided?"Стена: проход закрыт":
      animator.warning||"Скорость: "+state.speed.toFixed(1)+" м/с";
   }
   frames=0;lastReport=now;

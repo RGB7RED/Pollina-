@@ -46,6 +46,8 @@ body.first-person #reticle{display:block}
 #actions{position:fixed;right:max(16px,env(safe-area-inset-right));bottom:max(40px,calc(env(safe-area-inset-bottom) + 36px));
  z-index:6;display:flex;flex-direction:column;gap:9px;align-items:stretch}
 #actions button{min-width:90px}
+#entry-action[hidden]{display:none}
+#entry-action{background:#c4e3cd;color:#183c32;border-color:#f4ffe2}
 #tips{position:fixed;bottom:max(165px,calc(env(safe-area-inset-bottom) + 164px));left:17px;
  font-size:10px;color:#24383d;text-shadow:0 1px 1px #e5e9e6b8;max-width:220px;pointer-events:none}
 @media(max-width:620px){
@@ -151,9 +153,9 @@ body.game-mode .menu{max-width:min(47vw,190px)}
 </section>
 <div id="status" role="status">Загрузка настоящих моделей…<button id="retry" hidden>Повторить загрузку</button></div>
 <div id="reticle">+</div>
-<div id="tips">Стик — ходьба<br>Свайп — поворот камеры<br>ПК: WASD, Shift, F — смена вида</div>
+<div id="tips">Подъезд №1: подойди к двери и нажми «Открыть»<br>Стик — ходьба, свайп — осмотр<br>ПК: WASD, Shift, F — смена вида, E — дверь</div>
 <div id="stick" aria-label="Экранный джойстик перемещения"><div id="stick-knob"></div></div>
-<div id="actions"><button id="run" aria-pressed="false">⚡ Бег: ВЫКЛ</button><button id="switch-view">👁 Вид от 1-го лица</button></div>
+<div id="actions"><button id="entry-action" hidden aria-pressed="false">🚪 Открыть дверь</button><button id="run" aria-pressed="false">⚡ Бег: ВЫКЛ</button><button id="switch-view">👁 Вид от 1-го лица</button></div>
 <script type="module" src="./game.js"></script>
 </body>
 </html>

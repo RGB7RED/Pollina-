@@ -106,6 +106,20 @@ export class DeveloperStudio{
     document.title=lab?"MINI CITY · Лаборатория игры 4.2.2":
       "MINI CITY · Играть 4.2.2";
   }
+  refreshCollisions(){
+    // The first door adds/removes one REAL blocking rectangle on swing.
+    // Invalidate the optional debug batch, never leave ghost collisions.
+    if(this.gizmos){
+      this.scene.remove(this.gizmos);
+      this.gizmos.geometry.dispose();
+      this.gizmos.material.dispose();
+      this.gizmos=null;
+    }
+    if(this.collisionsShown)this.setCollisions(true);
+    this.nodes.route.textContent="Препятствия: "+
+      this.controller.obstacles.length+" · подъезд №1 "+
+      (this.controller.entryDoorOpen?"открыт":"закрыт");
+  }
   setCollisions(show){
     const next=Boolean(show)&&this.mode===MODES.LAB;
     if(next&&!this.gizmos){
