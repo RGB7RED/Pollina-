@@ -59,7 +59,7 @@ for(const pad of a.entryPads){
   assert.ok(a.doorPositions.includes(pad.x),"pad must be centered on a real doorway");
   assert.ok(pad.width>=5.3&&pad.depth>=3.1,"pad fits a passenger car parked along the wall");
   assert.equal(pad.bottom,0,"pad must meet the ground");
-  assert.ok(Math.abs(pad.top-pad.doorBottom)<.04,"flat pad meets door threshold");
+  assert.ok(Math.abs(pad.top-(pad.doorBottom-.20))<.001,"platform top lowered 20cm below doorstep");
 }
 for(const side of [-1,1]){
   const drains=a.downpipePositions.filter(p=>p.side===side).sort((l,r)=>l.x-r.x);
