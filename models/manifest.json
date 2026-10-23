@@ -47,7 +47,7 @@
     "labAndGameShareRuntime": true
   },
   "developerStudio": {
-    "stage": "4.2.3",
+    "stage": "4.2.4",
     "home": "studio/index.html",
     "objectLab": "lab/index.html",
     "gameLab": "play-lab/index.html?mode=lab",
@@ -69,6 +69,10 @@
     "catalogData": "models/catalog.json",
     "catalogUtils": "models/catalog-utils.js",
     "registryIsReadOnly": true,
-    "objectCount": 7
+    "objectCount": 7,
+    "catalogHierarchy": "category → numbered distinct models",
+    "catalogSchemaVersion": 2,
+    "folderCount": 5,
+    "modelNumberScope": "within category; persistent; not instance count"
   }
 }

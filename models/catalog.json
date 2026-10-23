@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "project": "MINI CITY",
-  "phase": "4.2.3",
+  "phase": "4.2.4",
   "scope": "Developer Studio; not the main game",
   "disclaimer": "Принятие модели для лаборатории не является выпуском игрового ассета или подтверждением прав на сторонние GLB.",
   "entries": [
@@ -25,7 +25,8 @@
       "scene": "play-lab/index.html?mode=lab",
       "assetFile": null,
       "origin": "project",
-      "rightsChecked": true
+      "rightsChecked": true,
+      "modelNumber": 1
     },
     {
       "id": "hero_city_candidate",
@@ -47,7 +48,8 @@
       "scene": "play-lab/index.html?mode=lab",
       "assetFile": null,
       "origin": "external",
-      "rightsChecked": false
+      "rightsChecked": false,
+      "modelNumber": 1
     },
     {
       "id": "hero_reference",
@@ -68,7 +70,8 @@
       "scene": null,
       "assetFile": "character-lab/assets/hero-reference.glb",
       "origin": "project",
-      "rightsChecked": null
+      "rightsChecked": null,
+      "modelNumber": 2
     },
     {
       "id": "residential_street",
@@ -88,7 +91,8 @@
       "scene": "play-lab/index.html?mode=lab",
       "assetFile": null,
       "origin": "project",
-      "rightsChecked": true
+      "rightsChecked": true,
+      "modelNumber": 1
     },
     {
       "id": "street_tree",
@@ -108,7 +112,8 @@
       "scene": "play-lab/index.html?mode=lab",
       "assetFile": null,
       "origin": "project",
-      "rightsChecked": true
+      "rightsChecked": true,
+      "modelNumber": 1
     },
     {
       "id": "street_lamp",
@@ -128,7 +133,8 @@
       "scene": "play-lab/index.html?mode=lab",
       "assetFile": null,
       "origin": "project",
-      "rightsChecked": true
+      "rightsChecked": true,
+      "modelNumber": 1
     },
     {
       "id": "street_bench",
@@ -148,7 +154,9 @@
       "scene": "play-lab/index.html?mode=lab",
       "assetFile": null,
       "origin": "project",
-      "rightsChecked": true
+      "rightsChecked": true,
+      "modelNumber": 2
     }
-  ]
+  ],
+  "folderMode": "categories"
 }

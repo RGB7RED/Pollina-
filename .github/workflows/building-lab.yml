@@ -12,6 +12,7 @@ on:
       - feat/mini-city-v033-stage421-first-street
       - feat/mini-city-v033-stage422-developer-studio
       - feat/mini-city-v033-stage423-asset-catalog
+      - feat/mini-city-v033-stage424-catalog-folders
     paths:
       - 'building-lab/**'
       - 'character-lab/**'
