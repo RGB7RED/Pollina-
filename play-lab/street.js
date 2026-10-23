@@ -31,17 +31,20 @@ export function sampleGrassTufts(surfaces,building,pads=[],{buildingPresent=true
       Math.abs(z-p.centreZ)<p.depth/2+.6);
   };
   const result=[];
-  const step=.94;
-  for(let x=-lawn.width/2+2;x<lawn.width/2-2;x+=step){
-    for(let z=lawn.z-lawn.depth/2+2;z<lawn.z+lawn.depth/2-2;z+=step){
-      if(hash(x,z,0)>.89)continue; // dense turf but still natural gaps
-      const px=x+(hash(x,z,1)-.5)*1.0;
-      const pz=z+(hash(x,z,2)-.5)*1.0;
+  // Dense continuous turf: 0.58 m centres instead of 0.94 m.
+  // Modest deterministic jitter prevents visible checkerboard planting.
+  // The narrow boundary margin also greens the edges of the entire lawn.
+  const step=.58;
+  for(let x=lawn.x-lawn.width/2+.62;x<lawn.x+lawn.width/2-.62;x+=step){
+    for(let z=lawn.z-lawn.depth/2+.62;z<lawn.z+lawn.depth/2-.62;z+=step){
+      if(hash(x,z,0)>.965)continue; // only small natural gaps
+      const px=x+(hash(x,z,1)-.5)*.24;
+      const pz=z+(hash(x,z,2)-.5)*.24;
       if(occupied(px,pz))continue;
       result.push({
         x:+px.toFixed(4),z:+pz.toFixed(4),
-        height:+(.19+hash(x,z,3)*.27).toFixed(4),
-        width:+(.35+hash(x,z,4)*.20).toFixed(4),
+        height:+(.22+hash(x,z,3)*.18).toFixed(4),
+        width:+(.98+hash(x,z,4)*.30).toFixed(4),
         angle:hash(x,z,5)*Math.PI
       });
     }
@@ -121,7 +124,7 @@ export function buildStreet(THREE,plan){
   const root=new THREE.Group();
   root.name="MINI CITY | 4.2.1 | first street";
   const materials={
-    grass:new THREE.MeshStandardMaterial({color:0x668459,roughness:1}),
+    grass:new THREE.MeshStandardMaterial({color:0x486e3f,roughness:1}),
 
     sidewalk:new THREE.MeshStandardMaterial({color:0xaca8a0,roughness:.97}),
     road:new THREE.MeshStandardMaterial({color:0x484e52,roughness:.98}),
