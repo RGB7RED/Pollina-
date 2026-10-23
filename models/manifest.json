@@ -31,5 +31,18 @@
     "needsVisualE2E": true,
     "needsFPSOnIphone": true,
     "needsImportValidation": true
+  },
+  "playableScene": {
+    "stage": "4.1",
+    "path": "play-lab/index.html",
+    "controller": "play-lab/controller.js",
+    "animation": "play-lab/animation.js",
+    "thirdPerson": true,
+    "firstPerson": true,
+    "mobileControls": true,
+    "houseCollision": true,
+    "entranceSlabCollision": true,
+    "externalAnimatedCandidate": true,
+    "productionReady": false
   }
 }
