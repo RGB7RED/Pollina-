@@ -64,11 +64,11 @@ const fetch=async path=>{
 };
 const js=source.replace(/import[\s\S]*?from "[^"]+";\n/,"")
   .replace(/^export /gm,"");
-const api=new Function("document","window","fetch","console",
+const api=new Function("document","window","fetch","console","URL",
  "CATEGORIES","STATUS","KIND","CATEGORY_ICON","validateCatalog",
  "filterCatalog","catalogCounts","catalogFolders","folderObjects",
  "modelLabel",js+"\nreturn {makeCatalogCard,makeCatalogFolder,openFolder,closeFolder,renderCatalog,updateCatalogView,loadCatalog};"
-)(document,window,fetch,{error(){}},CATEGORIES,STATUS,KIND,CATEGORY_ICON,
+)(document,window,fetch,{error(){}},URL,CATEGORIES,STATUS,KIND,CATEGORY_ICON,
  validateCatalog,filterCatalog,catalogCounts,catalogFolders,folderObjects,modelLabel);
 await new Promise(resolve=>setTimeout(resolve,0));
 assert.equal(requestCount,1);
