@@ -31,7 +31,7 @@ for(const [id,num] of [["street_tree",1],["street_tree_poplar",3],
  assert.equal(entry.modelNumber,num);
  assert.equal(entry.viewer,"street-asset-lab/index.html?model="+id);
  assert.ok(entry.sourcePaths.includes("play-lab/tree-models.js"));
- assert.equal(entry.quantity,id==="street_tree"?22:0);
+ assert.equal(entry.quantity,id==="street_tree"?22:1);
  if(id!=="street_tree"){
   assert.equal(entry.inPlayLab,false);
   assert.equal(entry.scene,null);
