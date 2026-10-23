@@ -16,6 +16,7 @@ on:
       - feat/mini-city-v033-stage425-catalog-as-object-hub
       - feat/mini-city-v033-stage431-bus-stop-lab
       - feat/mini-city-v033-stage432-isolated-asset-viewers
+      - feat/mini-city-v033-stage433-bench-lamp-references
     paths:
       - 'building-lab/**'
       - 'bus-stop-lab/**'
