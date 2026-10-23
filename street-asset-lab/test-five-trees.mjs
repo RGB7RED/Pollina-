@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import {TREE_MODELS,buildTreeMeshes} from "../play-lab/tree-models.js";
+import {TREE_MODELS,TREE_BRANCH_SEGMENTS,buildTreeMeshes} from "../play-lab/tree-models.js";
 import {buildIsolatedStreetAsset} from "./asset.js";
 import {BUILDING} from "../building-lab/building.js";
 import {planStreet,buildStreet} from "../play-lab/street.js";
@@ -63,6 +63,46 @@ for(const id of treeIds){
  assert.deepEqual(root.children.map(mesh=>mesh.name),spec.parts);
  assert.ok(root.children.every(mesh=>mesh.count===1&&mesh instanceof InstancedMesh));
  assert.ok(root.children.every(mesh=>mesh.instanceMatrix.needsUpdate));
+ // Regression for the reported "sticks" visibly poking BELOW the crown.
+ // Each tapered fork must originate ON the main stem and terminate WITHIN
+ // a leaf lobe, not be centred off to one side with a dangling lower end.
+ const trunk=root.children.find(mesh=>mesh.name.endsWith("-trunk")||
+   mesh.name==="trees-trunks");
+ assert.ok(trunk,"every tree must have a rooted trunk");
+ const trunkPose=trunk.matrices[0],trunkTop=
+   trunkPose.position.y+trunk.geometry.args[2]*trunkPose.scale.y/2;
+ const forks=TREE_BRANCH_SEGMENTS[id];
+ assert.equal(forks.length,root.children.filter(x=>x.name.includes("branch")).length);
+ const foliage=root.children.filter(x=>/canopy|foliage/.test(x.name)&&
+   !x.name.includes("flowers"));
+ for(const fork of forks){
+   const mesh=root.children.find(x=>x.name===fork.name);
+   const pose=mesh.matrices[0];
+   const [fx,fy,fz]=fork.from,[tx,ty,tz]=fork.to;
+   assert.ok(Math.abs(fx)<.3&&Math.abs(fz)<.3,
+     "branch MUST join the central stem: "+fork.name);
+   assert.ok(fy>=trunkTop-.40&&fy<=trunkTop+.07,
+     "branch should grow near the top of the stem, not dangle beneath leaves: "+fork.name);
+   assert.ok(ty>fy,"all branches grow UPWARDS into leaves");
+   assert.ok(fork.length<=1.9,"reject long straight sticks: "+fork.name);
+   assert.ok(foliage.some(leaf=>{
+     const p=leaf.matrices[0].position,scale=leaf.matrices[0].scale;
+     return Math.hypot((tx-p.x)/scale.x,(ty-p.y)/scale.y,
+       (tz-p.z)/scale.z)<.93;
+   }),"fork tip must be covered by a foliage lobe: "+fork.name);
+   assert.ok(Math.abs(pose.position.x-(fx+tx)/2)<1e-6);
+   assert.ok(Math.abs(pose.position.y-(fy+ty)/2)<1e-6);
+   assert.ok(Math.abs(pose.position.z-(fz+tz)/2)<1e-6);
+   const [rx,ry,rz]=pose.rotation;
+   assert.equal(ry,0);
+   const length=Math.hypot(tx-fx,ty-fy,tz-fz);
+   assert.ok(Math.abs(pose.scale.y-length)<1e-6);
+   assert.ok(Math.abs(-Math.sin(rz)*length-(tx-fx))<1e-6);
+   assert.ok(Math.abs(Math.cos(rx)*Math.cos(rz)*length-(ty-fy))<1e-6);
+   assert.ok(Math.abs(Math.sin(rx)*Math.cos(rz)*length-(tz-fz))<1e-6);
+   assert.equal(mesh.geometry.args[2],1,
+     "branch is a unit tapered cylinder scaled to the true endpoints");
+ }
  const entry=catalog.entries.find(e=>e.id===id);
  assert.ok(entry,"tree has an actual catalog record "+id);
  assert.equal(entry.viewer,"street-asset-lab/index.html?model="+id);
