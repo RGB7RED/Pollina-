@@ -72,7 +72,7 @@ const api=new Function("document","window","fetch","console","URL",
  validateCatalog,filterCatalog,catalogCounts,catalogFolders,folderObjects,modelLabel);
 await new Promise(resolve=>setTimeout(resolve,0));
 assert.equal(requestCount,1);
-assert.equal(nodes["metric-total"].textContent,9);
+assert.equal(nodes["metric-total"].textContent,13);
 assert.equal(nodes["folder-list"].children.length,5);
 assert.equal(nodes["folder-section"].hidden,false);
 assert.equal(nodes["object-section"].hidden,true,
@@ -122,19 +122,25 @@ assert.equal(stopCard.children.at(-1).children.length,1);
 assert.match(stopCard.children[3].children[5].textContent,/Не установлен/);
 assert.match(stopCard.children[3].children[7].textContent,/1 \(не размещён/);
 goBackBrowser("?category=nature");
-assert.equal(nodes["catalog-list"].children.length,2);
+assert.equal(nodes["catalog-list"].children.length,6);
 assert.equal(nodes["catalog-list"].children[0].dataset.assetId,"street_tree");
 assert.equal(nodes["catalog-list"].children[1].dataset.assetId,"street_grass_001");
 assert.equal(nodes["catalog-list"].children[1].children.at(-1).children[0].href,
  "../grass-lab/index.html");
 assert.equal(nodes["catalog-list"].children[0].children.at(-1).children[0].href,
  "../street-asset-lab/index.html?model=street_tree");
+assert.deepEqual(nodes["catalog-list"].children.map(e=>e.dataset.modelNumber),["1","2","3","4","5","6"]);
+assert.deepEqual(nodes["catalog-list"].children.slice(2).map(e=>e.dataset.assetId),
+ ["street_tree_poplar","street_tree_oak","street_tree_ornamental","street_tree_birch"]);
+assert.ok(nodes["catalog-list"].children.slice(2).every(e=>
+ e.children.at(-1).children.length===1),
+ "new tree cards must be independently inspectable but not yet in city");
 assert.equal(nodes["catalog-list"].children[0].dataset.modelNumber,"1",
   "22 copies of a tree is still one model № 001");
 assert.match(nodes["catalog-list"].children[0].children[3].children[5].textContent,/22 экземпляр/);
 // Reopening with a deep link must restore same folder.
 api.updateCatalogView(catalog);
-assert.equal(nodes["catalog-list"].children.length,2);
+assert.equal(nodes["catalog-list"].children.length,6);
 goBackBrowser("?category=unknown");
 assert.equal(nodes["folder-section"].hidden,false,
   "invalid deep links safely fall back to folder root");
@@ -153,4 +159,4 @@ await nodes["catalog-retry"].fire("click");
 assert.equal(nodes["catalog-error"].hidden,true);
 assert.equal(nodes["folder-list"].children.length,5);
 assert.equal(nodes["object-section"].hidden,true);
-console.log("MINI CITY 4.2.4 folder DOM PASS: 5 folders, 9 numbered models, search, back, deep links, distinct designs and retry");
+console.log("MINI CITY 4.2.4 folder DOM PASS: 5 folders, 13 numbered models, search, back, deep links, distinct designs and retry");
