@@ -166,10 +166,10 @@ const THREE={Group:Object3D,Object3D,Mesh,InstancedMesh,Vector3:Vec,
  MeshStandardMaterial,MeshBasicMaterial,DoubleSide:2};
 const rendered=buildStreet(THREE,plan);
 assert.equal(rendered.userData.streetStats.trees,22);
-assert.equal(rendered.userData.streetStats.drawGroups,39,
- "7 planes, 3 grass batches, 2 road batches, 3 trees, 19 lantern and 5 bench batches");
+assert.equal(rendered.userData.streetStats.drawGroups,46,
+ "7 planes, 3 grass batches, 2 road batches, 10 lush tree groups, 19 lantern and 5 bench batches");
 const instanced=rendered.children.filter(o=>o instanceof InstancedMesh);
-assert.equal(instanced.length,32);
+assert.equal(instanced.length,39);
 assert.ok(instanced.every(m=>m.instanceMatrix.needsUpdate));
 assert.ok(instanced.every(m=>m.matrices.length===m.count));
 const patches=instanced.filter(m=>m.name.startsWith("grass-patch-"));
@@ -181,6 +181,11 @@ assert.deepEqual(patches.map(m=>m.material.color),[0x4c8e41,0x6ca651,0x94b96d]);
 assert.equal(instanced.find(m=>m.name==="trees-trunks").count,22);
 assert.equal(instanced.find(m=>m.name==="trees-canopy-low").count,22);
 assert.equal(instanced.find(m=>m.name==="trees-canopy-high").count,22);
+assert.equal(instanced.filter(m=>m.name.startsWith("trees-")).length,10);
+for(const name of ["trees-branch-left","trees-branch-right","trees-canopy-left",
+ "trees-canopy-right","trees-canopy-back","trees-canopy-front","trees-canopy-top"]){
+ assert.equal(instanced.find(m=>m.name===name).count,22);
+}
 assert.equal(instanced.find(m=>m.name==="street-lamp-poles").count,6);
 assert.equal(instanced.find(m=>m.name==="street-lamp-heads").count,6);
 assert.equal(instanced.find(m=>m.name==="street-lamp-lantern-ribs").count,36);
@@ -208,6 +213,6 @@ assert.ok(Math.abs(plan.obstacles.find(x=>x.name==="bench-0").maxZ-
   plan.obstacles.find(x=>x.name==="bench-0").minZ-1.2)<1e-6);
 assert.ok(Math.abs(plan.obstacles.find(x=>x.name==="lamp-0").maxX-
   plan.obstacles.find(x=>x.name==="lamp-0").minX-.5)<1e-6);
-assert.ok(rendered.children.length<=40,
+assert.ok(rendered.children.length<=48,
  "street furniture mobile draw call overhead is bounded");
 console.log("MINI CITY 4.2.1 street PASS: 108m road, safe zebra, 22 trees, 6 detailed park lamps, 4 concrete benches, collisions, 39 groups");
