@@ -38,6 +38,8 @@ assert.match(js,/import \{DeveloperStudio\} from "\.\/studio\.js"/);
 assert.match(js,/new DeveloperStudio\(/);
 assert.match(js,/studio\.update\(\{fps:measuredFps,state\}\)/);
 assert.match(html,/href="\.\.\/studio\/index\.html"/);
+assert.match(html,/href="\.\.\/studio\/catalog\.html"/);
+assert.doesNotMatch(html,/href="\.\.\/lab\/index\.html"/);
 assert.match(html,/body\.game-mode \.brand p/);
 assert.match(studio,/window\.history\.pushState/);
 assert.match(studio,/class DeveloperStudio/);
