@@ -59,6 +59,17 @@ button:disabled{opacity:.44;cursor:not-allowed}
  .top .identity{max-width:38%}.top .stats{max-width:40%}
 }
 
+
+/* Cross-laboratory object selector; small, touch-targeted and always reachable. */
+.object-switch{margin-top:9px;display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.object-switch a{display:inline-flex;align-items:center;justify-content:center;min-height:32px;padding:5px 8px;
+  border:1px solid #bed7c58c;border-radius:9px;background:#183237dd;color:#e9f2eb;
+  font-size:10px;font-weight:750;text-decoration:none;touch-action:manipulation;pointer-events:auto}
+.object-switch a[aria-current="page"]{background:#c8ddcf;color:#183b3a}
+.object-switch a:focus-visible{outline:2px solid #fff;outline-offset:2px}
+@media(max-width:600px){.object-switch{margin-top:6px;gap:4px}
+ .object-switch a{min-height:31px;font-size:9px;padding:4px 7px}}
+.top .identity{pointer-events:auto}
 </style>
 <script type="importmap">
 {"imports":{
@@ -75,6 +86,10 @@ button:disabled{opacity:.44;cursor:not-allowed}
     <h1>Персонаж · Этап 2</h1>
     <p>Проверка <b>реальных анимаций</b> ходьбы, бега, поворотов и плавной остановки.</p>
     <div class="badge">КАНДИДАТ — НЕ ФИНАЛЬНЫЙ ГЕРОЙ</div>
+    <nav class="object-switch" aria-label="Выбор объекта лаборатории">
+      <a href="../building-lab/index.html">🏠 Дом</a>
+      <a href="./index.html" aria-current="page">🚶 Персонаж</a>
+    </nav>
   </div>
   <div class="card stats">
     <div><strong id="state">Загрузка ассета...</strong></div>
