@@ -215,4 +215,4 @@ assert.ok(Math.abs(plan.obstacles.find(x=>x.name==="lamp-0").maxX-
   plan.obstacles.find(x=>x.name==="lamp-0").minX-.5)<1e-6);
 assert.ok(rendered.children.length<=48,
  "street furniture mobile draw call overhead is bounded");
-console.log("MINI CITY 4.2.1 street PASS: 108m road, safe zebra, 22 trees, 6 detailed park lamps, 4 concrete benches, collisions, 39 groups");
+console.log("MINI CITY 4.2.1 street PASS: 108m road, safe zebra, 22 trees, 6 detailed park lamps, 4 concrete benches, collisions, 46 groups");
