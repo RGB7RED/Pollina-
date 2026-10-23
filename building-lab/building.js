@@ -193,9 +193,9 @@ export function buildApartmentHouse(THREE,config={}){
     box(.43,.24,.08,mats.frameWhite,x,hole.top+.16,face+.055); // entrance number
     // Replace all three stair boxes with ONE level, car-sized forecourt.
     // A ~4.7 x 1.9 m car fits parallel to the front wall on this 5.5 x 3.15 m pad.
-    // Its top is flush with the entrance threshold; the monolithic slab
+    // Its top is 20 cm below the entrance threshold; the monolithic slab
     // reaches the terrain (no suspended platform, steps or invisible supports).
-    const padWidth=5.50,padDepth=3.15,padTop=hole.bottom-.02;
+    const padWidth=5.50,padDepth=3.15,padTop=hole.bottom-.20;
     const padZ=face+padDepth/2-.10;
     box(padWidth,padTop,padDepth,mats.entryPad,x,padTop/2,padZ);
     audit.entryPads.push({x,side:1,width:padWidth,depth:padDepth,
