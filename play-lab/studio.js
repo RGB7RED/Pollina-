@@ -55,7 +55,7 @@ export class DeveloperStudio{
       return el;
     };
     this.nodes={
-      toggle:get("mode-toggle"),panel:get("devtools"),
+      toggle:get("mode-toggle"),title:get("play-title"),panel:get("devtools"),
       panelToggle:get("devtools-toggle"),body:get("devtools-body"),
       collisions:get("dev-collisions"),
       perf:get("dev-perf"),resources:get("dev-resources"),
@@ -97,6 +97,7 @@ export class DeveloperStudio{
     document.body.classList.toggle("game-mode",!lab);
     document.body.classList.toggle("lab-mode",lab);
     n.panel.hidden=!lab;
+    n.title.textContent=lab?"MINI CITY · Лаборатория игры":"MINI CITY";
     n.toggle.textContent=lab?"🎮 Перейти в игру":"🧪 Режим разработчика";
     n.toggle.setAttribute("aria-label",lab?
       "Перейти в игру без панели разработчика":
