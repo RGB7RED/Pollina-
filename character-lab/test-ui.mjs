@@ -9,6 +9,8 @@ assert.match(html,/type="importmap"/);
 assert.match(html,/three@0\.170\.0/);
 assert.match(html,/src="\.\/lab\.js"/);
 assert.match(html,/href="\.\.\/building-lab\/index\.html"/);
+assert.match(html,/href="\.\.\/studio\/index\.html"/);
+assert.match(html,/href="\.\.\/play-lab\/index\.html\?mode=lab"/);
 assert.match(html,/href="\.\/index\.html" aria-current="page"/);
 for(const id of ["viewport","state","rig","geometry","frame","clip","motion-status","speed","clip-select","status","model-source","skeleton","reset","turn-left","turn-right","btn-idle","btn-walk","btn-run"]){
   assert.ok(html.includes('id="'+id+'"'),"missing interface element "+id);

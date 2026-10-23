@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#20343d">
-<title>MINI CITY 4.2.1 — Первая жилая улица</title>
+<title>MINI CITY 4.2.2 — Developer Studio / Game</title>
 <style>
 :root{color-scheme:dark;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;color:#ecf2eb}
 *{box-sizing:border-box}
@@ -66,6 +66,39 @@ body.first-person #reticle{display:block}
  #actions button{min-height:35px;padding:6px 9px}
  #tips{display:none}
 }
+
+/* One scene, two presentation modes. Game hides instrumentation entirely. */
+#mode-toggle{min-height:34px;padding:5px 9px;margin-top:6px;font-size:11px;
+  background:#c3dbce;color:#1c3a3c}
+body.game-mode .brand p,body.game-mode .brand .nav,
+body.game-mode #hud-toggle,body.game-mode #fps,body.game-mode #camera-hint,
+body.game-mode #actor-status{display:none}
+body.game-mode .brand{max-width:min(46vw,240px)}
+body.game-mode .brand h1{font-size:15px;margin:4px 0}
+body.game-mode .brand small{display:none}
+body.game-mode .menu{max-width:min(47vw,190px)}
+#devtools{position:fixed;z-index:8;bottom:max(169px,calc(env(safe-area-inset-bottom) + 154px));
+ left:50%;transform:translateX(-50%);width:min(360px,calc(100vw - 26px));
+ max-height:38vh;overflow:auto;background:#142a32e8;
+ border:1px solid #aed4c4a9;border-radius:14px;padding:10px 12px;
+ backdrop-filter:blur(12px);box-shadow:0 9px 30px #09191a66;
+ pointer-events:auto;color:#e7f5ee;font-size:11px;line-height:1.48}
+#devtools[hidden],#devtools-body[hidden]{display:none!important}
+.devtools-head{display:flex;align-items:center;justify-content:space-between;gap:9px}
+.devtools-head strong{font-size:12px;letter-spacing:.03em}
+#devtools-toggle{min-height:30px;font-size:10px;padding:4px 9px}
+#devtools-body p{font-size:11px;line-height:1.34;margin:5px 0}
+#dev-collisions{min-height:34px;font-size:11px;padding:5px 10px;margin:5px 0}
+.dev-separator{border:0;border-top:1px solid #b7d7c24f;margin:8px 0}
+#devtools a{color:#bfe7d2;font-size:11px}
+@media(max-width:620px){
+ #devtools{max-height:31vh;bottom:max(147px,calc(env(safe-area-inset-bottom) + 147px))}
+ body.game-mode .menu{max-width:min(49vw,175px)}
+ body.game-mode .brand{max-width:min(48vw,202px)}
+}
+@media(orientation:landscape) and (max-height:500px){
+ #devtools{max-height:38vh;bottom:118px;width:min(345px,calc(100vw - 30px))}
+}
 </style>
 <script type="importmap">
 {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}
@@ -76,11 +109,13 @@ body.first-person #reticle{display:block}
 <div class="hud">
   <section class="card brand">
     <small>MINI CITY / PLAY LAB</small>
-    <h1>Первая жилая улица · 4.2.1</h1>
+    <h1 id="play-title">MINI CITY · Лаборатория игры</h1>
     <p>Первая улица: дом, двор, тротуары, переход, деревья и фонари. Два вида камеры.</p>
     <p id="world-info">Подготовка улицы…</p>
     <button id="hud-toggle" type="button" aria-expanded="true">▴ Свернуть описание</button>
+    <button id="mode-toggle" type="button">🎮 Перейти в игру</button>
     <nav class="nav" aria-label="Навигация по лабораториям">
+      <a href="../studio/index.html">Студия</a>
       <a href="../lab/index.html">Объекты</a>
       <a href="../building-lab/index.html">Дом</a>
       <a href="../character-lab/index.html">Персонаж</a>
@@ -94,6 +129,25 @@ body.first-person #reticle{display:block}
     <button id="reset">↻ На старт</button>
   </section>
 </div>
+<section id="devtools" aria-label="Инструменты разработчика" hidden>
+  <div class="devtools-head">
+    <strong>🛠️ Инспектор игровой сцены</strong>
+    <button id="devtools-toggle" type="button" aria-expanded="true">▴ Свернуть</button>
+  </div>
+  <div id="devtools-body">
+    <hr class="dev-separator">
+    <p id="dev-perf">FPS: — · Вызовы: — · Треугольники: —</p>
+    <p id="dev-resources">Геометрии: — · Текстуры: —</p>
+    <p id="dev-player">X: — · Z: —</p>
+    <p id="dev-hit">Столкновение: —</p>
+    <hr class="dev-separator">
+    <p id="dev-objects">Объекты сцены: —</p>
+    <p id="dev-route">Сцена: —</p>
+    <button id="dev-collisions" type="button" aria-pressed="false">⬜ Коллизии: ВЫКЛ</button>
+    <p>Бирюзовые рамки показывают неподвижные границы столкновений. В игровом режиме они отключены.</p>
+    <a href="../studio/index.html">← Пульт разработчика</a>
+  </div>
+</section>
 <div id="status" role="status">Загрузка настоящих моделей…<button id="retry" hidden>Повторить загрузку</button></div>
 <div id="reticle">+</div>
 <div id="tips">Стик — ходьба<br>Свайп — поворот камеры<br>ПК: WASD, Shift, F — смена вида</div>
