@@ -65,6 +65,7 @@ jobs:
       - name: Test isolated tree lamp bench and free-flight controls
         run: |
           node street-asset-lab/test-isolation.mjs
+          node street-asset-lab/test-viewer.mjs
           node object-viewer/test-free-flight.mjs
       - name: Test stage 4.1 first/third-person movement and house collisions
         run: node play-lab/test-controller.mjs
