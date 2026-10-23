@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import {BUILDING} from "../building-lab/building.js";
 import {PlayerController,facadeObstacles,collidesAt,resolveStep,cameraObstacleDistance,
- joystickValue,VIEW_MODES,RUN_SPEED,WALK_SPEED,PLAYER_RADIUS} from "./controller.js";
+ joystickValue,VIEW_MODES,RUN_SPEED,WALK_SPEED,PLAYER_RADIUS,modelYawForCamera} from "./controller.js";
 
 const pad=(x)=>({x,width:5.5,depth:3.15,centreZ:7.875});
 const pads=[-26.3625,-8.7875,8.7875,26.3625].map(pad);
@@ -53,11 +53,11 @@ c.toggleView();
 assert.equal(c.view,"first");
 assert.equal(c.getCameraPose().eye.y,1.65);
 assert.equal(c.getCameraPose().eye.z,c.position.z);
-c.look(-100,60);
-assert.ok(c.lookYaw>0,"dragging left rotates view right");
+c.look(100,60);
+assert.ok(c.lookYaw>0,"dragging right rotates view right");
 c.setStick(0,1);
 result=c.update(.05);
-assert.equal(c.heading,c.lookYaw,"first-person body aligns with camera yaw");
+assert.equal(c.heading,modelYawForCamera(c.lookYaw),"first-person body matches the camera forward");
 assert.ok(c.getCameraPose().aim.x>c.position.x);
 c.toggleView();assert.equal(c.view,"third");
 c.setView("first");c.reset();
