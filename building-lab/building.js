@@ -84,6 +84,7 @@ export function buildApartmentHouse(THREE,config={}){
     canopy:new THREE.MeshStandardMaterial({color:0x555457,roughness:.98}),
     chimney:new THREE.MeshStandardMaterial({color:0x795e57,roughness:1}),
     foundation:new THREE.MeshStandardMaterial({color:0x87847c,roughness:.98}),
+    entryPad:new THREE.MeshStandardMaterial({color:0x898780,roughness:.98}),
     vent:new THREE.MeshStandardMaterial({color:0x9ca3a1,roughness:.83}),
     ventDark:new THREE.MeshStandardMaterial({color:0x4b5656,roughness:.88})
   };
@@ -93,7 +94,7 @@ export function buildApartmentHouse(THREE,config={}){
     instancedElements:0,windowHoles:0,doorHoles:0,downpipes:0,airConditioners:0,
     balconyKinds:{A:0,B:0,C:0,D:0}};
   const audit={holes:[],wallPieces:[],windowGlazing:[],windowTypes:new Set(),doorPositions:[],
-    balconyPositions:[],originalFootprint:{length:C.length,width:C.width}};
+    entryPads:[],downpipePositions:[],balconyPositions:[],originalFootprint:{length:C.length,width:C.width}};
   function box(w,h,d,material,x,y,z,rx=0,ry=0,rz=0){
     if(w<=0||h<=0||d<=0)throw Error("Invalid architectural box dimensions");
     let transforms=batches.get(material);
@@ -190,10 +191,15 @@ export function buildApartmentHouse(THREE,config={}){
     box(.17,.33,.095,mats.ventDark,x+hole.width/2+.20,1.58,face+.08);
     box(.095,.04,.10,mats.vent,x+hole.width/2+.20,1.60,face+.13);
     box(.43,.24,.08,mats.frameWhite,x,hole.top+.16,face+.055); // entrance number
-    // Two risers meet the 0.66m plinth, then a full depth landing.
-    box(2.10,.24,1.55,mats.foundation,x,.12,face+.88);
-    box(2.10,.24,1.15,mats.foundation,x,.36,face+.62);
-    box(2.18,.17,.98,mats.foundation,x,.575,face+.48);
+    // Replace all three stair boxes with ONE level, car-sized forecourt.
+    // A ~4.7 x 1.9 m car fits parallel to the front wall on this 5.5 x 3.15 m pad.
+    // Its top is flush with the entrance threshold; the monolithic slab
+    // reaches the terrain (no suspended platform, steps or invisible supports).
+    const padWidth=5.50,padDepth=3.15,padTop=hole.bottom-.02;
+    const padZ=face+padDepth/2-.10;
+    box(padWidth,padTop,padDepth,mats.entryPad,x,padTop/2,padZ);
+    audit.entryPads.push({x,side:1,width:padWidth,depth:padDepth,
+      bottom:0,top:padTop,centreZ:padZ,doorBottom:hole.bottom});
     const canopyY=3.22;
     box(2.62,.17,1.43,mats.canopy,x,canopyY,face+.59);
     box(2.67,.06,.08,mats.roofEdge,x,canopyY-.11,face+1.30);
@@ -327,9 +333,21 @@ export function buildApartmentHouse(THREE,config={}){
       side*(C.width/2+C.roofOverhang-.1));
     box(C.length+1.0,.10,.19,mats.roofEdge,0,shellTop-.29,
       side*(C.width/2+.14)); // eave-to-wall flashing
-    // Downpipes are deliberately on piers, away from window openings.
-    for(const x of [-35.55,-16.93,1.30,16.93,35.55]){
+    // Place the three middle drains on actual masonry seams BETWEEN bays.
+    // Boundaries 8/14/20 touch neither balcony bays nor entrances, on
+    // either facade. Fixed metre offsets previously crossed windows/balconies.
+    const bayStep=(C.length-3.7)/C.windowBays;
+    const safeBoundaries=[8,14,20].map(n=>Math.round(n*C.windowBays/28));
+    const pipeSites=[
+      {x:-C.length/2+1.45,boundary:null},
+      ...safeBoundaries.map(boundary=>({
+        x:-C.length/2+1.85+boundary*bayStep,boundary
+      })),
+      {x:C.length/2-1.45,boundary:null}
+    ];
+    for(const {x,boundary} of pipeSites){
       const z=side*(C.width/2+.145);
+      audit.downpipePositions.push({x,side,boundary});
       box(.105,shellTop-.46,.11,mats.roofEdge,x,(shellTop+.46)/2,z);
       box(.18,.10,.16,mats.balconyMetal,x,.34,z+side*.03);
       for(let y=1.55;y<shellTop-.45;y+=2.25)
