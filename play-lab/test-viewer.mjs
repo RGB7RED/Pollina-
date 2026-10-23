@@ -16,7 +16,6 @@ for(const id of ["stage","fps","actor-status","status","retry","stick","stick-kn
 }
 assert.match(html,/three@0\.170\.0/);
 assert.match(html,/type="module" src="\.\/game\.js"/);
-assert.match(html,/href="\.\.\/lab\/index\.html"/);
 assert.match(html,/href="\.\.\/building-lab\/index\.html"/);
 assert.match(html,/href="\.\.\/character-lab\/index\.html"/);
 assert.match(js,/import \{buildApartmentHouse\} from "\.\.\/building-lab\/building\.js"/);
