@@ -35,6 +35,7 @@ export class FreeCamera {
     this.braking=braking;
     this.active=false;
     this.yaw=0;this.pitch=0;
+    this.targetYaw=0;this.targetPitch=0;
     this.axisX=0;this.axisY=0;this.axisZ=0;
     this.velocity={x:0,y:0,z:0};
     this.keys=new Set();
@@ -60,6 +61,8 @@ export class FreeCamera {
     const h=Math.hypot(dx,dz)||.000001;
     this.yaw=Math.atan2(-dx,-dz);
     this.pitch=Math.atan2(dy,h);
+    this.targetYaw=this.yaw;
+    this.targetPitch=this.pitch;
     this.active=true;
     this.clearInputs();
     this.orient();
@@ -76,9 +79,8 @@ export class FreeCamera {
   look(dx,dy){
     if(!this.active)return;
     // Ignore exceptionally large pointer deltas (e.g. Safari toolbar reflow).
-    this.yaw-=clamp(dx,-110,110)*this.sensitivity;
-    this.pitch=clamp(this.pitch-clamp(dy,-110,110)*this.sensitivity,-1.45,1.45);
-    this.orient();
+    this.targetYaw-=clamp(dx,-110,110)*this.sensitivity;
+    this.targetPitch=clamp(this.targetPitch-clamp(dy,-110,110)*this.sensitivity,-1.45,1.45);
   }
   setStick(x,z){
     this.axisX=clamp(x,-1,1);
@@ -94,6 +96,11 @@ export class FreeCamera {
   update(delta){
     if(!this.active)return;
     const dt=clamp(delta,0,.05);
+    // Temporal filtering avoids jagged Safari pointer events at varying FPS.
+    const lookBlend=1-Math.exp(-19*dt);
+    this.yaw+=(this.targetYaw-this.yaw)*lookBlend;
+    this.pitch+=(this.targetPitch-this.pitch)*lookBlend;
+    this.orient();
     const has=(...names)=>names.some(n=>this.keys.has(n));
     let side=this.axisX+Number(has("KeyD","ArrowRight"))-Number(has("KeyA","ArrowLeft"));
     let ahead=this.axisZ+Number(has("KeyW","ArrowUp"))-Number(has("KeyS","ArrowDown"));
