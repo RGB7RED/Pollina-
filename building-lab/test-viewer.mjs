@@ -15,11 +15,17 @@ for(const mode of ["front","threequarter","end","top"]){
 }
 assert.match(html,/three@0\.170\.0/);
 assert.match(html,/Дом · Этап 3\.3/);
-assert.match(html,/МАТЕРИАЛЫ И СВЕТ 3\.3/);
+assert.match(html,/ЭТАП 3\.4/);
 assert.match(html,/type="module" src="\.\/lab\.js"/);
 assert.match(js,/import \{OrbitControls\}/);
 assert.match(js,/import \{applyFacadeFinishes\} from "\.\/materials\.js"/);
 assert.match(js,/applyFacadeFinishes\(THREE,root\)/);
+assert.match(js,/import \{encodeHouseGLB,downloadGLB\} from "\.\/export-glb\.js"/);
+assert.match(js,/encodeHouseGLB\(THREE,root\)/);
+assert.match(html,/id="export-glb"/);
+assert.match(html,/id="export-message"/);
+assert.match(html,/href="\.\.\/character-lab\/index\.html"/);
+assert.match(html,/href="\.\/index\.html" aria-current="page"/);
 assert.match(js,/porchLights\.map|for\(const lamp of porchLights\)/);
 assert.match(js,/import \{BUILDING,buildApartmentHouse\} from "\.\/building\.js"/);
 assert.match(js,/sun\.shadow\.mapSize\.set/);
