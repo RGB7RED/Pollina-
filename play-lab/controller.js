@@ -83,10 +83,13 @@ export function joystickValue(clientX,clientY,rect,deadzone=.13){
   return {x:x/len*magnitude,z:z/len*magnitude};
 }
 export class PlayerController{
-  constructor({building,pads=[],spawn=DEFAULT_SPAWN}){
+  constructor({building,pads=[],spawn=DEFAULT_SPAWN,extras=[]}){
     this.position={x:spawn.x,z:spawn.z};
     this.spawn={...this.position};
-    this.obstacles=facadeObstacles(building,pads);
+    // Environment props use the exact same collision solver as the house,
+    // but are opt-in: old 4.1 building-only controller tests stay valid.
+    this.obstacles=[...facadeObstacles(building,pads),
+      ...extras.map(o=>({...o}))];
     if(collidesAt(spawn.x,spawn.z,this.obstacles))
       throw Error("Spawn must not intersect house or entrance slabs");
     this.lookYaw=0;this.lookPitch=.18;this.heading=modelYawForCamera(0);
