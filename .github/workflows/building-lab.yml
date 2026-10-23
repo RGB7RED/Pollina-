@@ -38,6 +38,8 @@ jobs:
           node --check play-lab/animation.js
       - name: Test stage 4.1 first/third-person movement and house collisions
         run: node play-lab/test-controller.mjs
+      - name: Check stage 4.1.1 model orientation and non-reversed swipe
+        run: node play-lab/test-directions.mjs
       - name: Check stage 4.1 actual animation clip wiring
         run: node play-lab/test-animation.mjs
       - name: Check stage 4.1 mobile gameplay UI
