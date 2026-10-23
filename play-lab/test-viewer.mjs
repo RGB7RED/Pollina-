@@ -32,6 +32,14 @@ assert.match(js,/function toggleEntryDoor\(\)/);
 assert.match(js,/planStreet\(config,pads\)/);
 assert.match(js,/buildStreet\(THREE,streetPlan\)/);
 assert.match(html,/id="world-info"/);
+assert.match(html,/id="entry-action"/);
+assert.match(html,/KeyE/);
+assert.match(js,/planPlayableEntrance\(config,pads\)/);
+assert.match(js,/setEntryDoorOpen/);
+assert.match(js,/actorPivot.position.set\(state.x,state.y,state.z\)/);
+assert.match(js,/doorPivot.rotation.y/);
+assert.match(js,/function updateEntryAction/);
+assert.match(js,/studio.refreshCollisions/);
 assert.match(html,/id="hud-toggle"/);
 for(const id of ["mode-toggle","play-title","devtools","devtools-toggle",
  "devtools-body","dev-collisions","dev-perf","dev-resources","dev-player",

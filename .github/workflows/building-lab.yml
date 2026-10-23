@@ -22,6 +22,7 @@ on:
       - feat/mini-city-v033-stage437-fine-lighter-grass
       - feat/mini-city-v033-stage44-five-tree-variants
       - fix/mini-city-v033-stage441-hidden-tree-branches
+      - feat/mini-city-v033-stage451-seamless-entry-door
     paths:
       - 'building-lab/**'
       - 'bus-stop-lab/**'
@@ -55,6 +56,7 @@ jobs:
           node --check building-lab/export-glb.js
           node --check play-lab/game.js
           node --check play-lab/controller.js
+          node --check play-lab/entrance.js
           node --check play-lab/animation.js
           node --check play-lab/street.js
           node --check play-lab/grass.js
@@ -83,6 +85,8 @@ jobs:
           node street-asset-lab/test-isolation.mjs
           node street-asset-lab/test-viewer.mjs
           node object-viewer/test-free-flight.mjs
+      - name: Test stage 4.5.1 physical first entrance, swinging door and continuous movement
+        run: node play-lab/test-entrance.mjs
       - name: Test stage 4.1 first/third-person movement and house collisions
         run: node play-lab/test-controller.mjs
       - name: Check stage 4.1.1 model orientation and non-reversed swipe
