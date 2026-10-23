@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1c3235">
+<title>MINI CITY — Улица №001 · отдельная лаборатория</title>
+<link rel="stylesheet" href="../object-viewer/free-flight.css">
+<style>
+:root{color-scheme:dark;font:14px -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;color:#eaf2ed;background:#7f9da8}
+*{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;overflow:hidden}
+#stage{position:fixed;inset:0;touch-action:none}#stage canvas{width:100%;height:100%;display:block;touch-action:none}
+.hud{position:fixed;z-index:5;top:max(9px,env(safe-area-inset-top));left:max(9px,env(safe-area-inset-left));right:max(9px,env(safe-area-inset-right));display:flex;align-items:flex-start;justify-content:space-between;gap:7px;pointer-events:none}
+.card{background:#1b333be9;border:1px solid #b4d6c080;border-radius:12px;padding:11px 13px;backdrop-filter:blur(10px);pointer-events:auto}
+.info{max-width:min(59vw,350px)}.metrics{max-width:min(40vw,250px);font-size:11px;line-height:1.6}
+small{font-size:9px;color:#b8d9c9;font-weight:850;letter-spacing:.09em}
+h1{font-size:18px;line-height:1.2;margin:6px 0 7px}
+p{font-size:11px;color:#c9ddd3;line-height:1.4;margin:6px 0}
+nav{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+nav a{display:inline-flex;align-items:center;min-height:38px;padding:6px 8px;color:#eaf2ed;text-decoration:none;border:1px solid #b8d8c38c;border-radius:9px;font-size:10px}
+button{min-height:42px;background:#203b44eb;color:#edf4ee;border:1px solid #bfd4c797;border-radius:10px;font-weight:750;padding:9px 12px;touch-action:manipulation}
+button.active{background:#d5e9d9;color:#1c3d37}
+#collapse{min-height:30px;padding:5px 7px;margin-bottom:5px;font-size:10px}
+.collapsed .metric{display:none}
+.controls{position:fixed;z-index:7;bottom:max(64px,calc(env(safe-area-inset-bottom) + 58px));left:8px;right:8px;display:flex;justify-content:center;flex-wrap:wrap;gap:6px}
+#fail{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:20;background:#593036f0;padding:17px;border-radius:13px}
+#fail[hidden]{display:none}
+@media(max-width:650px){.hud{left:6px;right:6px;gap:5px}.card{padding:8px}.info{max-width:55vw}.metrics{max-width:44vw;font-size:9px}h1{font-size:14px}p{font-size:9px}nav a{min-height:40px;font-size:9px;padding:5px}.controls{gap:4px}.controls button{font-size:10px;padding:7px 9px}}
+@media(orientation:landscape) and (max-height:510px){.card{padding:6px}.controls{bottom:max(44px,calc(env(safe-area-inset-bottom) + 40px))}}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
+</head>
+<body>
+<main id="stage" aria-label="Самостоятельная 3D-модель улицы, без дома"></main>
+<div class="hud">
+ <section class="card info">
+  <small>MINI CITY / STREET LAB · 4.3.4</small>
+  <h1>№001 — Улица и двор</h1>
+  <p>Отдельная улица: дорожное покрытие, тротуары, деревья, фонари, скамейки и трава. Пятиэтажки здесь нет.</p>
+  <nav aria-label="Навигация">
+   <a href="../studio/catalog.html?category=environment">← Улицы и окружение</a>
+   <a href="../building-lab/index.html">🏠 Дом отдельно</a>
+   <a href="../play-lab/index.html?mode=lab">🛠️ Весь город</a>
+  </nav>
+ </section>
+ <section class="card metrics" id="telemetry">
+  <button type="button" id="collapse" aria-expanded="true">▾ Характеристики</button>
+  <div class="metric" id="fps">FPS: —</div>
+  <div class="metric" id="calls">Вызовы отрисовки: —</div>
+  <div class="metric" id="triangles">Треугольники: —</div>
+  <div class="metric" id="lawn">Кустики травы: —</div>
+  <div class="metric" id="objects">Объекты: —</div>
+  <div class="metric" id="status">Отдельный объект · 0 домов</div>
+ </section>
+</div>
+<div class="controls" aria-label="Ракурсы улицы">
+ <button type="button" data-view="overview" class="active">Вся улица</button>
+ <button type="button" data-view="road">У дороги</button>
+ <button type="button" data-view="grass">Трава</button>
+ <button type="button" data-view="top">Сверху</button>
+ <button type="button" id="reset">↻ Сброс</button>
+</div>
+<div id="fail" hidden role="alert">Не удалось создать улицу</div>
+<script type="module" src="./lab.js"></script>
+</body>
+</html>
