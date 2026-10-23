@@ -15,6 +15,15 @@ class Object3D{
  updateMatrix(){this.matrix={position:{...this.position},rotation:{...this.rotation},scale:{...this.scale}};}
  add(o){this.children.push(o);}
 }
+class BufferGeometry{
+ constructor(){this.attributes={};this.index=null;this.transforms=[];}
+ setAttribute(k,v){this.attributes[k]=v;}
+ setIndex(v){this.index={count:v.length,values:v};}
+ computeVertexNormals(){this.normalsComputed=true;}
+}
+class Float32BufferAttribute{
+ constructor(array,size){this.array=array;this.count=array.length/size;}
+}
 class Geometry{
  constructor(...args){this.args=args;this.transforms=[];}
  translate(...a){this.transforms.push(["translate",...a]);return this;}
@@ -38,7 +47,7 @@ class InstancedMesh extends Mesh{
 }
 class Material{constructor(o){Object.assign(this,o);}}
 const THREE={Group:Object3D,Object3D,Mesh,InstancedMesh,Vector3:Vec,
- Shape,CatmullRomCurve3,
+ Shape,CatmullRomCurve3,BufferGeometry,Float32BufferAttribute,
  PlaneGeometry:class extends Geometry{},BoxGeometry:class extends Geometry{},
  CylinderGeometry:class extends Geometry{},DodecahedronGeometry:class extends Geometry{},
  ConeGeometry:class extends Geometry{},SphereGeometry:class extends Geometry{},
@@ -84,7 +93,7 @@ for(const id of ["street_tree","street_lamp","street_bench"]){
 }
 assert.throws(()=>buildIsolatedStreetAsset(THREE,"unknown"),/Unknown isolated asset/);
 // Existing city is exactly the old layout (22 trees, 6 lamps, 4 benches).
-assert.equal(world.children.length,38);
+assert.equal(world.children.length,39);
 assert.equal(world.children.find(m=>m.name==="benches-seats").count,4*6);
 assert.equal(world.children.find(m=>m.name==="benches-concrete-supports").count,4*2);
 assert.equal(world.children.find(m=>m.name==="street-lamp-lantern-ribs").count,6*6);

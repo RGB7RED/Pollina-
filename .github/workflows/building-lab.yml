@@ -18,11 +18,13 @@ on:
       - feat/mini-city-v033-stage432-isolated-asset-viewers
       - feat/mini-city-v033-stage433-bench-lamp-references
       - feat/mini-city-v033-stage434-independent-street-grass
+      - feat/mini-city-v033-stage435-isolated-street-detailed-grass
     paths:
       - 'building-lab/**'
       - 'bus-stop-lab/**'
       - 'street-asset-lab/**'
       - 'street-lab/**'
+      - 'grass-lab/**'
       - 'object-viewer/**'
       - 'character-lab/**'
       - 'lab/**'
@@ -52,6 +54,8 @@ jobs:
           node --check play-lab/controller.js
           node --check play-lab/animation.js
           node --check play-lab/street.js
+          node --check play-lab/grass.js
+          node --check grass-lab/lab.js
           node --check play-lab/studio.js
           node --check models/catalog-utils.js
           node --check studio/catalog.js
@@ -67,7 +71,9 @@ jobs:
       - name: Test bus-stop camera viewer and navigation
         run: node bus-stop-lab/test-viewer.mjs
       - name: Test standalone house/street viewers and grass geometry
-        run: node street-lab/test-street-lab.mjs
+        run: |
+          node street-lab/test-street-lab.mjs
+          node grass-lab/test-grass.mjs
       - name: Test isolated tree lamp bench and free-flight controls
         run: |
           node street-asset-lab/test-isolation.mjs

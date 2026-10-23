@@ -7,7 +7,7 @@ assert.equal(validateCatalog(catalog),catalog);
 assert.equal(catalog.schemaVersion,2);
 assert.deepEqual(catalogFolders(catalog).map(f=>[f.id,f.count]),[
  ["building",1],["character",2],["environment",1],
- ["nature",1],["street_furniture",3]
+ ["nature",2],["street_furniture",3]
 ]);
 assert.deepEqual(folderObjects(catalog,"character").map(e=>e.modelNumber),[1,2]);
 assert.deepEqual(folderObjects(catalog,"street_furniture").map(e=>e.modelNumber),[1,2,3]);
@@ -24,19 +24,29 @@ assert.deepEqual(folderObjects(catalog,"imaginary"),[]);
 assert.equal(modelLabel(1),"№ 001");
 assert.equal(modelLabel(12),"№ 012");
 // Numbering represents unique designs, NOT copies placed in the street.
-assert.equal(folderObjects(catalog,"nature").length,1);
+assert.equal(folderObjects(catalog,"nature").length,2);
 assert.equal(folderObjects(catalog,"nature")[0].quantity,22);
 assert.equal(folderObjects(catalog,"nature")[0].modelNumber,1);
+assert.deepEqual(folderObjects(catalog,"nature").map(e=>e.modelNumber),[1,2]);
+const grass=catalog.entries.find(e=>e.id==="street_grass_001");
+assert.ok(grass);
+assert.equal(grass.modelNumber,2);
+assert.equal(grass.quantity,1,"one reusable grass layer, not thousands of catalog cards");
+assert.equal(grass.inPlayLab,true);
+assert.equal(grass.viewer,"grass-lab/index.html");
+assert.ok(grass.sourcePaths.includes("play-lab/grass.js"));
+assert.equal(grass.assetFile,null);
+assert.equal(grass.releaseReady,false);
 const counts=catalogCounts(catalog);
 assert.deepEqual(counts,{
-  total:8,
-  statuses:{development:2,testing:5,approved:1},
-  categories:{building:1,character:2,environment:1,nature:1,street_furniture:3},
-  inGame:6,readyForRelease:0
+  total:9,
+  statuses:{development:2,testing:6,approved:1},
+  categories:{building:1,character:2,environment:1,nature:2,street_furniture:3},
+  inGame:7,readyForRelease:0
 });
 assert.equal(filterCatalog(catalog,{search:"дерево"}).length,1);
 assert.equal(filterCatalog(catalog,{search:"ПЯТИЭТАЖКА"}).length,1);
-assert.equal(filterCatalog(catalog,{search:"street.js"}).length,4);
+assert.equal(filterCatalog(catalog,{search:"street.js"}).length,5);
 assert.equal(filterCatalog(catalog,{category:"character"}).length,2);
 assert.equal(filterCatalog(catalog,{status:"approved"}).length,1);
 assert.equal(filterCatalog(catalog,{category:"street_furniture",status:"testing"}).length,2);
@@ -106,4 +116,4 @@ assert.equal(crossFolderSameNumber.entries[0].modelNumber,
   crossFolderSameNumber.entries[1].modelNumber,
   "same number is allowed across distinct folders");
 assert.equal(validateCatalog(crossFolderSameNumber),crossFolderSameNumber);
-console.log("MINI CITY 4.2.3 registry PASS: 8 real numbered entries, 5 folders, sources exist, no fake binaries or release approvals, filters validated");
+console.log("MINI CITY 4.2.3 registry PASS: 9 real numbered entries, 5 folders, sources exist, no fake binaries or release approvals, filters validated");

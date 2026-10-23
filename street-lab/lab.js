@@ -7,7 +7,7 @@ import {mountInspectionFlight} from "../object-viewer/free-flight.js";
 const $=id=>document.getElementById(id);
 // The street is an independent model. House dimensions inform the STREET
 // PLAN but house meshes (and house facade materials) are never constructed.
-const plan=planStreet(BUILDING,[],{buildingPresent:false});
+const plan=planStreet(BUILDING,[],{buildingPresent:false,furniture:false});
 const street=buildStreet(THREE,plan);
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x9eafbc);
 scene.add(street);
@@ -65,8 +65,8 @@ street.traverse(o=>{
 });
 $("triangles").textContent="Треугольники улицы: "+modelTris.toLocaleString("ru-RU");
 $("lawn").textContent="Кустики травы: "+plan.grassTufts.length.toLocaleString("ru-RU");
-$("objects").textContent=plan.info.trees+" деревьев · "+
-  plan.info.lamps+" фонарей · "+plan.info.benches+" скамейки";
+$("objects").textContent="На этой модели: 0 домов · 0 деревьев · "+
+ "0 фонарей · 0 скамеек";
 function resize(){
  camera.aspect=Math.max(.25,innerWidth/innerHeight);
  camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight,false);

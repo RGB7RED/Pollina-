@@ -10,15 +10,15 @@ const plan=planStreet(BUILDING,pads);
 const twin=planStreet(BUILDING,pads);
 assert.deepEqual(plan,twin,"same city block every refresh");
 const standalone=planStreet(BUILDING,[],{buildingPresent:false});
-assert.ok(plan.info.grassTufts>1500 && plan.info.grassTufts<3500,
+assert.ok(plan.info.grassTufts>5000 && plan.info.grassTufts<10000,
  "grass density stays bounded for iPhone");
 assert.equal(plan.info.grassTufts,plan.grassTufts.length);
 assert.ok(standalone.grassTufts.length>plan.grassTufts.length,
  "standalone street has grass on the empty space where the house would be");
 for(const tuft of plan.grassTufts){
  assert.ok(Number.isFinite(tuft.x)&&Number.isFinite(tuft.z));
- assert.ok(tuft.height>.10&&tuft.height<=.321);
- assert.ok(tuft.width>.20&&tuft.width<=.401);
+ assert.ok(tuft.height>.18&&tuft.height<=.461);
+ assert.ok(tuft.width>.34&&tuft.width<=.551);
  assert.ok(Math.abs(tuft.x)>=BUILDING.length/2+1.2||
    Math.abs(tuft.z)>=BUILDING.width/2+1.2,
    "grass may not grow through the residential building");
@@ -106,6 +106,15 @@ class Geometry{
  rotateY(v){this.transforms.push(["rotateY",v]);return this;}
  rotateZ(v){this.transforms.push(["rotateZ",v]);return this;}
 }
+class BufferGeometry{
+ constructor(){this.attributes={};this.index=null;}
+ setAttribute(name,v){this.attributes[name]=v;}
+ setIndex(v){this.index={count:v.length,values:v};}
+ computeVertexNormals(){this.normalsComputed=true;}
+}
+class Float32BufferAttribute{
+ constructor(array,size){this.array=array;this.count=array.length/size;}
+}
 class Shape{
  constructor(){this.commands=[];}
  moveTo(...xy){this.commands.push(["moveTo",...xy]);}
@@ -114,7 +123,7 @@ class Shape{
 }
 class CatmullRomCurve3{constructor(points){this.points=points;}}
 const THREE={Group:Object3D,Object3D,Mesh,InstancedMesh,Vector3:Vec,
- Shape,CatmullRomCurve3,
+ Shape,CatmullRomCurve3,BufferGeometry,Float32BufferAttribute,
  PlaneGeometry:class extends Geometry{},BoxGeometry:class extends Geometry{},
  CylinderGeometry:class extends Geometry{},ConeGeometry:class extends Geometry{},
  SphereGeometry:class extends Geometry{},ExtrudeGeometry:class extends Geometry{},
@@ -122,14 +131,18 @@ const THREE={Group:Object3D,Object3D,Mesh,InstancedMesh,Vector3:Vec,
  MeshStandardMaterial,MeshBasicMaterial,DoubleSide:2};
 const rendered=buildStreet(THREE,plan);
 assert.equal(rendered.userData.streetStats.trees,22);
-assert.equal(rendered.userData.streetStats.drawGroups,38,
- "7 planes, 2 grass batches, 2 road batches, 3 trees, 19 lantern and 5 bench batches");
+assert.equal(rendered.userData.streetStats.drawGroups,39,
+ "7 planes, 3 grass batches, 2 road batches, 3 trees, 19 lantern and 5 bench batches");
 const instanced=rendered.children.filter(o=>o instanceof InstancedMesh);
-assert.equal(instanced.length,31);
+assert.equal(instanced.length,32);
 assert.ok(instanced.every(m=>m.instanceMatrix.needsUpdate));
 assert.ok(instanced.every(m=>m.matrices.length===m.count));
-assert.equal(instanced.find(m=>m.name==="grass-blades-a").count,plan.info.grassTufts);
-assert.equal(instanced.find(m=>m.name==="grass-blades-b").count,plan.info.grassTufts);
+const patches=instanced.filter(m=>m.name.startsWith("grass-patch-"));
+assert.equal(patches.length,3);
+assert.equal(patches.reduce((s,m)=>s+m.count,0),plan.info.grassTufts);
+assert.ok(patches.every(m=>m.geometry.index.count===7*4*3));
+assert.ok(patches.every(m=>m.geometry.normalsComputed));
+assert.deepEqual(patches.map(m=>m.material.color),[0x3e7e34,0x619745,0x87a95b]);
 assert.equal(instanced.find(m=>m.name==="trees-trunks").count,22);
 assert.equal(instanced.find(m=>m.name==="trees-canopy-low").count,22);
 assert.equal(instanced.find(m=>m.name==="trees-canopy-high").count,22);
@@ -162,4 +175,4 @@ assert.ok(Math.abs(plan.obstacles.find(x=>x.name==="lamp-0").maxX-
   plan.obstacles.find(x=>x.name==="lamp-0").minX-.5)<1e-6);
 assert.ok(rendered.children.length<=40,
  "street furniture mobile draw call overhead is bounded");
-console.log("MINI CITY 4.2.1 street PASS: 108m road, safe zebra, 22 trees, 6 detailed park lamps, 4 concrete benches, collisions, 38 groups");
+console.log("MINI CITY 4.2.1 street PASS: 108m road, safe zebra, 22 trees, 6 detailed park lamps, 4 concrete benches, collisions, 39 groups");

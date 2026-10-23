@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "project": "MINI CITY",
-  "phase": "4.3.4",
+  "phase": "4.3.5",
   "scope": "Developer Studio; not the main game",
   "disclaimer": "Принятие модели для лаборатории не является выпуском игрового ассета или подтверждением прав на сторонние GLB.",
   "entries": [
@@ -82,9 +82,10 @@
       "quantity": 1,
       "inPlayLab": true,
       "releaseReady": false,
-      "scopeNote": "Самостоятельная улица 108 м с проезжей частью, тротуарами, двором, деревьями, фонарями, скамейками и процедурной травой. Отдельная лаборатория не загружает дом; в игровой лаборатории оба объекта используются совместно.",
+      "scopeNote": "Изолированная улица: проезжая часть, тротуары, дорожки, разметка и газоны с травой. В отдельном просмотре нет дома, деревьев, фонарей и скамеек. Все объекты вместе — только в игре и игровой лаборатории.",
       "sourcePaths": [
         "play-lab/street.js",
+        "play-lab/grass.js",
         "street-lab/lab.js"
       ],
       "viewer": "street-lab/index.html",
@@ -182,6 +183,29 @@
       "origin": "project",
       "rightsChecked": true,
       "scopeNote": "Один процедурный прототип в отдельной 3D-лаборатории; в игровой сцене остановка не установлена. Визуальная приёмка ожидается."
+    },
+    {
+      "id": "street_grass_001",
+      "modelNumber": 2,
+      "name": "Городская газонная трава",
+      "category": "nature",
+      "status": "testing",
+      "kind": "procedural",
+      "quantity": 1,
+      "inPlayLab": true,
+      "releaseReady": false,
+      "scopeNote": "Один тип процедурной травы (один слой газона): 7 изогнутых листьев на пучок, три зелёных оттенка. В городе создаётся несколько тысяч пучков; один образец отдельно просматривается без улицы, домов и других предметов. Требует визуальной приёмки на iPhone.",
+      "sourcePaths": [
+        "play-lab/street.js",
+        "play-lab/grass.js",
+        "grass-lab/lab.js"
+      ],
+      "viewer": "grass-lab/index.html",
+      "viewerLabel": "Осмотреть траву отдельно",
+      "scene": "play-lab/index.html?mode=lab",
+      "assetFile": null,
+      "origin": "project",
+      "rightsChecked": true
     }
   ],
   "folderMode": "categories"
