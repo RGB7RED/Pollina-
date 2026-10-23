@@ -46,6 +46,7 @@ class BufferGeometry{
  getAttribute(name){return this.attributes[name];}
  computeVertexNormals(){}
  computeBoundingSphere(){}
+ dispose(){}
 }
 class BoxGeometry extends BufferGeometry{
  constructor(){
