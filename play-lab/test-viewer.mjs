@@ -40,5 +40,10 @@ assert.doesNotMatch(js,/\.\/game\.js|\.\.\/game\.js|\.\.\/district\.js/,
 assert.match(controller,/cameraObstacleDistance/);
 assert.match(controller,/resolveStep/);
 assert.match(controller,/VIEW_MODES/);
+assert.match(controller,/export function modelYawForTravel/);
+assert.match(controller,/export function modelYawForCamera/);
+assert.match(controller,/this\.lookYaw\+=clamp\(dx/);
+assert.match(controller,/modelYawForTravel\(movedX,movedZ\)/);
+assert.match(controller,/this\.heading=modelYawForCamera\(this\.lookYaw\)/);
 assert.match(animation,/selectLocomotionClips/);
 console.log("MINI CITY 4.1 viewer PASS: dual view, 3D collisions, mobile controls, real model loading, isolated scene");
