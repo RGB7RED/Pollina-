@@ -93,7 +93,7 @@ for(const id of treeIds){
    assert.ok(Math.abs(pose.position.x-(fx+tx)/2)<1e-6);
    assert.ok(Math.abs(pose.position.y-(fy+ty)/2)<1e-6);
    assert.ok(Math.abs(pose.position.z-(fz+tz)/2)<1e-6);
-   const [rx,ry,rz]=pose.rotation;
+   const {x:rx,y:ry,z:rz}=pose.rotation;
    assert.equal(ry,0);
    const length=Math.hypot(tx-fx,ty-fy,tz-fz);
    assert.ok(Math.abs(pose.scale.y-length)<1e-6);
