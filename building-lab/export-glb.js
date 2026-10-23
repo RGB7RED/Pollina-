@@ -74,7 +74,7 @@ export function makePortableHouse(THREE,labRoot,{brickTexture=makeBrickTexture(T
     copy.castShadow=false;copy.receiveShadow=false;
     portable.add(copy);
     if(isInstanced)instances+=original.count;
-    else roofCount++;
+    else if(original.name?.includes("hipped pitched roof"))roofCount++;
   }
   portable.userData={
     asset:"mini-city/apartment_house",stage:"3.4",

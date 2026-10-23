@@ -85,10 +85,12 @@ export function buildApartmentHouse(THREE,config={}){
     chimney:new THREE.MeshStandardMaterial({color:0x795e57,roughness:1}),
     foundation:new THREE.MeshStandardMaterial({color:0x87847c,roughness:.98}),
     entryPad:new THREE.MeshStandardMaterial({color:0x898780,roughness:.98}),
+    entryRamp:new THREE.MeshStandardMaterial({color:0x91918a,roughness:.96}),
     vent:new THREE.MeshStandardMaterial({color:0x9ca3a1,roughness:.83}),
     ventDark:new THREE.MeshStandardMaterial({color:0x4b5656,roughness:.88})
   };
   const cube=new THREE.BoxGeometry(1,1,1), dummy=new THREE.Object3D();
+  let playableDoor=null;
   const batches=new Map();
   const stats={windows:0,litWindows:0,balconies:0,entrances:0,chimneys:0,
     instancedElements:0,windowHoles:0,doorHoles:0,downpipes:0,airConditioners:0,
@@ -180,14 +182,18 @@ export function buildApartmentHouse(THREE,config={}){
     const doorMat=[mats.entryBlue,mats.entry,mats.entryBrown,mats.entryBlue][index];
     const centreY=(hole.bottom+hole.top)/2;
     // Door is set back from the wall face by 0.16m, bounded by the cutout.
-    box(hole.width-.18,hole.height-.15,.065,doorMat,x,centreY,face-.19);
+    // Entrance 1 is a real swinging door. Other three entrances keep their
+    // approved appearance and locked collision until their own build stages.
+    if(index!==0)box(hole.width-.18,hole.height-.15,.065,doorMat,x,centreY,face-.19);
     box(.075,hole.height-.09,.15,mats.frameGrey,x-hole.width/2+.09,centreY,face-.145);
     box(.075,hole.height-.09,.15,mats.frameGrey,x+hole.width/2-.09,centreY,face-.145);
     box(hole.width-.13,.075,.14,mats.frameGrey,x,hole.top-.10,face-.145);
     box(hole.width-.17,.07,.14,mats.frameGrey,x,hole.bottom+.09,face-.145);
-    box(hole.width-.20,.34,.07,mats.glass,x,hole.top-.37,face-.155);
-    box(hole.width-.23,.06,.13,mats.frameGrey,x,hole.top-.56,face-.14);
-    box(.035,.20,.075,mats.vent,x+.37,centreY-.21,face-.079); // handle
+    if(index!==0){
+      box(hole.width-.20,.34,.07,mats.glass,x,hole.top-.37,face-.155);
+      box(hole.width-.23,.06,.13,mats.frameGrey,x,hole.top-.56,face-.14);
+      box(.035,.20,.075,mats.vent,x+.37,centreY-.21,face-.079); // handle
+    }
     box(.17,.33,.095,mats.ventDark,x+hole.width/2+.20,1.58,face+.08);
     box(.095,.04,.10,mats.vent,x+hole.width/2+.20,1.60,face+.13);
     box(.43,.24,.08,mats.frameWhite,x,hole.top+.16,face+.055); // entrance number
@@ -206,6 +212,52 @@ export function buildApartmentHouse(THREE,config={}){
     for(const sign of [-1,1]){
       box(.09,.10,1.00,mats.balconyMetal,x+sign*1.12,canopyY-.40,face+.46,
         -.40);
+    }
+    if(index===0){
+      // A single continuous first-floor vestibule physically INSIDE the
+      // existing house. No parallel scene, loading screen or teleport.
+      // The first 1.2 m exterior ramp climbs onto the existing .50 m pad;
+      // a small sloping sill then joins the +.70 m indoor floor.
+      const firstRampDepth=Math.hypot(1.23,.50);
+      box(1.52,.085,firstRampDepth,mats.entryRamp,x,.25,10.035,
+        Math.atan2(.50,1.23));
+      const sillDepth=Math.hypot(.87,.20);
+      box(1.52,.075,sillDepth,mats.entryRamp,x,.60,6.665,
+        Math.atan2(.20,.87));
+      const floorMid=(3.35+face)/2;
+      box(1.70,.12,face-3.35,mats.foundation,x,.64,floorMid);
+      // Narrow whitewashed foyer walls, solid stop before stairwell
+      // construction in 4.5.3. They keep the character inside the facade.
+      for(const off of [-.91,.91])
+        box(.14,2.59,face-3.35,mats.reveal,x+off,2.045,floorMid);
+      box(1.96,2.59,.16,mats.reveal,x,2.045,3.35);
+      box(1.96,.13,face-3.35,mats.foundation,x,3.41,floorMid);
+      box(.36,.035,.25,mats.litGlass,x,3.32,4.69);
+      // Pivot at the LEFT jamb. The door opens inward around its real
+      // hinge, rotating into -Z; leaf and handle share the same pivot.
+      const hinge=new THREE.Group();
+      hinge.name="entrance-1-hinged-door";
+      const leafWidth=hole.width-.18,leafHeight=hole.height-.15;
+      hinge.position.set(x-leafWidth/2,hole.bottom+.075,face-.19);
+      function leafBox(w,h,d,mat,px,py,pz){
+        const mesh=new THREE.Mesh(cube,mat);
+        mesh.scale.set(w,h,d);mesh.position.set(px,py,pz);
+        mesh.castShadow=true;mesh.receiveShadow=true;
+        hinge.add(mesh);return mesh;
+      }
+      leafBox(leafWidth,leafHeight,.075,doorMat,
+        leafWidth/2,leafHeight/2,0);
+      leafBox(leafWidth-.15,.33,.079,mats.glass,
+        leafWidth/2,leafHeight-.37,.045);
+      leafBox(leafWidth-.08,.055,.10,mats.frameGrey,
+        leafWidth/2,leafHeight-.63,.052);
+      leafBox(.045,.20,.10,mats.vent,
+        leafWidth-.25,leafHeight*.45,.07);
+      root.add(hinge);playableDoor=hinge;
+      audit.playableEntrance={
+        x,face,doorZ:face-.19,doorWidth:leafWidth,
+        threshold:hole.bottom,vestibuleBack:3.35
+      };
     }
     stats.entrances++;audit.doorPositions.push(x);
   }
@@ -396,5 +448,5 @@ export function buildApartmentHouse(THREE,config={}){
     stage:"3.2",config:C,counters:stats,roofTop,windowPlan:plan,
     geometryAudit:audit,provisionalMaterials:true,facadeTextureReady:false
   };
-  return {root,config:C,stats,roofTop};
+  return {root,config:C,stats,roofTop,doorPivot:playableDoor};
 }

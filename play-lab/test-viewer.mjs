@@ -23,10 +23,23 @@ assert.match(js,/import \{applyFacadeFinishes\} from "\.\.\/building-lab\/materi
 assert.match(js,/import \{ActorAnimator\} from "\.\/animation\.js"/);
 assert.match(js,/import \{PlayerController,joystickValue,PLAYER_HEIGHT\} from "\.\/controller\.js"/);
 assert.match(js,/new PlayerController\(\{[\s\S]*building:config,pads,extras:streetPlan\.obstacles[\s\S]*\}\)/);
-assert.match(js,/import \{planStreet,buildStreet\} from "\.\/street\.js"/);
+assert.match(js,/import {planStreet,buildStreet} from ".\/street.js"/);
+assert.match(js,/import {planPlayableEntrance} from ".\/entrance.js"/);
+assert.match(js,/doorPivot.rotation.y/);
+assert.match(js,/actorPivot.position.set\(state.x,state.y,state.z\)/);
+assert.match(html,/id="entry-action"/);
+assert.match(js,/function toggleEntryDoor\(\)/);
 assert.match(js,/planStreet\(config,pads\)/);
 assert.match(js,/buildStreet\(THREE,streetPlan\)/);
 assert.match(html,/id="world-info"/);
+assert.match(html,/id="entry-action"/);
+assert.match(js,/KeyE/);
+assert.match(js,/planPlayableEntrance\(config,pads\)/);
+assert.match(js,/setEntryDoorOpen/);
+assert.match(js,/actorPivot.position.set\(state.x,state.y,state.z\)/);
+assert.match(js,/doorPivot.rotation.y/);
+assert.match(js,/function updateEntryAction/);
+assert.match(js,/studio.refreshCollisions/);
 assert.match(html,/id="hud-toggle"/);
 for(const id of ["mode-toggle","play-title","devtools","devtools-toggle",
  "devtools-body","dev-collisions","dev-perf","dev-resources","dev-player",
