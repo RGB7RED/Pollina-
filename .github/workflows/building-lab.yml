@@ -8,10 +8,12 @@ on:
       - feat/mini-city-v033-stage32-facade
       - feat/mini-city-v033-stage33-materials-light
       - feat/mini-city-v033-stage34-asset-export-lab-switch
+      - feat/mini-city-v033-stage41-playable-dual-camera
     paths:
       - 'building-lab/**'
       - 'character-lab/**'
       - 'lab/**'
+      - 'play-lab/**'
       - '.github/workflows/building-lab.yml'
   workflow_dispatch:
 jobs:
@@ -31,6 +33,15 @@ jobs:
           node --check building-lab/free-camera.js
           node --check building-lab/materials.js
           node --check building-lab/export-glb.js
+          node --check play-lab/game.js
+          node --check play-lab/controller.js
+          node --check play-lab/animation.js
+      - name: Test stage 4.1 first/third-person movement and house collisions
+        run: node play-lab/test-controller.mjs
+      - name: Check stage 4.1 actual animation clip wiring
+        run: node play-lab/test-animation.mjs
+      - name: Check stage 4.1 mobile gameplay UI
+        run: node play-lab/test-viewer.mjs
       - name: Check real wall openings, balcony variants and entrances
         run: node building-lab/test-building.mjs
       - name: Check authored textures, roof UVs and world-aligned brick shader
