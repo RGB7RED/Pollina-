@@ -21,6 +21,7 @@ on:
       - feat/mini-city-v033-stage435-isolated-street-detailed-grass
       - feat/mini-city-v033-stage437-fine-lighter-grass
       - feat/mini-city-v033-stage44-five-tree-variants
+      - fix/mini-city-v033-stage441-hidden-tree-branches
     paths:
       - 'building-lab/**'
       - 'bus-stop-lab/**'
