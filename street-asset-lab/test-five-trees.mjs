@@ -100,7 +100,7 @@ const world=buildStreet(THREE,plan);
 const batches=world.children.filter(x=>x.name?.startsWith("trees-"));
 assert.equal(batches.length,TREE_MODELS.street_tree.parts.length);
 assert.ok(batches.every(m=>m.count===22));
-assert.equal(world.children.length,46);
+assert.equal(world.children.length,47);
 assert.equal(plan.info.lamps,6);
 assert.equal(plan.info.benches,4);
 const previewGroup=new Group();
