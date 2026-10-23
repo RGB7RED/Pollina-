@@ -43,6 +43,11 @@ const actorPivot=new THREE.Group();scene.add(actorPivot);
 const controller=new PlayerController({
   building:config,pads,extras:streetPlan.obstacles
 });
+$("hud-toggle").addEventListener("click",()=>{
+  const collapsed=$(".brand").classList.toggle("collapsed");
+  $("hud-toggle").setAttribute("aria-expanded",String(!collapsed));
+  $("hud-toggle").textContent=collapsed?"▾ Показать описание":"▴ Свернуть описание";
+});
 $("world-info").textContent="Улица 108 м · "+streetPlan.info.trees+
   " деревьев · "+streetPlan.info.lamps+" фонарей · "+
   streetPlan.info.benches+" скамейки";
