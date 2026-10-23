@@ -13,6 +13,7 @@ on:
       - feat/mini-city-v033-stage422-developer-studio
       - feat/mini-city-v033-stage423-asset-catalog
       - feat/mini-city-v033-stage424-catalog-folders
+      - feat/mini-city-v033-stage425-catalog-as-object-hub
     paths:
       - 'building-lab/**'
       - 'character-lab/**'
