@@ -72,7 +72,7 @@ const api=new Function("document","window","fetch","console","URL",
  validateCatalog,filterCatalog,catalogCounts,catalogFolders,folderObjects,modelLabel);
 await new Promise(resolve=>setTimeout(resolve,0));
 assert.equal(requestCount,1);
-assert.equal(nodes["metric-total"].textContent,7);
+assert.equal(nodes["metric-total"].textContent,8);
 assert.equal(nodes["folder-list"].children.length,5);
 assert.equal(nodes["folder-section"].hidden,false);
 assert.equal(nodes["object-section"].hidden,true,
@@ -109,9 +109,14 @@ assert.equal(nodes["catalog-list"].children.length,0);
 assert.equal(window.location.search,"");
 const furniture=nodes["folder-list"].children.find(c=>c.dataset.category==="street_furniture");
 furniture.fire("click");
-assert.deepEqual(nodes["catalog-list"].children.map(c=>c.dataset.modelNumber),["1","2"]);
+assert.deepEqual(nodes["catalog-list"].children.map(c=>c.dataset.modelNumber),["1","2","3"]);
 assert.deepEqual(nodes["catalog-list"].children.map(c=>c.dataset.assetId),
-  ["street_lamp","street_bench"]);
+  ["street_lamp","street_bench","bus_stop_city_001"]);
+const stopCard=nodes["catalog-list"].children[2];
+assert.equal(stopCard.children.at(-1).children[0].href,"../bus-stop-lab/index.html");
+assert.equal(stopCard.children.at(-1).children.length,1);
+assert.match(stopCard.children[3].children[5].textContent,/Не установлен/);
+assert.match(stopCard.children[3].children[7].textContent,/1 \(не размещён/);
 goBackBrowser("?category=nature");
 assert.equal(nodes["catalog-list"].children.length,1);
 assert.equal(nodes["catalog-list"].children[0].dataset.assetId,"street_tree");
@@ -136,4 +141,4 @@ await nodes["catalog-retry"].fire("click");
 assert.equal(nodes["catalog-error"].hidden,true);
 assert.equal(nodes["folder-list"].children.length,5);
 assert.equal(nodes["object-section"].hidden,true);
-console.log("MINI CITY 4.2.4 folder DOM PASS: 5 folders, numbered models, search, back, deep links, distinct designs and retry");
+console.log("MINI CITY 4.2.4 folder DOM PASS: 5 folders, 8 numbered models, search, back, deep links, distinct designs and retry");

@@ -53,7 +53,11 @@ export function makeCatalogCard(item){
   const list=create("dl",null,"details");
   detail(list,"Номер модели:",modelLabel(item.modelNumber));
   detail(list,"ID:",item.id);
-  detail(list,"На сцене:",item.quantity+" "+(item.quantity===1?"экземпляр":"экземпляров"));
+  detail(list,"На сцене:",item.inPlayLab===true?
+    item.quantity+" "+(item.quantity===1?"экземпляр":"экземпляров"):
+    item.inPlayLab==="fallback"?"Только резервный вариант":"Не установлен в игровой сцене");
+  if(item.inPlayLab===false)
+    detail(list,"Прототипы:",item.quantity+" (не размещён в городе)");
   detail(list,"Исходник:",item.sourcePaths.join(" · "));
   detail(list,"Файл GLB:",item.assetFile??"Нет отдельного локального GLB");
   detail(list,"Релиз:",item.releaseReady?"Готовность отмечена":"Не допущен");
