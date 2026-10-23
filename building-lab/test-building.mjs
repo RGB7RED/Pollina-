@@ -53,6 +53,31 @@ assert.equal(a.holes.filter(h=>h.axis==="long").length,280);
 assert.equal(stats.balconies,planFacade().filter(p=>p.balcony).length);
 for(const kind of ["A","B","C","D"])assert.ok(stats.balconyKinds[kind]>=4,"missing balcony "+kind);
 assert.equal(a.balconyPositions.length,stats.balconies);
+assert.equal(a.entryPads.length,4,"one landing slab per entrance");
+assert.equal(a.downpipePositions.length,10,"five pipes per long facade");
+for(const pad of a.entryPads){
+  assert.ok(a.doorPositions.includes(pad.x),"pad must be centered on a real doorway");
+  assert.ok(pad.width>=5.3&&pad.depth>=3.1,"pad fits a passenger car parked along the wall");
+  assert.equal(pad.bottom,0,"pad must meet the ground");
+  assert.ok(Math.abs(pad.top-pad.doorBottom)<.04,"flat pad meets door threshold");
+}
+for(const side of [-1,1]){
+  const drains=a.downpipePositions.filter(p=>p.side===side).sort((l,r)=>l.x-r.x);
+  assert.equal(drains.length,5);
+  assert.deepEqual(drains.slice(1,4).map(p=>p.boundary),[8,14,20],
+    "middle drains must align to safe bay SEAMS");
+  for(const p of drains){
+    // Pipes have ~0.22 m-wide fixings; don't cross actual apertures OR balconies.
+    for(const h of a.holes.filter(h=>h.axis==="long"&&h.side===side)){
+      assert.ok(Math.abs(p.x-h.centre)>h.width/2+.11,
+        "downpipe fixture overlaps "+h.kind+" at x="+p.x);
+    }
+    for(const b of a.balconyPositions.filter(b=>b.side===side)){
+      assert.ok(Math.abs(p.x-b.x)>2.18/2+.11,
+        "downpipe fixture overlaps balcony at x="+p.x);
+    }
+  }
+}
 assert.deepEqual(a.windowTypes,[0,1,2,3]);
 assert.equal(a.windowGlazing.length,stats.windows);
 assert.equal(stats.downpipes,10);assert.equal(stats.airConditioners,10);
@@ -66,6 +91,13 @@ const meshes=root.children.filter(c=>c instanceof Mesh);
 const instances=meshes.filter(c=>c instanceof InstancedMesh);
 assert.ok(instances.length>=17 && instances.length<=32,"mobile batch budget");
 assert.ok(instances.every(m=>m.sphereDone&&m.count===m.matrices.length));
+const landingMeshes=instances.filter(m=>m.material.color===0x898780);
+assert.equal(landingMeshes.length,1,"landing uses a single instanced material batch");
+assert.equal(landingMeshes[0].count,4,"exactly one box per entrance, no stairs");
+for(const m of landingMeshes[0].matrices){
+  assert.ok(Math.abs(m.scale.x-5.5)<1e-5&&Math.abs(m.scale.z-3.15)<1e-5,
+    "landing footprint stays car-sized");
+}
 const roof=meshes.find(c=>c.name?.includes("hipped pitched roof"));
 assert.ok(roof&&roof.geometry.normals);
 assert.equal(roof.geometry.position.array.length,54);
