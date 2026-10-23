@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import {OrbitControls} from "three/addons/controls/OrbitControls.js";
 import {createBusStop,auditBusStop} from "./bus-stop.js";
+import {mountInspectionFlight} from "../object-viewer/free-flight.js";
 
 const $=id=>document.getElementById(id);
 const scene=new THREE.Scene();
@@ -85,6 +86,8 @@ $("lighting").addEventListener("click",()=>{
   $("lighting").textContent=night?"🌙 Вечер":"☀️ День";
 });
 setView("threequarter");
+const flight=mountInspectionFlight({camera,orbit:controls,canvas:renderer.domElement,
+ resetPose:()=>setView("threequarter"),speed:2.5});
 function resize(){
   camera.aspect=Math.max(.25,innerWidth/innerHeight);
   camera.updateProjectionMatrix();
@@ -94,9 +97,10 @@ function resize(){
 window.addEventListener("resize",resize);
 resize();
 
-let frames=0,lastFpsTime=performance.now(),fps=0;
+let frames=0,lastFpsTime=performance.now(),fps=0,lastTick=lastFpsTime;
 function draw(now){
-  controls.update();
+  const dt=Math.max(0,Math.min(.05,(now-lastTick)/1000));lastTick=now;
+  if(flight.active)flight.update(dt);else controls.update();
   renderer.render(scene,camera);
   frames++;
   if(now-lastFpsTime>=1000){
