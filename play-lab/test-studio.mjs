@@ -51,7 +51,7 @@ const houseBox=lines.matrices[0];
 assert.equal(houseBox.scale.x,BUILDING.length);
 assert.equal(houseBox.scale.z,BUILDING.width);
 assert.equal(lines.matrices[1].scale.x,5.5);
-assert.equal(lines.matrices[1].scale.z,3.15);
+assert.ok(Math.abs(lines.matrices[1].scale.z-3.15)<1e-8);
 for(let i=0;i<lines.count;i++){
   assert.ok(lines.matrices[i].scale.x>0&&lines.matrices[i].scale.z>0);
 }
