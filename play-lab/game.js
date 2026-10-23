@@ -4,6 +4,7 @@ import {buildApartmentHouse} from "../building-lab/building.js";
 import {applyFacadeFinishes} from "../building-lab/materials.js";
 import {ActorAnimator} from "./animation.js";
 import {planStreet,buildStreet} from "./street.js";
+import {DeveloperStudio} from "./studio.js";
 import {PlayerController,joystickValue,PLAYER_HEIGHT} from "./controller.js";
 
 // Separate playable prototype. It neither changes MINI CITY's main game
@@ -42,6 +43,11 @@ scene.add(street);
 const actorPivot=new THREE.Group();scene.add(actorPivot);
 const controller=new PlayerController({
   building:config,pads,extras:streetPlan.obstacles
+});
+// Same renderer, map, actor, controls and GLB in both modes. Only the
+// developer presentation layer is toggled; no second Three.js scene.
+const studio=new DeveloperStudio({
+  THREE,scene,renderer,controller,house,street,streetPlan
 });
 $("hud-toggle").addEventListener("click",()=>{
   const collapsed=document.querySelector(".brand").classList.toggle("collapsed");
@@ -253,8 +259,10 @@ function animate(){
  frames++;
  const now=performance.now();
  if(now-lastReport>1050){
-  $("fps").textContent="FPS: "+Math.round(frames*1000/(now-lastReport))+
+  const measuredFps=frames*1000/(now-lastReport);
+  $("fps").textContent="FPS: "+Math.round(measuredFps)+
    " · "+(controller.view==="first"?"1-е лицо":"3-е лицо");
+  studio.update({fps:measuredFps,state});
   if(ready){
    $("actor-status").textContent=state.collided?"Стена: проход закрыт":
      animator.warning||"Скорость: "+state.speed.toFixed(1)+" м/с";
