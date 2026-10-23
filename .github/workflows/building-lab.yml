@@ -17,10 +17,12 @@ on:
       - feat/mini-city-v033-stage431-bus-stop-lab
       - feat/mini-city-v033-stage432-isolated-asset-viewers
       - feat/mini-city-v033-stage433-bench-lamp-references
+      - feat/mini-city-v033-stage434-independent-street-grass
     paths:
       - 'building-lab/**'
       - 'bus-stop-lab/**'
       - 'street-asset-lab/**'
+      - 'street-lab/**'
       - 'object-viewer/**'
       - 'character-lab/**'
       - 'lab/**'
@@ -58,11 +60,14 @@ jobs:
           node --check bus-stop-lab/lab.js
           node --check street-asset-lab/asset.js
           node --check street-asset-lab/lab.js
+          node --check street-lab/lab.js
           node --check object-viewer/free-flight.js
       - name: Test stop geometry groups, glazing and mobile budget
         run: node bus-stop-lab/test-bus-stop.mjs
       - name: Test bus-stop camera viewer and navigation
         run: node bus-stop-lab/test-viewer.mjs
+      - name: Test standalone house/street viewers and grass geometry
+        run: node street-lab/test-street-lab.mjs
       - name: Test isolated tree lamp bench and free-flight controls
         run: |
           node street-asset-lab/test-isolation.mjs

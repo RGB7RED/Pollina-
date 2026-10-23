@@ -65,7 +65,8 @@ export function makeCatalogCard(item){
   const inspect=create("a",item.viewerLabel);
   inspect.href="../"+item.viewer;actions.append(inspect);
   if(item.scene&&item.scene!==item.viewer){
-    const ingame=create("a","🛠️ Посмотреть в игровой лаборатории");
+    const ingame=create("a",["apartment_house","residential_street"].includes(item.id)?
+      "🛠️ Весь город: дом + улица":"🛠️ Посмотреть в игровой лаборатории");
     ingame.href="../"+item.scene;actions.append(ingame);
   }
   card.append(head,badges,create("p",item.scopeNote,"notes"),

@@ -12,6 +12,14 @@ assert.deepEqual(catalogFolders(catalog).map(f=>[f.id,f.count]),[
 assert.deepEqual(folderObjects(catalog,"character").map(e=>e.modelNumber),[1,2]);
 assert.deepEqual(folderObjects(catalog,"street_furniture").map(e=>e.modelNumber),[1,2,3]);
 assert.deepEqual(folderObjects(catalog,"building").map(e=>e.id),["apartment_house"]);
+const street=catalog.entries.find(e=>e.id==="residential_street");
+const house=catalog.entries.find(e=>e.id==="apartment_house");
+assert.equal(street.viewer,"street-lab/index.html");
+assert.equal(street.scene,"play-lab/index.html?mode=lab");
+assert.equal(house.viewer,"building-lab/index.html");
+assert.equal(house.scene,"play-lab/index.html?mode=lab");
+assert.notEqual(street.viewer,house.viewer,
+ "house and street are different assets with independent viewers");
 assert.deepEqual(folderObjects(catalog,"imaginary"),[]);
 assert.equal(modelLabel(1),"№ 001");
 assert.equal(modelLabel(12),"№ 012");
