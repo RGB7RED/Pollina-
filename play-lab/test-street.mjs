@@ -134,10 +134,10 @@ assert.ok(concrete.geometry.args[0].commands.length>=9,
 assert.equal(concrete.material.color,0xd7d6cf);
 assert.equal(instanced.find(m=>m.name==="benches-seats").material.color,0x80563c);
 assert.equal(instanced.find(m=>m.name==="street-lamp-poles").material.color,0x171b1e);
-assert.equal(plan.obstacles.find(x=>x.name==="bench-0").maxZ-
-  plan.obstacles.find(x=>x.name==="bench-0").minZ,1.2);
-assert.equal(plan.obstacles.find(x=>x.name==="lamp-0").maxX-
-  plan.obstacles.find(x=>x.name==="lamp-0").minX,.5);
+assert.ok(Math.abs(plan.obstacles.find(x=>x.name==="bench-0").maxZ-
+  plan.obstacles.find(x=>x.name==="bench-0").minZ-1.2)<1e-6);
+assert.ok(Math.abs(plan.obstacles.find(x=>x.name==="lamp-0").maxX-
+  plan.obstacles.find(x=>x.name==="lamp-0").minX-.5)<1e-6);
 assert.ok(rendered.children.length<=40,
  "street furniture mobile draw call overhead is bounded");
 console.log("MINI CITY 4.2.1 street PASS: 108m road, safe zebra, 22 trees, 6 detailed park lamps, 4 concrete benches, collisions, 35 groups");
