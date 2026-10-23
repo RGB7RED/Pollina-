@@ -13,7 +13,9 @@ if(!Object.hasOwn(ISOLATED_ASSETS,id)){
 const {root,spec}=buildIsolatedStreetAsset(THREE,id);
 $("title").textContent="№ "+String(spec.number).padStart(3,"0")+" — "+spec.name;
 document.title="MINI CITY — "+spec.name;
-$("description").textContent="Точно такая же геометрия, как у объектов игровой улицы. В лаборатории показан один экземпляр из "+spec.quantity+".";
+$("description").textContent=spec.quantity>0?
+ "Реальная геометрия игрового дерева: "+spec.quantity+" экземпляров в городе. Здесь один.":
+ "Уникальный вид дерева в отдельной лаборатории; пока не размещён в городе.";
 $("back").href="../studio/catalog.html?category="+spec.category;
 const scene=new THREE.Scene();
 scene.background=new THREE.Color(0xa1b4bd);
@@ -68,7 +70,9 @@ const box=new THREE.Box3().setFromObject(root),sz=box.getSize(new THREE.Vector3(
 $("tris").textContent="Треугольники модели: "+triangles;
 $("materials").textContent="Материалы модели: "+used.size;
 $("size").textContent="Габариты: "+sz.x.toFixed(2)+" × "+sz.y.toFixed(2)+" × "+sz.z.toFixed(2)+" м";
-$("scene-status").textContent="В городе: "+spec.quantity+" шт. · просмотр одного прототипа";
+$("scene-status").textContent=spec.quantity>0?
+ "В городе: "+spec.quantity+" шт. · просмотр одного дерева":
+ "Прототип отдельного дерева · пока нет в городе";
 function resize(){
  camera.aspect=Math.max(.25,innerWidth/innerHeight);
  camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight,false);

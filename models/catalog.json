@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "project": "MINI CITY",
-  "phase": "4.3.7",
+  "phase": "4.4",
   "scope": "Developer Studio; not the main game",
   "disclaimer": "Принятие модели для лаборатории не является выпуском игрового ассета или подтверждением прав на сторонние GLB.",
   "entries": [
@@ -105,8 +105,9 @@
       "quantity": 22,
       "inPlayLab": true,
       "releaseReady": false,
-      "scopeNote": "22 экземпляра процедурного малополигонального дерева на трёх участках. Общие InstancedMesh, нет самостоятельного GLB.",
+      "scopeNote": "22 городских дерева с заметно увеличенной пышной многоярусной кроной, ветвями и широким силуэтом. Реальная геометрия общая для игры и каталога.",
       "sourcePaths": [
+        "play-lab/tree-models.js",
         "play-lab/street.js",
         "street-asset-lab/asset.js"
       ],
@@ -206,6 +207,98 @@
       "assetFile": null,
       "origin": "project",
       "rightsChecked": true
+    },
+    {
+      "id": "street_tree_poplar",
+      "name": "Тополь пирамидальный",
+      "category": "nature",
+      "status": "development",
+      "kind": "procedural",
+      "quantity": 1,
+      "inPlayLab": false,
+      "releaseReady": false,
+      "scopeNote": "Высокое узкое дерево с вертикальной многоярусной кроной. Прототип в отдельной лаборатории, пока не размещён в городе.",
+      "sourcePaths": [
+        "play-lab/tree-models.js",
+        "play-lab/street.js",
+        "street-asset-lab/asset.js"
+      ],
+      "viewer": "street-asset-lab/index.html?model=street_tree_poplar",
+      "viewerLabel": "Осмотреть дерево",
+      "scene": null,
+      "assetFile": null,
+      "origin": "project",
+      "rightsChecked": true,
+      "modelNumber": 3
+    },
+    {
+      "id": "street_tree_oak",
+      "name": "Дуб раскидистый",
+      "category": "nature",
+      "status": "development",
+      "kind": "procedural",
+      "quantity": 1,
+      "inPlayLab": false,
+      "releaseReady": false,
+      "scopeNote": "Мощный ствол, боковые ветви и широкая раскидистая крона. Прототип в отдельной лаборатории, пока не размещён в городе.",
+      "sourcePaths": [
+        "play-lab/tree-models.js",
+        "play-lab/street.js",
+        "street-asset-lab/asset.js"
+      ],
+      "viewer": "street-asset-lab/index.html?model=street_tree_oak",
+      "viewerLabel": "Осмотреть дерево",
+      "scene": null,
+      "assetFile": null,
+      "origin": "project",
+      "rightsChecked": true,
+      "modelNumber": 4
+    },
+    {
+      "id": "street_tree_ornamental",
+      "name": "Дерево декоративное цветущее",
+      "category": "nature",
+      "status": "development",
+      "kind": "procedural",
+      "quantity": 1,
+      "inPlayLab": false,
+      "releaseReady": false,
+      "scopeNote": "Невысокое компактное дерево с розовыми соцветиями. Прототип в отдельной лаборатории, пока не размещён в городе.",
+      "sourcePaths": [
+        "play-lab/tree-models.js",
+        "play-lab/street.js",
+        "street-asset-lab/asset.js"
+      ],
+      "viewer": "street-asset-lab/index.html?model=street_tree_ornamental",
+      "viewerLabel": "Осмотреть дерево",
+      "scene": null,
+      "assetFile": null,
+      "origin": "project",
+      "rightsChecked": true,
+      "modelNumber": 5
+    },
+    {
+      "id": "street_tree_birch",
+      "name": "Берёза белоствольная",
+      "category": "nature",
+      "status": "development",
+      "kind": "procedural",
+      "quantity": 1,
+      "inPlayLab": false,
+      "releaseReady": false,
+      "scopeNote": "Белый ствол, чёрные отметины и лёгкая раздельная крона. Прототип в отдельной лаборатории, пока не размещён в городе.",
+      "sourcePaths": [
+        "play-lab/tree-models.js",
+        "play-lab/street.js",
+        "street-asset-lab/asset.js"
+      ],
+      "viewer": "street-asset-lab/index.html?model=street_tree_birch",
+      "viewerLabel": "Осмотреть дерево",
+      "scene": null,
+      "assetFile": null,
+      "origin": "project",
+      "rightsChecked": true,
+      "modelNumber": 6
     }
   ],
   "folderMode": "categories"

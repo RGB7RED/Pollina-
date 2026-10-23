@@ -24,7 +24,7 @@ assert.equal(grass.viewer,"grass-lab/index.html");
 assert.equal(grass.category,"nature");
 assert.equal(grass.inPlayLab,true);
 assert.equal(grass.assetFile,null);
-assert.deepEqual(catalog.entries.filter(e=>e.category==="nature").map(e=>e.modelNumber),[1,2]);
+assert.deepEqual(catalog.entries.filter(e=>e.category==="nature").map(e=>e.modelNumber).sort((a,b)=>a-b),[1,2,3,4,5,6]);
 assert.equal(BLADES_PER_TUFT,8);
 assert.equal(TRIANGLES_PER_TUFT,32);
 class BufferGeometry{
