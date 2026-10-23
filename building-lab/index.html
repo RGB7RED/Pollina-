@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
 <meta name="theme-color" content="#202f38">
-<title>MINI CITY · Building Lab 3.2 · Архитектура фасада</title>
+<title>MINI CITY · Дом 3.4 · Экспорт GLB</title>
 <style>
 :root{color-scheme:dark;--panel:rgba(22,35,43,.88);--line:rgba(231,231,218,.21);--cream:#eaece8;--mint:#b9d2cb;--gold:#edc6a8}
 *{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;color:var(--cream);background:#576974}
@@ -78,6 +78,19 @@ body.fly-mode #free-hint{display:block}
   body.fly-mode .controls button{min-height:30px;padding:3px 7px;font-size:9px}
   #free-hint{display:none!important}
 }
+
+/* Cross-laboratory object selector; small, touch-targeted and always reachable. */
+.object-switch{margin-top:9px;display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.object-switch a{display:inline-flex;align-items:center;justify-content:center;min-height:32px;padding:5px 8px;
+  border:1px solid #bed7c58c;border-radius:9px;background:#183237dd;color:#e9f2eb;
+  font-size:10px;font-weight:750;text-decoration:none;touch-action:manipulation;pointer-events:auto}
+.object-switch a[aria-current="page"]{background:#c8ddcf;color:#183b3a}
+.object-switch a:focus-visible{outline:2px solid #fff;outline-offset:2px}
+@media(max-width:600px){.object-switch{margin-top:6px;gap:4px}
+ .object-switch a{min-height:31px;font-size:9px;padding:4px 7px}}
+#export-glb{margin-top:7px;min-height:32px;font-size:10px;padding:5px 8px;border-color:#d1c3a4;pointer-events:auto}
+#export-message{font-size:10px;color:#dbe8dd;line-height:1.2;margin-top:3px;max-width:215px}
+.hud .ident{pointer-events:auto}
 </style>
 <script type="importmap">
 {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}
@@ -87,9 +100,15 @@ body.fly-mode #free-hint{display:block}
 <div id="stage" aria-label="3D-модель жилого кирпичного дома"></div>
 <div class="hud">
   <section class="card ident">
-    <small>MINI CITY / BUILDING LAB</small><h1>Дом · Этап 3.3</h1>
+    <small>MINI CITY / BUILDING LAB</small><h1>Дом · Этап 3.4</h1>
     <div class="desc">Кирпичная пятиэтажка по архитектурному референсу. Настоящие оконные и дверные проёмы, 4 типа балконов, подъезды и бытовые детали. <strong>Авторская кирпичная кладка, состаренная крыша, стекло и вечерний свет.</strong></div>
-    <div class="tag">МАТЕРИАЛЫ И СВЕТ 3.3 · MOBILE WIP</div>
+    <div class="tag">ЭТАП 3.4 · ОПТИМИЗАЦИЯ / ЭКСПОРТ</div>
+    <nav class="object-switch" aria-label="Выбор объекта лаборатории">
+      <a href="./index.html" aria-current="page">🏠 Дом</a>
+      <a href="../character-lab/index.html">🚶 Персонаж</a>
+    </nav>
+    <button id="export-glb" type="button" aria-label="Скачать 3D-модель дома в формате GLB">↓ Скачать GLB</button>
+    <div id="export-message" role="status" aria-live="polite"></div>
   </section>
   <section class="card stats" id="telemetry"><button id="hide-hud" aria-label="Свернуть статистику">▾ Свернуть</button>
     <div class="metrics" id="fps">FPS: —</div>

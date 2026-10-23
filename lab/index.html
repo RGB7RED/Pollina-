@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#182830">
+<title>MINI CITY — Выбор объекта лаборатории</title>
+<style>
+:root{color-scheme:dark;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;color:#eaf0e8;background:#14252d}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:radial-gradient(ellipse at 15% 5%,#38555d,#1b3038 46%,#14252d)}
+main{min-height:100svh;max-width:850px;margin:auto;padding:clamp(22px,7vh,80px) 19px max(35px,env(safe-area-inset-bottom))}
+header small{font-size:12px;letter-spacing:.18em;color:#b9d6c9;font-weight:800}
+h1{font-size:clamp(26px,6vw,46px);letter-spacing:-.04em;line-height:1.1;margin:14px 0}
+.intro{color:#b8c7c6;line-height:1.6;max-width:570px;font-size:14px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px;margin:30px 0 20px}
+a.card{display:block;min-height:245px;border:1px solid #89aa9c68;border-radius:22px;background:linear-gradient(145deg,#2a4347d9,#23333bdd);padding:25px;text-decoration:none;color:inherit;box-shadow:0 13px 34px #08151d38;transition:transform .15s}
+a.card:hover,a.card:focus-visible{transform:translateY(-3px);border-color:#d4e1cd}
+.icon{display:block;font-size:44px;margin-bottom:17px}
+h2{font-size:25px;margin:0 0 7px}
+.card p{color:#b5caca;line-height:1.5;font-size:13px;min-height:45px}
+.go{display:inline-block;background:#b7d3c3;color:#203631;padding:9px 13px;border-radius:11px;font-size:12px;font-weight:850;margin-top:15px}
+.note{color:#a7b9b7;font-size:12px;line-height:1.6}
+@media(max-width:610px){.grid{grid-template-columns:1fr}.card{min-height:195px!important}.icon{margin-bottom:8px}.card p{min-height:0}a.card{padding:19px}}
+@media(prefers-reduced-motion:reduce){a.card{transition:none}}
+</style>
+</head>
+<body>
+<main>
+<header>
+<small>MINI CITY / LABS</small>
+<h1>Выбор объекта</h1>
+<p class="intro">Выбирай, что исследовать в 3D. На странице каждого объекта есть переключатель «Дом / Персонаж», поэтому возвращаться сюда необязательно.</p>
+</header>
+<section class="grid" aria-label="Объекты лаборатории">
+<a class="card" href="../building-lab/index.html">
+<span class="icon" aria-hidden="true">🏠</span>
+<h2>Жилой дом</h2>
+<p>Пятиэтажка: фасад, материалы, крыша, окна, свободная 3D-камера и экспорт GLB.</p>
+<span class="go">Осмотреть дом →</span>
+</a>
+<a class="card" href="../character-lab/index.html">
+<span class="icon" aria-hidden="true">🚶</span>
+<h2>Персонаж</h2>
+<p>Осмотр анимированного кандидата, ходьба, бег, повороты и проверка скелета.</p>
+<span class="go">Осмотреть персонажа →</span>
+</a>
+</section>
+<p class="note">Оба объекта пока работают в отдельных тестовых сценах. Переключение загружает выбранную сцену; пока это не единый игровой мир. Городской персонаж использует внешний GLB-кандидат.</p>
+</main>
+</body>
+</html>

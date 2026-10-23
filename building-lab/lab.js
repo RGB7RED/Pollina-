@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import {OrbitControls} from "three/addons/controls/OrbitControls.js";
 import {BUILDING,buildApartmentHouse} from "./building.js";
+import {encodeHouseGLB,downloadGLB} from "./export-glb.js";
 import {applyFacadeFinishes} from "./materials.js";
 import {FreeCamera,normalizedStick,CAMERA_SPEEDS,LOOK_SENSITIVITIES} from "./free-camera.js";
 const $=id=>document.getElementById(id);
@@ -107,6 +108,28 @@ $("time").addEventListener("click",()=>{timeIndex=(timeIndex+1)%lighting.length;
 $("quality").addEventListener("click",()=>{qualityIndex=(qualityIndex+1)%modes.length;applyQuality();});
 $("reset").addEventListener("click",()=>{if(activeFly())return;controls.target.set(0,8,0);setView("threequarter");});
 $("building-info").textContent=config.floors+" этажей · "+stats.entrances+" подъезда · "+stats.balconies+" балконов · "+finishes.textures+" текстуры";
+let exporting=false;
+$("export-glb").addEventListener("click",async()=>{
+  if(exporting)return;
+  exporting=true;
+  $("export-glb").disabled=true;
+  $("export-glb").textContent="Экспорт…";
+  $("export-message").textContent="Подготовка GLB на устройстве…";
+  try{
+    const {buffer,stats:portable}=await encodeHouseGLB(THREE,root);
+    downloadGLB(buffer);
+    const size=(buffer.byteLength/1048576).toFixed(1);
+    $("export-message").textContent=
+      "Готово: apartment_house.glb ("+size+" МБ), "+portable.totalNodes+" групп.";
+  }catch(error){
+    console.error("Building GLB export failed",error);
+    $("export-message").textContent="Не удалось экспортировать GLB. Открой консоль для подробностей.";
+  }finally{
+    exporting=false;
+    $("export-glb").disabled=false;
+    $("export-glb").textContent="↓ Скачать GLB";
+  }
+});
 
 /* 3.1.1: ORBIT is retained, FREE is a separate explicit XYZ inspection mode.
    No change to the building geometry, materials or baseline render budget. */
