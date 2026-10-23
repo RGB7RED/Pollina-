@@ -171,7 +171,7 @@ export function buildStreet(THREE,plan){
     root.add(mesh);
     return mesh;
   }
-  // Independently reusable grass asset: seven sculpted leaves per clump,
+  // Independently reusable grass asset: eight fine leaves per clump,
   // three palette batches (not hundreds of individual draw calls).
   addGrassToGroup(THREE,root,plan.grassTufts||[]);
   const cube=new THREE.BoxGeometry(1,1,1);
