@@ -102,10 +102,10 @@ export class PlayerController{
   setEntryDoorOpen(open){
     if(!this.entry)return false;
     open=Boolean(open);
+    if(open===this.entryDoorOpen)return true;
     if(!open&&Math.abs(this.position.x-this.entry.x)<1.05&&
       Math.abs(this.position.z-this.entry.door.minZ)<.65)
       return false; // no door closing THROUGH the player
-    if(open===this.entryDoorOpen)return true;
     this.entryDoorOpen=open;
     const index=this.obstacles.indexOf(this.doorBlocker);
     if(open&&index>=0)this.obstacles.splice(index,1);
