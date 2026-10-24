@@ -69,6 +69,18 @@ body.first-person #reticle{display:block}
  #tips{display:none}
 }
 
+/* Scene lab is free spectator inspection, NOT a second copy of gameplay. */
+#free-controls{position:fixed;right:max(14px,env(safe-area-inset-right));
+ bottom:max(17px,calc(env(safe-area-inset-bottom) + 13px));
+ display:flex;flex-direction:column;gap:7px;z-index:8}
+#free-controls button{min-width:100px;background:#204d4add}
+body.game-mode #free-controls,body.game-mode .lab-help{display:none!important}
+body.lab-mode #actions,body.lab-mode #camera-mode,
+body.lab-mode #camera-hint,body.lab-mode #reset,
+body.lab-mode #actor-status,body.lab-mode #status,
+body.lab-mode #reticle,body.lab-mode .game-help{display:none!important}
+body.lab-mode #free-controls{display:flex}
+body.lab-mode #tips{bottom:max(165px,calc(env(safe-area-inset-bottom) + 155px))}
 /* One scene, two presentation modes. Game hides instrumentation entirely. */
 #mode-toggle{min-height:34px;padding:5px 9px;margin-top:6px;font-size:11px;
   background:#c3dbce;color:#1c3a3c}
@@ -107,12 +119,12 @@ body.game-mode .menu{max-width:min(47vw,190px)}
 </script>
 </head>
 <body>
-<main id="stage" aria-label="Игровая сцена: человек возле пятиэтажного дома"></main>
+<main id="stage" aria-label="Сцена 3D-города: свободная камера в лаборатории, персонаж только в игре"></main>
 <div class="hud">
   <section class="card brand">
     <small>MINI CITY / PLAY LAB</small>
     <h1 id="play-title">MINI CITY · Лаборатория игры</h1>
-    <p>Этап 4.5.4: первый подъезд — все пять этажей и 20 пронумерованных квартирных дверей (4 на этаж), без лифта. Вторая внутренняя дверь остаётся прозрачной. Всё внутри одного игрового дома.</p>
+    <p>4.5.4.1: две квартиры перед лестничной площадкой и по одной по сторонам — без отдельного коридора за стеной. Лаборатория открывает свободную камеру без персонажа; игра остаётся отдельным режимом той же 3D-сцены.</p>
     <p id="world-info">Подготовка улицы…</p>
     <button id="hud-toggle" type="button" aria-expanded="true">▴ Свернуть описание</button>
     <button id="mode-toggle" type="button">🎮 Перейти в игру</button>
@@ -153,8 +165,9 @@ body.game-mode .menu{max-width:min(47vw,190px)}
 </section>
 <div id="status" role="status">Загрузка настоящих моделей…<button id="retry" hidden>Повторить загрузку</button></div>
 <div id="reticle">+</div>
-<div id="tips">5 этажей: левый марш → дальняя площадка → правый марш. На каждом этаже справа коридор с 4 квартирами; чтобы подняться выше, вернись к левому маршу.<br>ПК: E — двери, F — вид от первого лица.</div>
+<div id="tips"><span class="lab-help">🛠️ Камера: джойстик/WASD — перемещение; свайп — обзор; кнопки ↑↓ или Space/Q — высота; Shift — быстрее. Без персонажа.</span><span class="game-help">🎮 На каждом этаже четыре двери прямо на лестничной площадке: две впереди, по одной слева и справа. ПК: E — дверь.</span></div>
 <div id="stick" aria-label="Экранный джойстик перемещения"><div id="stick-knob"></div></div>
+<div id="free-controls" aria-label="Высота свободной камеры"><button id="free-up">↑ Выше</button><button id="free-down">↓ Ниже</button><button id="free-reset">⌖ Общий вид</button></div>
 <div id="actions"><button id="entry-action" hidden aria-pressed="false">🚪 Открыть дверь</button><button id="run" aria-pressed="false">⚡ Бег: ВЫКЛ</button><button id="switch-view">👁 Вид от 1-го лица</button></div>
 <script type="module" src="./game.js"></script>
 </body>
