@@ -99,7 +99,42 @@ export function planPlayableEntrance(building,pads){
     door,inside,stair,stairHalf,aisleHalf,totalFloors,
     floorHeight,
     buildingObstacles:[...house,...porch],
-    apartment:null,
+    apartment:null,firstFloorPlan:null,
+    installFirstFloor(plan){
+      if(this.firstFloorPlan)throw Error("First floor already installed");
+      if(!plan||plan.floor!==1||Math.abs(plan.y-firstFloor)>.0001)
+        throw Error("Invalid first-floor plan");
+      // Physically replace only ground-residential-height slices of
+      // formerly solid wing colliders; all other elevations remain sealed.
+      for(const side of [-1,1]){
+        const name=side===-1?"stair-left":"stair-right";
+        const i=this.buildingObstacles.findIndex(o=>o.name===name);
+        if(i<0)throw Error("Missing whole-wing collider "+name);
+        const old=this.buildingObstacles.splice(i,1)[0];
+        const wing=plan.wings.find(w=>w.side===side);
+        if(!wing)throw Error("Missing floor-plan wing");
+        this.buildingObstacles.push(
+          {...old,name:name+"-below",maxY:plan.y-.10},
+          {...old,name:name+"-above",minY:plan.ceilingY+.01}
+        );
+        const low=side<0?old.minX:wing.maxX,
+          high=side<0?wing.minX:old.maxX;
+        if(high>low)
+          this.buildingObstacles.push(rect(name+"-unbuilt-neighbour",
+            low,high,-halfZ,facade,plan.y-.10,plan.ceilingY+.01));
+        // End walls stay part of original house; openings only for
+        // existing window geometry, NOT at random wall segments.
+        for(const z of [-halfZ,halfZ])
+          this.buildingObstacles.push(rect(name+"-facade-edge",
+            wing.minX,wing.maxX,z-.12,z+.12,plan.y-.10,plan.ceilingY+.01));
+        this.buildingObstacles.push(rect(name+"-outer-edge",
+          side<0?wing.minX-.12:wing.maxX-.02,
+          side<0?wing.minX+.02:wing.maxX+.12,
+          -halfZ,facade,plan.y-.10,plan.ceilingY+.01));
+      }
+      this.buildingObstacles.push(...plan.obstacles);
+      this.firstFloorPlan=plan;
+    },
     installApartment(apartment){
       if(this.apartment)throw Error("Apartment already installed");
       if(!apartment||apartment.number!==17||Math.abs(apartment.floorY-floorHeight(4))>.0001)
@@ -107,13 +142,19 @@ export function planPlayableEntrance(building,pads){
       // The earlier collision plan treated ALL apartment space as solid
       // at ALL elevations. Split the LEFT slab vertically, allowing only
       // this fifth-floor flat. Exterior, other flats and 1–4F stay solid.
-      const old=this.buildingObstacles.findIndex(b=>b.name==="stair-left");
-      if(old<0)throw Error("Cannot find existing stair-left blocker");
-      this.buildingObstacles.splice(old,1,
+      // The 1F layout may have split the former whole-wing blocker
+      // already. Preserve its lower y-bound when opening 5F; otherwise
+      // the old lower-floor solid masonry would reappear over the new 1F.
+      const targetName=this.firstFloorPlan?"stair-left-above":"stair-left";
+      const old=this.buildingObstacles.findIndex(b=>b.name===targetName);
+      if(old<0)throw Error("Cannot find left wing upper blocker");
+      const blocker=this.buildingObstacles.splice(old,1)[0];
+      this.buildingObstacles.push(
         rect("stair-left-below-apartment",-halfX,x-stairHalf,
-          -halfZ,facade,-Infinity,apartment.floorY-.10),
+          -halfZ,facade,blocker.minY??-Infinity,apartment.floorY-.10),
         rect("stair-left-above-apartment",-halfX,x-stairHalf,
-          -halfZ,facade,apartment.ceilingY+.01,Infinity));
+          -halfZ,facade,apartment.ceilingY+.01,Infinity)
+      );
       this.buildingObstacles.push(...apartment.obstacles);
       this.apartment=apartment;
     },
@@ -123,6 +164,8 @@ export function planPlayableEntrance(building,pads){
     // world-space Y. The same X/Z staircase repeats at four distinct
     // storeys: a naive 2D height map would wrongly teleport to floor 1.
     groundHeight(px,z,currentY=0){
+      if(this.firstFloorPlan?.contains(px,z,currentY))
+        return this.firstFloorPlan.y;
       // Apartment 17 uses exactly the fifth-floor landing elevation.
       // The height solver must check its space BEFORE rejecting X outside
       // the stairwell; otherwise the player falls through the room floor.
@@ -170,6 +213,7 @@ export function planPlayableEntrance(building,pads){
         Math.abs(y-currentY)<Math.abs(best-currentY)?y:best);
     },
     isInside(px,z,y=0){
+      if(this.firstFloorPlan?.contains(px,z,y))return true;
       if(this.apartment?.contains(px,z,y))return true;
       const width=z<insideEnd||y>=upperTurnY-.13?stairHalf:foyerHalf;
       return Math.abs(px-x)<width&&z>=stair.backZ&&z<facade-.07;
@@ -178,6 +222,8 @@ export function planPlayableEntrance(building,pads){
       return Math.hypot(px-x,z-(facade-.12))<2.35;
     },
     zone(px,z,y=0){
+      if(this.firstFloorPlan?.contains(px,z,y))
+        return "Квартиры первого этажа · план 1–4";
       if(this.apartment?.contains(px,z,y))
         return "Квартира №17 · "+this.apartment.zone(px,z);
       if(!this.isInside(px,z,y))return "street";
