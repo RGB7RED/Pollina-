@@ -69,7 +69,7 @@ for(let i=0;i<105;i++){
 assert.ok(entered,"the avatar walks INSIDE the same house scene");
 assert.ok(player.position.z>=entry.insideEnd-.02,
  "open shaft at the bottom of the first flight has no imaginary flat passage");
-assert.equal(entry.groundHeight(entry.x,2.5,.70),null);
+assert.equal(entry.groundHeight(entry.x,1.5,.70),null);
 assert.equal(player.position.y,.70);
 assert.equal(player.setEntryDoorOpen(false),true,
  "door closes after avatar clears threshold into interior");
