@@ -222,7 +222,9 @@ function toggleEntryDoor(){
  if(studio.mode==="lab")return;
  const near=controller.nearestDoor();
  if(!near)return;
- const ok=controller.toggleNearestDoor();
+ const ok=near.id==="outer"?
+    controller.setEntryDoorOpen(!controller.entryDoorOpen):
+    controller.setApartmentDoorOpen(!controller.apartmentDoorOpen);
  if(ok){updateEntryAction();studio.refreshCollisions();}
  else $("actor-status").textContent="Отойди от дверного проёма, чтобы закрыть дверь";
 }
