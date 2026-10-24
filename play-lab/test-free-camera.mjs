@@ -35,8 +35,8 @@ assert.match(html,/в свободном режиме|свободн|Без пе
 assert.doesNotMatch(game,/new THREE\.Scene\(\).*new THREE\.Scene\(/);
 assert.doesNotMatch(building,/const corridorEndX|hallFromX|hallToX/,
  "no off-stair apartment corridor is built");
-assert.match(building,/orientation=centre\?"front":local===2\?"left":"right"/);
-assert.match(building,/const doorCenters=\[-\.92,\.92\]/);
+assert.match(building,/orientation=side<0\?"left":"right"/);
+assert.match(building,/const sideDoorPositions=\[-2\.42,-4\.00\]/);
 assert.match(building,/zone:"rear-stair-landing"/);
 const fly=new FreeSceneCamera();
 assert.deepEqual(fly.position,{x:FREE_CAMERA_START.x,y:FREE_CAMERA_START.y,z:FREE_CAMERA_START.z});

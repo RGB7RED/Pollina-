@@ -189,7 +189,7 @@ export function buildApartmentHouse(THREE,config={}){
     audit.windowGlazing.push({axis,side,opening:hole,frontDepth:facadeExtent-.17,
       glassDepth:facadeExtent-.235});
     if(isStairWindow)audit.stairwellWindows.push({
-      floor:Math.round((bottom-(.70+1.39+2.42/2+.46))/2.42)+1,
+      floor:Math.round((bottom-(.70+1.39+2.42/2+.80))/2.42)+1,
       centreX:centre,bottom,top,width,wallZ:side*(facadeExtent-.16),
       through:true,transparent:glassMat.transparent===true,type:"facade-bay"
     });
@@ -266,7 +266,7 @@ export function buildApartmentHouse(THREE,config={}){
       // Reverse the U-stair slope: go from the full-floor REAR landing
       // forward along LEFT flight to front intermediate landing; turn
       // RIGHT; climb back along RIGHT flight to next full-floor rear landing.
-      const rearWallZ=-3.38,rearLandingEndZ=-1.58;
+      const rearWallZ=-4.85,rearLandingEndZ=-1.58;
       // First residential landing rises one real 12-step flight above foyer.
       // Remaining four storeys are 2.42m apart to preserve the existing
       // building roof and full-sized 2.15m apartment doors.
@@ -286,9 +286,9 @@ export function buildApartmentHouse(THREE,config={}){
       const stairHeight=C.plinth+C.floors*C.floorHeight-wallBase-.08;
       if(baseFloor+(C.floors-1)*storeyRise+2.19>C.plinth+C.floors*C.floorHeight)
         throw Error("Apartment doors would cross existing roofline");
-      // Widened stairwell: >1.65 m deep rear FULL floor platform versus
-      // previous ~0.89 m turnaround. Central continuous aisle is kept
-      // between flights to reach the rear floor-1 apartment doors.
+      // Deepened full-floor platform: enough Z length for TWO 1.04m
+      // apartment doors on EACH side wall. Its END masonry is intact
+      // and reserved for the electricity cabinets instead of flat doors.
       for(const side of [-1,1]){
         const wX=x+side*stairHalfWidth;
         box(.14,stairHeight,facadeInnerZ-rearWallZ,mats.reveal,
@@ -405,6 +405,34 @@ export function buildApartmentHouse(THREE,config={}){
           bottom:level,mid:level+rise,top:level+storeyRise,
           steps:stepsPerFlight*2,returnEndZ:turnEndZ});
       }
+      // Two-tone Soviet stairwell paint CONTINUES along the flight walls.
+      // A sloping green band follows the step incline, while the warm
+      // ivory finish already covers the complete wall behind the stripe.
+      // One shared instanced batch per paint material (mobile friendly).
+      const paintDepth=run+.05,paintSlope=Math.atan2(rise,run);
+      const slopedLength=Math.hypot(run,rise);
+      for(let f=0;f<C.floors-1;f++){
+        const y=baseFloor+f*storeyRise;
+        for(const [side,cx,cy,angle] of [
+          [-1,firstX,y+rise/2,-paintSlope],
+          [1,secondX,y+rise+rise/2,paintSlope]
+        ]){
+          const wallX=x+side*(stairHalfWidth-.10);
+          box(.025,1.14,slopedLength,mats.foyerLower,
+            wallX,cy+.57,(rearLandingEndZ+halfLandingZ)/2,angle);
+          // Continuous waist-height separator matching apartment landings.
+          box(.032,.040,slopedLength,mats.frameWhite,
+            wallX,cy+1.15,(rearLandingEndZ+halfLandingZ)/2,angle);
+        }
+        // Opposite return: retain the same colour along the side walls.
+        for(const side of [-1,1]){
+          const wx=x+side*(stairHalfWidth-.10);
+          const length=frontZ-halfLandingZ-.08;
+          const z=(frontZ+halfLandingZ)/2;
+          box(.025,1.14,length,mats.foyerLower,wx,y+rise+.57,z);
+          box(.032,.040,length,mats.frameWhite,wx,y+rise+1.15,z);
+        }
+      }
       // On the FIFTH floor continue the end-of-shaft handrail all the
       // way to the left solid wall. Keep the RIGHT flight's landing
       // unobstructed for the person arriving from the fourth floor.
@@ -419,11 +447,11 @@ export function buildApartmentHouse(THREE,config={}){
       for(let k=0;k<=4;k++)
         box(.065,.94,.065,railMat,topRailLeft+topRailWidth*k/4,
           topRailY+.47,rearLandingEndZ+.02);
-      // Four doors in the OPPOSITE rear landing: two at centre rear
-      // wall, and one each on the two SIDE walls. No extra room.
+      // Four doors, now exactly TWO on EACH side wall, with a deep
+      // turning/approach area. NO apartment door is mounted on the end.
       const apartments=[],doorWidth=1.04,sideDoorWidth=1.04;
-      const doorCenters=[-.92,.92],sideDoorZ=-2.40,
-        rearDoorZ=rearWallZ+.14;
+      const sideDoorPositions=[-2.42,-4.00];
+      const electricPanels=[];
       const numeralSegments={
         0:"abcfed",1:"bc",2:"abged",3:"abgcd",4:"fgbc",
         5:"afgcd",6:"afgecd",7:"abc",8:"abcdefg",9:"abcdfg"
@@ -461,42 +489,95 @@ export function buildApartmentHouse(THREE,config={}){
           x,level+1.82,rearWallZ+.088);
         box(stairHalfWidth*2-.30,.052,.036,mats.frameWhite,
           x,level+1.18,rearWallZ+.10);
+        // Side paint continues for the FULL depth of the extended landing.
         for(const sign of [-1,1]){
           const wallX=x+sign*(stairHalfWidth-.09);
-          box(.025,1.20,1.68,mats.foyerLower,
-            wallX,level+.60,(rearWallZ+rearLandingEndZ)/2);
-          box(.025,1.30,1.68,mats.foyerPaint,
-            wallX,level+1.85,(rearWallZ+rearLandingEndZ)/2);
+          const paintDepth=rearLandingEndZ-rearWallZ-.12;
+          const midZ=(rearWallZ+rearLandingEndZ)/2;
+          box(.025,1.20,paintDepth,mats.foyerLower,
+            wallX,level+.60,midZ);
+          box(.025,1.20,paintDepth,mats.foyerPaint,
+            wallX,level+1.80,midZ);
+          box(.030,.045,paintDepth,mats.frameWhite,
+            wallX,level+1.20,midZ);
         }
         for(let local=0;local<4;local++){
-          const number=floor*4+local+1,centre=local<2;
-          const orientation=centre?"front":local===2?"left":"right";
-          const off=centre?doorCenters[local]:
-            (local===2?-stairHalfWidth+.11:stairHalfWidth-.11);
-          const doorX=x+off,doorZ=centre?rearDoorZ:sideDoorZ;
-          const yaw=centre?0:Math.PI/2;
-          const width=centre?doorWidth:sideDoorWidth;
-          box(width,2.15,.09,mats.frameWhite,
+          const number=floor*4+local+1;
+          const side=local<2?-1:1;
+          const sidePosition=sideDoorPositions[local%2];
+          const doorX=x+side*(stairHalfWidth-.11),doorZ=sidePosition;
+          const orientation=side<0?"left":"right";
+          const yaw=Math.PI/2;
+          box(sideDoorWidth,2.15,.09,mats.frameWhite,
             doorX,level+1.10,doorZ,0,yaw);
-          box(width-.10,2.04,.10,apartmentPalette[local],
-            doorX,level+1.095,
-            centre?doorZ+.065:doorZ,0,yaw);
-          if(centre){
-            box(.034,.13,.075,mats.vent,
-              doorX+doorWidth*.32,level+1.02,doorZ+.15);
-            numberOnDoor(number,doorX,level+1.90,doorZ+.130,orientation);
-          }else{
-            const sign=orientation==="left"?1:-1;
-            box(.034,.13,.075,mats.vent,
-              doorX+sign*.085,level+1.02,doorZ+.22,0,yaw);
-            numberOnDoor(number,doorX+sign*.100,
-              level+1.90,doorZ,orientation);
-          }
+          box(sideDoorWidth-.10,2.04,.10,apartmentPalette[local],
+            doorX,level+1.095,doorZ,0,yaw);
+          box(.034,.13,.075,mats.vent,
+            doorX+(side<0?.085:-.085),level+1.02,doorZ+.22,0,yaw);
+          numberOnDoor(number,doorX+(side<0?.100:-.100),
+            level+1.90,doorZ,orientation);
           apartments.push({number,floor:floor+1,entrance:1,
-            x:doorX,z:doorZ,orientation,zone:"rear-stair-landing",
+            x:doorX,z:doorZ,orientation,side,
+            width:sideDoorWidth,zone:"rear-stair-landing",
             accessible:false});
         }
+        // Electricity distribution and four apartment meters on the
+        // now-doorless END wall. Shallow wall-mounted metal cabinets.
+        const panelZ=rearWallZ+.17,panelY=level+1.43;
+        box(1.43,1.03,.105,mats.foyerMailbox,x,panelY,panelZ);
+        box(1.35,.93,.018,mats.frameGrey,x,panelY,panelZ+.062);
+        for(let meter=0;meter<4;meter++){
+          const mx=x+(meter-1.5)*.31;
+          box(.255,.37,.022,mats.frameWhite,
+            mx,panelY+.13,panelZ+.076);
+          box(.17,.09,.025,mats.ventDark,
+            mx,panelY+.22,panelZ+.091);
+          box(.17,.025,.026,mats.frameGrey,
+            mx,panelY-.01,panelZ+.095);
+        }
+        box(1.21,.035,.029,mats.ventDark,
+          x,panelY-.37,panelZ+.087);
+        electricPanels.push({floor:floor+1,centreX:x,
+          y:panelY,z:panelZ,meters:4,width:1.43});
       }
+      // A single continuous, low-poly heating RISER beside the +Z
+      // stairwell windows. The 4 real cast-iron radiators sit BELOW
+      // four intermediate landing windows; the riser runs the full cage.
+      // Mesh boxes form an octagonal-looking pipe, batched per material.
+      const radiatorRiser={x:x+1.45,z:facadeInnerZ-.19,
+        bottom:.76,top:shellTop-.22};
+      const pipeY=(radiatorRiser.bottom+radiatorRiser.top)/2;
+      const pipeH=radiatorRiser.top-radiatorRiser.bottom;
+      box(.064,pipeH,.064,mats.frameGrey,
+        radiatorRiser.x,pipeY,radiatorRiser.z);
+      box(.047,pipeH,.076,mats.frameGrey,
+        radiatorRiser.x,pipeY,radiatorRiser.z,0,Math.PI/4);
+      const radiators=[];
+      for(let i=0;i<C.floors-1;i++){
+        const landingY=baseFloor+i*storeyRise+rise;
+        const radY=landingY+.40;
+        const radZ=facadeInnerZ-.17;
+        // Backplate, two horizontal manifolds, 10 heat-dissipating ribs.
+        box(1.24,.56,.055,mats.frameWhite,x,radY,radZ+.038);
+        for(const dy of [-.23,.23])
+          box(1.32,.065,.10,mats.frameGrey,x,radY+dy,radZ-.055);
+        for(let j=0;j<10;j++){
+          const rx=x+(j-4.5)*.115;
+          box(.083,.53,.12,mats.frameWhite,rx,radY,radZ-.08);
+          box(.035,.41,.126,mats.foyerMailbox,rx,radY,radZ-.115);
+        }
+        // Two small supply/return tubes to the vertical wall riser.
+        for(const dy of [-.19,.19]){
+          const connectorLength=radiatorRiser.x-(x+.62);
+          box(connectorLength,.055,.055,mats.frameGrey,
+            x+.62+connectorLength/2,radY+dy,radZ-.13);
+        }
+        radiators.push({floorFrom:i+1,floorTo:i+2,
+          landingY,x,y:radY,z:radZ,width:1.32,height:.59,
+          windowSillY:landingY+.80,clearance:.80-.695});
+      }
+      audit.heating={riser:radiatorRiser,radiators,
+        windowWallZ:facadeInnerZ,instanced:true};
       audit.firstStaircase={
         firstX,secondX,bottomZ:rearLandingEndZ,turnZ:halfLandingZ,
         backZ:rearWallZ,stepsPerFlight,stairwellWidth:stairHalfWidth*2,
@@ -513,7 +594,10 @@ export function buildApartmentHouse(THREE,config={}){
         levels:stairway,apartmentDoors:apartments,
         landing:{centreX:x,minX:x-stairHalfWidth,maxX:x+stairHalfWidth,
           minZ:rearWallZ,maxZ:rearLandingEndZ,doorsPerFloor:4,
-          depth:rearLandingEndZ-rearWallZ,doorWidth,sideDoorWidth},
+          depth:rearLandingEndZ-rearWallZ,doorWidth,sideDoorWidth,
+          leftDoorsPerFloor:2,rightDoorsPerFloor:2,endDoorsPerFloor:0,
+          sideDoorPositions},
+        electricPanels,
         fifthFloorRail:{left:topRailLeft,right:topRailRight,
           centre:topRailCentre,width:topRailWidth,
           z:rearLandingEndZ+.02,height:topRailY,openRightFlight:true},
@@ -721,7 +805,7 @@ export function buildApartmentHouse(THREE,config={}){
   let priorTop=columnStart;
   for(let i=0;i<C.floors-1;i++){
     const midY=.70+1.39+(i+.5)*2.42;
-    const bottom=midY+.46,height=1.42,top=bottom+height;
+    const bottom=midY+.80,height=1.42,top=bottom+height;
     if(bottom<priorTop||top>=shellTop)
       throw Error("Stairwell opening overlaps previous window/roof");
     wallStrip("long",1,windowLeft,windowRight,priorTop,bottom,mats.brick);
@@ -732,6 +816,50 @@ export function buildApartmentHouse(THREE,config={}){
     priorTop=top;
   }
   wallStrip("long",1,windowLeft,windowRight,priorTop,shellTop,mats.brick);
+  // Inside the EXISTING brick wall, add a continuous cream/green
+  // plaster lining. All four window-shaped apertures are subtracted
+  // from the interior paint too — NEVER cover the real transparent
+  // glazing with a coloured rectangle. Existing outside brick remains.
+  const innerWindowZ=C.width/2-wallDepth-.018;
+  const innerHalfWidth=1.84;
+  const firstMid=.70+1.39+2.42/2;
+  const windowIntervals=Array.from({length:C.floors-1},(_,i)=>{
+    const lo=firstMid+i*2.42+.80;
+    return {bottom:lo,top:lo+1.42};
+  });
+  // Preserve the ORIGINAL operable entrance opening as well.
+  const entryDoorVoid={bottom:C.plinth+.04,top:C.plinth+.04+2.28,
+    halfWidth:1.71/2};
+  const cuts=[.70,shellTop,entryDoorVoid.top,
+    ...windowIntervals.flatMap(w=>[w.bottom,w.top]),
+    ...Array.from({length:C.floors},(_,i)=>.70+1.39+i*2.42),
+    ...Array.from({length:C.floors},(_,i)=>.70+1.39+i*2.42+1.16)];
+  const sorted=[...new Set(cuts.filter(v=>v>=.70&&v<=shellTop)
+    .map(v=>Number(v.toFixed(5))))].sort((a,b)=>a-b);
+  let plasterPanels=0;
+  for(let j=0;j<sorted.length-1;j++){
+    const y0=sorted[j],y1=sorted[j+1];
+    if(y1-y0<.005)continue;
+    const midY=(y0+y1)/2;
+    const rel=midY-(.70+1.39);
+    const lower=rel<0?midY<1.90:
+      rel-Math.floor(rel/2.42)*2.42<1.16;
+    const mat=lower?mats.foyerLower:mats.foyerPaint;
+    const windowOpen=windowIntervals.some(w=>midY>w.bottom&&midY<w.top);
+    const doorwayOpen=midY>entryDoorVoid.bottom&&midY<entryDoorVoid.top;
+    const holeHalf=doorwayOpen?entryDoorVoid.halfWidth:windowOpen?.70:0;
+    const ranges=holeHalf?
+      [[-innerHalfWidth,-holeHalf],[holeHalf,innerHalfWidth]]:
+      [[-innerHalfWidth,innerHalfWidth]];
+    for(const [l,r] of ranges){
+      box(r-l,y1-y0,.025,mat,wx+(l+r)/2,midY,innerWindowZ);
+      plasterPanels++;
+    }
+  }
+  audit.stairwellInterior={plasterPanels,wallZ:innerWindowZ,
+    windowApertures:windowIntervals,entranceAperture:entryDoorVoid,
+    painted:true,
+    noBrickFacing:true,transparentWindowsUnobstructed:true};
   // Two side windows per storey. The end walls are perforated too.
   for(const side of [-1,1]){
     for(let floor=0;floor<C.floors;floor++){

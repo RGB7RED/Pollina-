@@ -32,6 +32,7 @@ on:
       - fix/mini-city-v033-stage4544-raised-first-floor-central-entry-flight
       - fix/mini-city-v033-stage4545-right-entry-wider-flights-single-door-mailboxes-rails
       - fix/mini-city-v033-stage4546-narrow-stairwell-wider-doors-top-rails-mailboxes
+      - fix/mini-city-v033-stage4547-deep-side-doors-heating-painted-stairwell
     paths:
       - 'building-lab/**'
       - 'bus-stop-lab/**'
@@ -105,6 +106,8 @@ jobs:
         run: node play-lab/test-five-floors.mjs
       - name: Test stage 4.5.4.3 facade windows, real openings and upper landing headroom
         run: node play-lab/test-architecture-4543.mjs
+      - name: Test stage 4.5.4.7 deep landing, 2+2 side doors, radiators, electric cabinets and clear painted window apertures
+        run: node play-lab/test-architecture-4547.mjs
       - name: Test stage 4.5.4.6 narrower first staircase, enlarged flat doors and postboxes, fifth-floor wall railing
         run: node play-lab/test-architecture-4546.mjs
       - name: Test stage 4.5.4.5 one door, wide foyer, right entrance steps, inward stair expansion and mid-landing mailboxes
