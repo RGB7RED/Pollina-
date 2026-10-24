@@ -6,7 +6,7 @@ import {PlayerController,PLAYER_RADIUS,collidesAt} from "./controller.js";
 const source=path=>readFileSync(new URL(path,import.meta.url),"utf8");
 const game=source("./game.js"),view=source("./index.html");
 assert.equal((game.match(/new THREE\.Scene\(/g)||[]).length,1);
-assert.match(view,/Лестница на/);
+assert.match(view,/Окна лестниц/);
 assert.match(game,/actorPivot\.position\.set\(state.x,state.y,state.z\)/);
 assert.match(game,/setInnerDoorOpen/);
 const pads=[-26.3625,-8.7875,8.7875,26.3625].map(x=>({
