@@ -189,7 +189,7 @@ export function buildApartmentHouse(THREE,config={}){
     audit.windowGlazing.push({axis,side,opening:hole,frontDepth:facadeExtent-.17,
       glassDepth:facadeExtent-.235});
     if(isStairWindow)audit.stairwellWindows.push({
-      floor:Math.round((bottom-C.plinth-.695)/C.floorHeight),
+      floor:Math.round((bottom-(.70+1.39+2.42/2+.46))/2.42)+1,
       centreX:centre,bottom,top,width,wallZ:side*(facadeExtent-.16),
       through:true,transparent:glassMat.transparent===true,type:"facade-bay"
     });
@@ -688,6 +688,10 @@ export function buildApartmentHouse(THREE,config={}){
     wallStrip("long",side,C.length/2-1.85,C.length/2,C.plinth,shellTop,mats.brick);
   }
   for(const w of plan){
+    // Bay over the FIRST doorway is one continuous 5-storey stairwell.
+    // Its four windows are cut separately below, at stair LANDING heights
+    // instead of regular apartment-window heights, to avoid half windows.
+    if(w.side===1&&w.bay===ENTRANCE_BAYS[0]&&w.floor>0)continue;
     const y0=C.plinth+w.floor*C.floorHeight,y1=y0+C.floorHeight;
     const centre=w.x,side=w.side;
     const isDoor=w.entrance,balcony=w.balcony&&!isDoor;
@@ -698,11 +702,34 @@ export function buildApartmentHouse(THREE,config={}){
       centre,openingWidth,low,height,mats.brick,isDoor?"door":"window");
     if(isDoor)entranceDetail(hole,ENTRANCE_BAYS.indexOf(w.bay));
     else {
-      windowDetail(hole,w.variation,balcony,
-        side===1&&w.bay===ENTRANCE_BAYS[0]&&w.floor>=1&&w.floor<=3);
+      windowDetail(hole,w.variation,balcony);
       if(balcony)balconyDetail(w);
     }
   }
+  // FIRST entrance: four full-height windows, each placed above its
+  // intermediate return. One existing brick column is split into real
+  // masonry piers + lintels; never overlay glass on opaque brick.
+  const entryBay=plan.find(w=>w.entrance&&w.bay===ENTRANCE_BAYS[0]);
+  const wx=entryBay.x,spanLeft=wx-step/2,spanRight=wx+step/2;
+  const windowWidth=1.40,windowLeft=wx-windowWidth/2,
+    windowRight=wx+windowWidth/2;
+  const columnStart=C.plinth+C.floorHeight;
+  wallStrip("long",1,spanLeft,windowLeft,columnStart,shellTop,mats.brick);
+  wallStrip("long",1,windowRight,spanRight,columnStart,shellTop,mats.brick);
+  let priorTop=columnStart;
+  for(let i=0;i<C.floors-1;i++){
+    const midY=.70+1.39+(i+.5)*2.42;
+    const bottom=midY+.46,height=1.42,top=bottom+height;
+    if(bottom<priorTop||top>=shellTop)
+      throw Error("Stairwell opening overlaps previous window/roof");
+    wallStrip("long",1,windowLeft,windowRight,priorTop,bottom,mats.brick);
+    const hole={axis:"long",side:1,centre:wx,width:windowWidth,
+      bottom,top,height,kind:"window"};
+    audit.holes.push(hole);stats.windowHoles++;
+    windowDetail(hole,i,false,true);
+    priorTop=top;
+  }
+  wallStrip("long",1,windowLeft,windowRight,priorTop,shellTop,mats.brick);
   // Two side windows per storey. The end walls are perforated too.
   for(const side of [-1,1]){
     for(let floor=0;floor<C.floors;floor++){
