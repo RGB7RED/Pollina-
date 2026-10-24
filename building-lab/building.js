@@ -304,6 +304,23 @@ export function buildApartmentHouse(THREE,config={}){
         railsPerFlight:3,continuous:true,wallSideRails:0,
         innerGuardLinks:4,frontGuardLinks:4,flightWidth,shaftGap,
         fifthFloorWallConnection:true};
+      // Lamps are mounted from the UNDERSIDE of real overhead slabs,
+      // never at the top surface of the next apartment landing.
+      // The last-floor lamp uses the underside of the existing roof.
+      const ceilingFixtures=[];
+      function mountCeilingLight(cx,cz,ceilingY,kind,floor,width=.37,depth=.35){
+        const housingY=ceilingY-.040,glassY=ceilingY-.084;
+        const housingH=.055,glassH=.037;
+        if(housingY+housingH/2>=ceilingY||
+          glassY+glassH/2>=housingY-housingH/2+.008)
+          throw Error("Ceiling fixture must hang below the solid slab");
+        box(width,housingH,depth,mats.frameWhite,cx,housingY,cz);
+        box(width-.09,glassH,depth-.11,mats.litGlass,cx,glassY,cz);
+        ceilingFixtures.push({kind,floor,x:cx,z:cz,
+          ceilingY,housingY,glassY,housingH,glassH,
+          width,depth,bottomY:glassY-glassH/2,
+          belowCeiling:true});
+      }
       const stairway=[];
       // FIRST staircase: 12 treads rising from the .70m foyer to +2.09m.
       const entranceTread=entranceRun/stepsPerFlight;
@@ -339,9 +356,12 @@ export function buildApartmentHouse(THREE,config={}){
         box(stairHalfWidth*2-.18,.16,
           rearLandingEndZ-rearWallZ-.10,mats.foyerTileAlt,
           x,level-.08,(rearLandingEndZ+rearWallZ)/2);
-        // No horizontal centre-floor strip: the entrance uses real steps.
-        box(.37,.056,.35,mats.frameWhite,x,level+2.47,rearWallZ+.70);
-        box(.28,.035,.24,mats.litGlass,x,level+2.44,rearWallZ+.70);
+        // Ceiling here is the UNDERSIDE of the next floor slab;
+        // fifth floor is capped by the existing roof, not another floor.
+        const rearCeilingY=floor<C.floors-1?
+          level+storeyRise-.16:shellTop-.16;
+        mountCeilingLight(x,rearWallZ+.70,rearCeilingY,
+          "apartment-landing",floor+1);
         if(floor===C.floors-1)continue;
         // With the first apartment floor moved to 2.09m, its half-turn
         // is at 3.30m: clearance above the .70m foyer is now 2.44m.
@@ -677,13 +697,15 @@ export function buildApartmentHouse(THREE,config={}){
         box(.014,.020,.032,mats.ventDark,frontX-.002,by-.055,bz+.052);
         mailboxes++;
       }
-      // A small notice board and illuminated overhead fixture: no heavy
-      // shadows or duplicate indoor scene are required.
+      // The vestibule light attaches to the UNDERSIDE of the window-
+      // facing intermediate landing, not its walking surface (Y=3.30).
+      // There is no invented full-width foyer ceiling/solid shaft slab.
       box(.028,.46,.45,mats.ventDark,x-2.078,1.89,4.18);
       for(const offset of [-.12,.03,.16])
         box(.032,.055,.32,mats.foyerPaint,x-2.056,1.89+offset,4.18);
-      box(.39,.055,.39,mats.frameWhite,x,3.325,5.14);
-      box(.30,.037,.30,mats.litGlass,x,3.290,5.14);
+      mountCeilingLight(x,5.14,baseFloor+rise-.16,
+        "entrance-vestibule",0,.39,.39);
+      audit.ceilingFixtures=ceilingFixtures;
       audit.foyer={
         x,outerZ:face-.19,backZ:3.35,halfWidth:foyerHalfWidth,
         floorLevel:.70,tiles,mailboxes,mailboxLevel,mailboxWallX,
