@@ -20,7 +20,7 @@ assert.equal(entry.stair.bottomZ,-1.58);
 assert.equal(entry.stair.backZ,-3.38);
 assert.equal(entry.corridor,undefined);
 assert.ok(entry.stair.bottomZ-entry.stair.backZ>=1.75);
-assert.ok(entry.stair.frontZ-entry.stair.turnZ>=1.20);
+assert.ok(entry.stair.frontZ-entry.stair.turnZ>=3.95);
 assert.ok(collidesAt(x,entry.stair.backZ-.5,entry.buildingObstacles,PLAYER_RADIUS));
 assert.ok(!collidesAt(x,-2.4,entry.buildingObstacles,PLAYER_RADIUS));
 assert.ok(!collidesAt(x-1.5,-2.4,entry.buildingObstacles,PLAYER_RADIUS));
@@ -53,11 +53,11 @@ at(.70,"rear landing 1");
 assert.ok(player.position.z<-2.5);
 for(let floor=1;floor<5;floor++){
  go(-1,0,70);assert.ok(player.position.x<x-1.1);
- go(0,-1,150);
+ go(0,-1,230);
  at(.70+(floor-.5)*BUILDING.floorHeight,"front half landing "+floor);
- assert.ok(player.position.z>entry.stair.frontZ-.45);
+ assert.ok(player.position.z>entry.stair.frontZ-.50);
  go(1,0,90);assert.ok(player.position.x>x+1.1);
- go(0,1,150);
+ go(0,1,230);
  at(.70+floor*BUILDING.floorHeight,"rear floor "+(floor+1));
  assert.ok(player.position.z<entry.stair.backZ+.5);
  assert.equal(entry.zone(player.position.x,player.position.z,player.position.y),
@@ -65,10 +65,10 @@ for(let floor=1;floor<5;floor++){
 }
 assert.equal(player.nearestDoor(),null);
 for(let floor=4;floor>=1;floor--){
- go(0,-1,150);
+ go(0,-1,230);
  at(.70+(floor-.5)*BUILDING.floorHeight,"descending right "+floor);
  go(-1,0,90);
- go(0,1,150);
+ go(0,1,230);
  at(.70+(floor-1)*BUILDING.floorHeight,"descending left "+floor);
  if(floor>1)go(1,0,70);
 }
@@ -111,6 +111,11 @@ assert.equal(audit.completeStaircase.treads,96);
 assert.equal(audit.completeStaircase.liftCount,0);
 assert.equal(audit.completeStaircase.corridor,undefined);
 const landing=audit.completeStaircase.landing;
+assert.equal(audit.completeStaircase.removedUpperShaftSlabs,true);
+assert.ok(audit.completeStaircase.frontTurnaround.depth>=3.95);
+assert.equal(audit.stairwellFacade.windows.length,4);
+assert.ok(audit.stairwellFacade.cutThroughMasonry);
+assert.ok(audit.stairwellFacade.windows.every(w=>w.transparent&&w.openToStreet));
 assert.ok(landing.depth>=1.75);
 assert.ok(landing.maxZ<0,"not the old front wall");
 assert.equal(landing.doorsPerFloor,4);
