@@ -87,6 +87,12 @@ export function planPlayableEntrance(building,pads){
             px<x ? index/stair.steps*stair.halfRise :
               2*stair.halfRise-downSteps/stair.steps*stair.halfRise));
         }
+        // A small front landing directly connects each floor to its
+        // apartment corridor. At floor 1 this also makes the four flats
+        // reachable without forcing the player up to floor 2 first.
+        if(px>=x-.10&&z>=stair.bottomZ-.40)
+          for(let floor=0;floor<totalFloors;floor++)
+            candidate.push(floorHeight(floor));
         // The nearest reachable elevation is selected instead of
         // assuming a floor from X/Z or silently snapping downward.
         return candidate.reduce((best,y)=>
