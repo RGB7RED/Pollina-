@@ -827,7 +827,11 @@ export function buildApartmentHouse(THREE,config={}){
     const lo=firstMid+i*2.42+.80;
     return {bottom:lo,top:lo+1.42};
   });
-  const cuts=[.70,shellTop,...windowIntervals.flatMap(w=>[w.bottom,w.top]),
+  // Preserve the ORIGINAL operable entrance opening as well.
+  const entryDoorVoid={bottom:C.plinth+.04,top:C.plinth+.04+2.28,
+    halfWidth:1.71/2};
+  const cuts=[.70,shellTop,entryDoorVoid.top,
+    ...windowIntervals.flatMap(w=>[w.bottom,w.top]),
     ...Array.from({length:C.floors},(_,i)=>.70+1.39+i*2.42),
     ...Array.from({length:C.floors},(_,i)=>.70+1.39+i*2.42+1.16)];
   const sorted=[...new Set(cuts.filter(v=>v>=.70&&v<=shellTop)
@@ -841,9 +845,11 @@ export function buildApartmentHouse(THREE,config={}){
     const lower=rel<0?midY<1.90:
       rel-Math.floor(rel/2.42)*2.42<1.16;
     const mat=lower?mats.foyerLower:mats.foyerPaint;
-    const interrupted=windowIntervals.some(w=>midY>w.bottom&&midY<w.top);
-    const ranges=interrupted?
-      [[-innerHalfWidth,-.70],[.70,innerHalfWidth]]:
+    const windowOpen=windowIntervals.some(w=>midY>w.bottom&&midY<w.top);
+    const doorwayOpen=midY>entryDoorVoid.bottom&&midY<entryDoorVoid.top;
+    const holeHalf=doorwayOpen?entryDoorVoid.halfWidth:windowOpen?.70:0;
+    const ranges=holeHalf?
+      [[-innerHalfWidth,-holeHalf],[holeHalf,innerHalfWidth]]:
       [[-innerHalfWidth,innerHalfWidth]];
     for(const [l,r] of ranges){
       box(r-l,y1-y0,.025,mat,wx+(l+r)/2,midY,innerWindowZ);
@@ -851,7 +857,8 @@ export function buildApartmentHouse(THREE,config={}){
     }
   }
   audit.stairwellInterior={plasterPanels,wallZ:innerWindowZ,
-    windowApertures:windowIntervals,painted:true,
+    windowApertures:windowIntervals,entranceAperture:entryDoorVoid,
+    painted:true,
     noBrickFacing:true,transparentWindowsUnobstructed:true};
   // Two side windows per storey. The end walls are perforated too.
   for(const side of [-1,1]){
