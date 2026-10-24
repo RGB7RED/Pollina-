@@ -6,7 +6,7 @@ export function planPlayableEntrance(building,pads){
   const halfX=building.length/2,halfZ=facade;
   const corridorHalf=.81,insideEnd=3.35;
   // U-stair follows the true stair mesh in building-lab/building.js.
-  const stair={bottomZ:3.35,turnZ:-.74,backZ:-1.63,
+  const stair={bottomZ:3.00,turnZ:-.74,backZ:-1.63,
     halfRise:building.floorHeight/2,steps:12};
   if(p.width<2||insideEnd>=facade||corridorHalf>=p.width/2)
     throw Error("Entrance dimensions invalid");
@@ -55,7 +55,7 @@ export function planPlayableEntrance(building,pads){
       if(z>=9.42)return (10.65-z)/(10.65-9.42)*.50;
       if(z>=7.10)return .50;
       if(z>=6.23)return .50+(7.10-z)/(7.10-6.23)*.20;
-      if(z>=insideEnd)return .70;
+      if(z>=stair.bottomZ)return .70;
       if(z>=stair.backZ){
         // The turnaround is half a storey above the vestibule floor.
         if(z<=stair.turnZ)return .70+stair.halfRise;
@@ -63,7 +63,9 @@ export function planPlayableEntrance(building,pads){
           (stair.bottomZ-z)/(stair.bottomZ-stair.turnZ)));
         const index=Math.min(stair.steps,Math.floor(ratio*stair.steps)+1);
         const stepsUp=index/stair.steps*stair.halfRise;
-        return px<x ? .70+stepsUp : .70+2*stair.halfRise-stepsUp;
+        const downSteps=Math.min(stair.steps,Math.floor(ratio*stair.steps));
+        return px<x ? .70+stepsUp :
+          .70+2*stair.halfRise-downSteps/stair.steps*stair.halfRise;
       }
       return 0;
     },
