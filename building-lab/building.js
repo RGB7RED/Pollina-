@@ -155,11 +155,13 @@ export function buildApartmentHouse(THREE,config={}){
     wallBox(axis,openingWidth,lining,.17,mats.reveal,centre,bottom+lining/2,recess);
     return {axis,side,centre,width:openingWidth,bottom,top,height,kind};
   }
-  function windowDetail(hole,variation,isBalcony=false,isStairWindow=false){
+  function windowDetail(hole,variation,isBalcony=false,isStairWindow=false,isApartmentWindow=false){
     const {axis,side,centre,width,bottom,top,height}=hole;
     const facadeExtent=(axis==="long"?C.width:C.length)/2;
     const frameMat=[mats.frame,mats.frameWhite,mats.frameGrey][variation%3];
-    const glassMat=isStairWindow?mats.foyerWindowGlass:
+    // Apartment flats that can be entered have genuine transparent glass,
+    // same physically clear material already used in the stairwell windows.
+    const glassMat=(isStairWindow||isApartmentWindow)?mats.foyerWindowGlass:
       (variation%5===0||variation%7===3)?mats.litGlass:mats.glass;
     const depth=side*(facadeExtent-.17);
     const innerW=width-.16,innerH=height-.17,centreY=(bottom+top)/2;
@@ -896,7 +898,8 @@ export function buildApartmentHouse(THREE,config={}){
       centre,openingWidth,low,height,mats.brick,isDoor?"door":"window");
     if(isDoor)entranceDetail(hole,ENTRANCE_BAYS.indexOf(w.bay));
     else {
-      windowDetail(hole,w.variation,balcony);
+      windowDetail(hole,w.variation,balcony,false,
+        w.floor===4&&w.bay===1);
       if(balcony)balconyDetail(w);
     }
   }
@@ -933,7 +936,7 @@ export function buildApartmentHouse(THREE,config={}){
       const hole={axis:"long",side,centre:mid,width:w,bottom,
         top:bottom+height,height,kind:"window"};
       audit.holes.push(hole);stats.windowHoles++;
-      windowDetail(hole,variation,balcony);
+      windowDetail(hole,variation,balcony,false,floor===0);
       if(balcony)balconyDetail(f1);
       if(floor===0)audit.firstFloorWindowHoles.push(hole);
     }
