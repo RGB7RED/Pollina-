@@ -277,7 +277,8 @@ export function buildApartmentHouse(THREE,config={}){
       const entranceStartZ=3.35,entranceRun=entranceStartZ-rearLandingEndZ;
       const run=halfLandingZ-rearLandingEndZ,runStep=run/stepsPerFlight;
       const firstX=x-1.40,secondX=x+1.40,stairHalfWidth=2.18;
-      const stairHeight=C.plinth+C.floors*C.floorHeight-baseFloor-.08;
+      const wallBase=foyerFloor;
+      const stairHeight=C.plinth+C.floors*C.floorHeight-wallBase-.08;
       if(baseFloor+(C.floors-1)*storeyRise+2.19>C.plinth+C.floors*C.floorHeight)
         throw Error("Apartment doors would cross existing roofline");
       // Widened stairwell: >1.65 m deep rear FULL floor platform versus
@@ -286,13 +287,13 @@ export function buildApartmentHouse(THREE,config={}){
       for(const side of [-1,1]){
         const wX=x+side*stairHalfWidth;
         box(.14,stairHeight,facadeInnerZ-rearWallZ,mats.reveal,
-          wX,baseFloor+stairHeight/2,(facadeInnerZ+rearWallZ)/2);
+          wX,wallBase+stairHeight/2,(facadeInnerZ+rearWallZ)/2);
         box(.019,stairHeight-.20,facadeInnerZ-rearWallZ-.12,mats.foyerPaint,
-          wX-side*.084,baseFloor+(stairHeight-.20)/2,
+          wX-side*.084,wallBase+(stairHeight-.20)/2,
           (facadeInnerZ+rearWallZ)/2);
       }
       box(stairHalfWidth*2+.14,stairHeight,.14,mats.reveal,x,
-        baseFloor+stairHeight/2,rearWallZ);
+        wallBase+stairHeight/2,rearWallZ);
       const railMat=mats.balconyMetal,railing={
         height:.94,postSpacing:run/7,balustersPerFlight:8,
         railsPerFlight:3,continuous:true,wallSideRails:0,
