@@ -137,5 +137,5 @@ for(let f=1;f<=5;f++){
 const glass=house.innerDoorPivot.children.filter(m=>m.material.transparent);
 assert.equal(glass.length,1,"accepted transparent interior door intact");
 const instanced=house.root.children.filter(o=>o instanceof InstancedMesh);
-assert.ok(instanced.length<=32,"mobile batching maintained");
+assert.ok(instanced.length<=33,"one dedicated batch for real transparent stairwell glass");
 console.log("MINI CITY 4.5.4.2 PASS: 4 reversed U climbs & descents, 20 opposite-end doors, deep landing, 3-level rails and posts");
