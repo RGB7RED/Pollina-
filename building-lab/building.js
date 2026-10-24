@@ -93,6 +93,10 @@ export function buildApartmentHouse(THREE,config={}){
     foyerRubber:new THREE.MeshStandardMaterial({color:0x4a5050,roughness:1}),
     foyerMailbox:new THREE.MeshStandardMaterial({color:0x7b8584,roughness:.72,metalness:.22}),
     foyerDoor:new THREE.MeshStandardMaterial({color:0x777e79,roughness:.74}),
+    foyerWindowGlass:new THREE.MeshStandardMaterial({
+      color:0xc9e4e7,roughness:.12,metalness:0,
+      transparent:true,opacity:.22,depthWrite:false,side:THREE.DoubleSide
+    }),
     vent:new THREE.MeshStandardMaterial({color:0x9ca3a1,roughness:.83}),
     ventDark:new THREE.MeshStandardMaterial({color:0x4b5656,roughness:.88})
   };
@@ -248,11 +252,64 @@ export function buildApartmentHouse(THREE,config={}){
         box(.039,.065,depth-.24,mats.frameWhite,inX,2.01,floorMid);
         box(.045,.095,depth-.24,mats.frameWhite,inX,.795,floorMid);
       }
-      // A solid terminal wall marks the future stairwell interface. A
-      // stair flight and landings will REPLACE it on stage 4.5.3.
-      box(1.96,2.59,.16,mats.reveal,x,2.045,3.35);
-      box(1.70,1.20,.025,mats.foyerLower,x,1.36,3.447);
-      box(1.70,1.20,.025,mats.foyerPaint,x,2.57,3.447);
+      // 4.5.3: remove the temporary blind rear wall — the first flight
+      // is genuinely behind the second glazed door, inside the same house.
+      // One U-shaped staircase links floors 1 → 2 without any scene change.
+      const bottomZ=3.35,turnZ=-.74,backZ=-1.63;
+      const rise=C.floorHeight/2,stepsPerFlight=12;
+      const run=bottomZ-turnZ,runStep=run/stepsPerFlight;
+      const firstX=x-.41,secondX=x+.41;
+      // Enclosing painted stairwell follows the same masonry footprint.
+      for(const off of [-.91,.91]){
+        box(.14,5.42,bottomZ-backZ,mats.reveal,
+          x+off,3.37,(bottomZ+backZ)/2);
+        box(.018,1.40,bottomZ-backZ-.12,mats.foyerLower,
+          x+Math.sign(off)*.828,1.40,(bottomZ+backZ)/2);
+        box(.018,1.65,bottomZ-backZ-.12,mats.foyerPaint,
+          x+Math.sign(off)*.828,2.93,(bottomZ+backZ)/2);
+      }
+      box(1.96,5.42,.14,mats.reveal,x,3.37,backZ);
+      // Half-height return landing (between the two parallel flights).
+      box(1.64,.16,backZ*-1+turnZ,mats.foyerTileAlt,
+        x,.70+rise-.08,(turnZ+backZ)/2);
+      // Actual risers and treads; no visual-only staircase texture.
+      for(let i=0;i<stepsPerFlight;i++){
+        const zA=bottomZ-(i+.5)*runStep;
+        const zB=turnZ+(i+.5)*runStep;
+        const yA=.70+(i+1)*rise/stepsPerFlight;
+        const yB=.70+rise+(i+1)*rise/stepsPerFlight;
+        for(const [cx,cz,y] of [[firstX,zA,yA],[secondX,zB,yB]]){
+          box(.725,.115,runStep-.012,mats.foyerTileAlt,cx,y-.057,cz);
+          box(.725,.064,runStep-.012,mats.foyerTile,cx,y-.030,cz);
+        }
+      }
+      // Top landing has room to stop; 4.5.4 will connect four flat doors
+      // per floor here. The landing does not extend into the lower ceiling.
+      box(.76,.18,.63,mats.foyerTileAlt,secondX,
+        .70+2*rise-.09,bottomZ-.32);
+      // Two continuous handrails + posts; no inaccessible fake corridors.
+      const railMat=mats.foyerMailbox;
+      for(const z of [3.02,2.24,1.47,.70,-.04]){
+        const t=(bottomZ-z)/run;
+        const y=.70+rise*t;
+        box(.044,1.01,.046,railMat,x-.075,y+.50,z);
+        box(.044,1.01,.046,railMat,x+.075,.70+2*rise-y+.70+.50,z);
+      }
+      const stringerLength=Math.hypot(run,rise);
+      box(.053,.057,stringerLength,railMat,x-.075,
+        .70+rise/2+1.01,(bottomZ+turnZ)/2,
+        -Math.atan2(rise,run));
+      box(.053,.057,stringerLength,railMat,x+.075,
+        .70+rise+rise/2+1.01,(bottomZ+turnZ)/2,
+        Math.atan2(rise,run));
+      // A little natural light spills onto the intermediate landing.
+      box(.29,.028,.29,mats.frameWhite,x,5.44,-.80);
+      box(.22,.021,.22,mats.litGlass,x,5.41,-.80);
+      audit.firstStaircase={
+        firstX,secondX,bottomZ,turnZ,backZ,stepsPerFlight,
+        storeyHeight:C.floorHeight,halfLandingHeight:.70+rise,
+        secondFloorHeight:.70+2*rise,stairFlights:2
+      };
       box(1.96,.13,depth,mats.foundation,x,3.41,floorMid);
       // Individual stone slabs with tiny grouted gaps, batched by only
       // two materials to preserve mobile draw-call and memory budgets.
@@ -289,14 +346,25 @@ export function buildApartmentHouse(THREE,config={}){
         mesh.castShadow=true;mesh.receiveShadow=true;
         inner.add(mesh);
       }
-      doorPart(innerWidth,innerHeight,.067,mats.foyerDoor,
-        innerWidth/2,innerHeight/2,0);
-      doorPart(.77,.82,.079,mats.glass,
-        innerWidth*.51,innerHeight*.70,.045);
-      doorPart(.90,.045,.10,mats.frameGrey,
-        innerWidth*.51,innerHeight*.92,.053);
+      // REAL open window, not tinted paint drawn on a solid metal slab.
+      // The metal leaf is assembled around an actual rectangular void.
+      const stile=.175,glassBottom=.91,glassTop=1.97;
+      doorPart(innerWidth,glassBottom,.067,mats.foyerDoor,
+        innerWidth/2,glassBottom/2,0);
+      doorPart(stile,glassTop-glassBottom,.067,mats.foyerDoor,
+        stile/2,(glassBottom+glassTop)/2,0);
+      doorPart(stile,glassTop-glassBottom,.067,mats.foyerDoor,
+        innerWidth-stile/2,(glassBottom+glassTop)/2,0);
+      doorPart(innerWidth,innerHeight-glassTop,.067,mats.foyerDoor,
+        innerWidth/2,(innerHeight+glassTop)/2,0);
+      // Transparent glazing at the opening (depthWrite off): player can
+      // see the REAL first stair flight through the CLOSED inner door.
+      doorPart(innerWidth-2*stile,glassTop-glassBottom,.024,
+        mats.foyerWindowGlass,innerWidth/2,(glassBottom+glassTop)/2,.010);
+      doorPart(innerWidth-2*stile,.043,.10,mats.frameGrey,
+        innerWidth/2,glassBottom-.014,.052);
       doorPart(.045,.16,.10,mats.vent,
-        innerWidth-.17,innerHeight*.44,.081);
+        innerWidth-.22,innerHeight*.44,.081);
       root.add(inner);foyerDoor=inner;
       // Twenty individual postal boxes: 5 columns x 4 rows (future
       // flats 1–20), fixed to the landing-side right wall, not hovering
@@ -319,6 +387,8 @@ export function buildApartmentHouse(THREE,config={}){
       audit.foyer={
         x,outerZ:face-.19,innerDoorZ:innerZ,backZ:3.35,
         floorLevel:.70,tiles,mailboxes,doorCount:2,
+        secondDoorWindow:{width:innerWidth-2*stile,
+          bottom:glassBottom,top:glassTop,transparent:true},
         upperPaint:0xd0c9b1,lowerPaint:0x76978d
       };
       // Pivot at the LEFT jamb. The door opens inward around its real
