@@ -91,6 +91,18 @@ assert.ok(p.obstacles.includes(plan.doorBlockers[2]));
 assert.ok(maxLift<.19);
 for(const d of plan.doors){
  assert.ok(collidesAt(d.x,d.z,plan.doorBlockers,PLAYER_RADIUS,plan.y));
+ // Exercise EACH of the four doors independently at the true first-
+ // floor level. Use a new numerical avatar position only for this
+ // local doorway check; full street-to-floor ascent was checked above.
+ p.position={x:entry.x+d.side*1.14,z:d.z,y:plan.y};
+ assert.equal(p.nearestDoor()?.number,d.number);
+ assert.ok(p.toggleNearestDoor());
+ go(d.side,0,22);
+ assert.ok(Math.abs(p.position.x-entry.x)>entry.stairHalf+.24,
+  "opening flat "+d.number+" must be traversable");
+ p.reset();
+ assert.ok(p.obstacles.includes(plan.doorBlockers.find(b=>
+  b.name==="flat-"+d.number+"-closed")));
 }
 const catalog=validateCatalog(JSON.parse(readFileSync(
  new URL("../models/catalog.json",import.meta.url),"utf8")));
