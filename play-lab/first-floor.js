@@ -28,11 +28,11 @@ export function planFirstFloor(building,entrance){
   }
   for(const wing of wings){
     const {side,minX,maxX,innerX}=wing,left=minX,right=maxX;
-    const near=innerX-side*.75;
+    const near=innerX+side*.75;
     // Rear and front flats have independent entrance doors. Private
     // hall of front flat runs beside the side wall from Z=-3 to Z=-0.65.
     alongZ("front-rear-flat-"+side,-.65,left,right,near,1.02);
-    const corridorWall=innerX-side*1.33;
+    const corridorWall=innerX+side*1.33;
     alongX("private-hall-"+side,corridorWall,-3.08,-.65,-1.90,.91);
     alongZ("rear-wet-zone-"+side,-4.73,left,right,
       side<0?left+3.05:right-3.05,.92);
