@@ -115,7 +115,7 @@ assert.ok(player.position.x>apartment.doorway.x+PLAYER_RADIUS-.10,
  "closed wooden door blocks a player from entering");
 assert.ok(player.toggleNearestDoor());
 assert.ok(!player.obstacles.includes(apartment.doorBlocker));
-walk(-1,0,35);
+walk(-1,0,32);
 assert.ok(player.position.x<apartment.doorway.x-.8);
 assert.equal(entry.zone(player.position.x,player.position.z,player.position.y),
  "Квартира №17 · Прихожая");
