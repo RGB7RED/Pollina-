@@ -88,12 +88,10 @@ export function buildApartmentHouse(THREE,config={}){
     entryRamp:new THREE.MeshStandardMaterial({color:0x91918a,roughness:.96}),
     foyerPaint:new THREE.MeshStandardMaterial({color:0xd0c9b1,roughness:.99}),
     foyerLower:new THREE.MeshStandardMaterial({color:0x76978d,roughness:.98}),
-    foyerTrim:new THREE.MeshStandardMaterial({color:0xe4e0d4,roughness:.92}),
     foyerTile:new THREE.MeshStandardMaterial({color:0x9b9b94,roughness:.96}),
     foyerTileAlt:new THREE.MeshStandardMaterial({color:0xaaa9a0,roughness:.96}),
     foyerRubber:new THREE.MeshStandardMaterial({color:0x4a5050,roughness:1}),
     foyerMailbox:new THREE.MeshStandardMaterial({color:0x7b8584,roughness:.72,metalness:.22}),
-    foyerMailboxDark:new THREE.MeshStandardMaterial({color:0x404e52,roughness:.91}),
     foyerDoor:new THREE.MeshStandardMaterial({color:0x777e79,roughness:.74}),
     vent:new THREE.MeshStandardMaterial({color:0x9ca3a1,roughness:.83}),
     ventDark:new THREE.MeshStandardMaterial({color:0x4b5656,roughness:.88})
@@ -247,8 +245,8 @@ export function buildApartmentHouse(THREE,config={}){
         const inX=x+Math.sign(off)*.829;
         box(.018,1.20,depth-.24,mats.foyerLower,inX,1.36,floorMid);
         box(.018,1.22,depth-.24,mats.foyerPaint,inX,2.57,floorMid);
-        box(.039,.065,depth-.24,mats.foyerTrim,inX,2.01,floorMid);
-        box(.045,.095,depth-.24,mats.foyerTrim,inX,.795,floorMid);
+        box(.039,.065,depth-.24,mats.frameWhite,inX,2.01,floorMid);
+        box(.045,.095,depth-.24,mats.frameWhite,inX,.795,floorMid);
       }
       // A solid terminal wall marks the future stairwell interface. A
       // stair flight and landings will REPLACE it on stage 4.5.3.
@@ -272,15 +270,15 @@ export function buildApartmentHouse(THREE,config={}){
       // Anti-slip mat immediately behind the street door.
       box(1.18,.016,.50,mats.foyerRubber,x,.72,5.69);
       for(let i=-3;i<=3;i++)
-        box(.015,.018,.44,mats.foyerMailboxDark,
+        box(.015,.018,.44,mats.ventDark,
           x+i*.16,.737,5.69);
       // Real inner doorway. Solid jambs and lintel leave a 1.42 m-wide
       // void below the lintel; the pivot leaf swings into the landing.
       for(const side of [-1,1]){
-        box(.135,2.30,.14,mats.foyerTrim,
+        box(.135,2.30,.14,mats.frameWhite,
           x+side*.777,1.86,innerZ);
       }
-      box(1.69,.48,.14,mats.foyerTrim,x,3.10,innerZ);
+      box(1.69,.48,.14,mats.frameWhite,x,3.10,innerZ);
       const inner=new THREE.Group();
       inner.name="entrance-1-inner-hinged-door";
       const innerWidth=1.39,innerHeight=2.13;
@@ -307,13 +305,13 @@ export function buildApartmentHouse(THREE,config={}){
       for(let row=0;row<4;row++)for(let col=0;col<5;col++){
         const bz=3.60+col*.172,by=1.21+row*.205;
         box(.075,.177,.162,mats.foyerMailbox,x+.781,by,bz);
-        box(.011,.028,.10,mats.foyerMailboxDark,x+.734,by+.04,bz);
+        box(.011,.028,.10,mats.ventDark,x+.734,by+.04,bz);
         box(.013,.018,.028,mats.ventDark,x+.733,by-.042,bz+.045);
         mailboxes++;
       }
       // A small notice board and illuminated overhead fixture: no heavy
       // shadows or duplicate indoor scene are required.
-      box(.028,.46,.45,mats.foyerMailboxDark,x-.798,1.89,3.99);
+      box(.028,.46,.45,mats.ventDark,x-.798,1.89,3.99);
       for(const offset of [-.12,.03,.16])
         box(.032,.055,.32,mats.foyerPaint,x-.777,1.89+offset,3.99);
       box(.39,.055,.39,mats.frameWhite,x,3.325,5.14);
