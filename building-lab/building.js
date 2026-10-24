@@ -375,7 +375,7 @@ export function buildApartmentHouse(THREE,config={}){
           const doorZ=side<0?corridorMinZ+.025:corridorMaxZ-.025;
           const doorX=x+dx;
           box(1.03,2.18,.08,mats.frameWhite,doorX,level+1.13,doorZ);
-          box(.89,2.06,.09,[mats.foyerDoor,mats.entryBrown,
+          box(.89,2.06,.09,[mats.frameGrey,mats.entryBrown,
             mats.entryBlue,mats.entry][local],
             doorX,level+1.10,doorZ-side*.051);
           box(.035,.115,.072,mats.vent,
