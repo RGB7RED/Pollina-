@@ -335,15 +335,17 @@ export function buildApartmentHouse(THREE,config={}){
             }
           }
         }
-        // Front half-landing guard protecting the open centre shaft.
-        // A horizontal top rail connects the ascending flight rails.
-        for(const z of [halfLandingZ+.20,frontZ-.15]){
-          box(stairHalfWidth*2-.36,.08,.075,railMat,
-            x,level+rise+.94,z);
-          box(stairHalfWidth*2-.36,.056,.075,railMat,
-            x,level+rise+.47,z);
-          for(const px of [-1.80,-1.2,-.6,0,.6,1.2,1.80])
-            box(.068,.94,.068,railMat,x+px,level+rise+.47,z);
+        // Wall-side half-landing rails follow the TURN, rather than
+        // blocking the cross-landing with random sticks.
+        for(const sign of [-1,1]){
+          const rx=x+sign*(stairHalfWidth-.16);
+          for(const h of [.47,.94])
+            box(.085,.075,frontZ-halfLandingZ-.10,railMat,
+              rx,level+rise+h,(frontZ+halfLandingZ)/2);
+          for(let k=0;k<=3;k++){
+            const postZ=halfLandingZ+.14+k*(frontZ-halfLandingZ-.28)/3;
+            box(.072,.94,.072,railMat,rx,level+rise+.47,postZ);
+          }
         }
         stairway.push({fromFloor:floor+1,toFloor:floor+2,
           bottom:level,mid:level+rise,top:level+C.floorHeight,
