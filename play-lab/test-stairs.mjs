@@ -103,7 +103,7 @@ assert.equal(audit.foyer.mailboxLevel,3.30);
 assert.equal(audit.foyer.doorCount,1);
 assert.equal(house.innerDoorPivot,null);
 assert.equal(house.doorPivot.name,"entrance-1-hinged-door");
-assert.equal(audit.firstStaircase.entryFlight.centreX,x+1.31);
+assert.ok(Math.abs(audit.firstStaircase.entryFlight.centreX-(x+1.31))<1e-8);
 assert.equal(audit.completeStaircase.railing.flightWidth,1.58);
 assert.equal(audit.completeStaircase.railing.frontGuardLinks,4);
 const instanced=house.root.children.filter(m=>m instanceof InstancedMesh);
