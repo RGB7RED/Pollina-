@@ -2,6 +2,7 @@ import * as THREE from "three";
 import {GLTFLoader} from "three/addons/loaders/GLTFLoader.js";
 import {buildApartmentHouse} from "../building-lab/building.js";
 import {planFirstApartment,buildFirstApartment} from "./apartment.js";
+import {planFirstFloor,buildFirstFloor} from "./first-floor.js";
 import {applyFacadeFinishes} from "../building-lab/materials.js";
 import {ActorAnimator} from "./animation.js";
 import {planStreet,buildStreet} from "./street.js";
@@ -42,6 +43,11 @@ scene.add(house);
 // blank road/ground with one deterministic street plan and batched furnishing.
 const pads=house.userData.geometryAudit.entryPads;
 const entry=planPlayableEntrance(config,pads);
+const firstFloor=planFirstFloor(config,entry);
+entry.installFirstFloor(firstFloor);
+const {root:firstFloorRoot,doorPivots:firstFloorDoorPivots}=
+  buildFirstFloor(THREE,firstFloor);
+scene.add(firstFloorRoot);
 const apartment=planFirstApartment(config,entry);
 entry.installApartment(apartment);
 const {root:flat,doorPivot:apartmentDoorPivot}=buildFirstApartment(THREE,apartment);
@@ -214,7 +220,7 @@ function updateEntryAction(){
  entryAction.hidden=!near;
  if(!near)return;
  entryAction.textContent="🚪 "+(near.open?"Закрыть ":"Открыть ")+
-    (near.id==="apartment-17"?"квартиру №17":"входную");
+    (near.id==="outer"?"входную":"квартиру №"+(near.number||17));
  entryAction.setAttribute("aria-pressed",String(near.open));
  entryAction.title=near.label+" · E";
 }
@@ -222,9 +228,7 @@ function toggleEntryDoor(){
  if(studio.mode==="lab")return;
  const near=controller.nearestDoor();
  if(!near)return;
- const ok=near.id==="outer"?
-    controller.setEntryDoorOpen(!controller.entryDoorOpen):
-    controller.setApartmentDoorOpen(!controller.apartmentDoorOpen);
+ const ok=controller.toggleNearestDoor();
  if(ok){updateEntryAction();studio.refreshCollisions();}
  else $("actor-status").textContent="Отойди от дверного проёма, чтобы закрыть дверь";
 }
@@ -241,6 +245,7 @@ function resetActor(){
  controller.reset();
  doorPivot.rotation.y=0;
  apartmentDoorPivot.rotation.y=0;
+ for(const pivot of firstFloorDoorPivots.values())pivot.rotation.y=0;
  updateEntryAction();
  studio.refreshCollisions();
  releaseControls();
@@ -287,6 +292,10 @@ for(const [id,direction] of [["free-up","up"],["free-down","down"]]){
   button.addEventListener(ev,()=>holdElevation[direction]=false);
 }
 $("free-reset").addEventListener("click",()=>freeCamera.reset());
+$("free-first-floor").addEventListener("click",()=>{
+ freeCamera.position={x:entry.x-4.60,y:firstFloor.y+1.60,z:2.45};
+ freeCamera.yaw=0;freeCamera.pitch=-.18;
+});
 $("free-landing").addEventListener("click",()=>{
   // Fifth-floor landing: inspect first real apartment 17.
   freeCamera.position={x:entry.x,y:entry.floorHeight(4)+1.55,z:-2.42};
@@ -337,6 +346,14 @@ function animate(){
   const aptAngle=controller.apartmentDoorOpen?-Math.PI*.48:0;
   apartmentDoorPivot.rotation.y+=(aptAngle-apartmentDoorPivot.rotation.y)*
     (1-Math.exp(-12*dt));
+  for(const [number,pivot] of firstFloorDoorPivots){
+    const door=firstFloor.doors.find(d=>d.number===number);
+    // Left and right apartment leaves swing into their OWN rooms,
+    // never across the narrow communal landing.
+    const angle=controller.firstFloorDoorOpen.has(number)?
+      door.side*Math.PI*.48:0;
+    pivot.rotation.y+=(angle-pivot.rotation.y)*(1-Math.exp(-12*dt));
+  }
  actorPivot.position.set(state.x,state.y,state.z);
  updateEntryAction();
  actorPivot.rotation.y=state.heading;
