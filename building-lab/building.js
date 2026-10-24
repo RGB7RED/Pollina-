@@ -139,29 +139,7 @@ export function buildApartmentHouse(THREE,config={}){
     wallStrip(axis,side,u0,left,y0,y1,material);
     wallStrip(axis,side,right,u1,y0,y1,material);
     wallStrip(axis,side,left,right,y0,bottom,material);
-    // Real transom: remove brick from the FIRST doorway's lintel.
-    const firstX=-C.length/2+1.85+(ENTRANCE_BAYS[0]+.5)*
-      ((C.length-3.7)/C.windowBays);
-    const firstDoor=kind==="door"&&axis==="long"&&side===1&&
-      Math.abs(centre-firstX)<.001;
-    if(firstDoor){
-      const low=top+.075,high=y1-.075,tw=1.18;
-      const from=centre-tw/2,to=centre+tw/2,py=(low+high)/2;
-      wallStrip(axis,side,left,right,top,low,material);
-      wallStrip(axis,side,left,from,low,high,material);
-      wallStrip(axis,side,to,right,low,high,material);
-      wallStrip(axis,side,left,right,high,y1,material);
-      const face=C.width/2;
-      wallBox(axis,tw-.085,high-low-.045,.024,
-        mats.foyerWindowGlass,centre,py,face-.235);
-      for(const u of [from+.027,to-.027])
-        wallBox(axis,.054,high-low,.12,mats.frameWhite,u,py,face-.17);
-      for(const v of [low+.023,high-.023])
-        wallBox(axis,tw,.045,.12,mats.frameWhite,centre,v,face-.17);
-      audit.stairwellWindows.push({floor:0,centreX:centre,bottom:low,top:high,
-        width:tw,wallZ:face-.16,through:true,transparent:true,
-        type:"entrance-transom"});
-    }else wallStrip(axis,side,left,right,top,y1,material);
+    wallStrip(axis,side,left,right,top,y1,material);
     audit.holes.push({axis,side,centre,width:openingWidth,bottom,top,kind});
     if(kind==="door")stats.doorHoles++;else stats.windowHoles++;
     // Thin inner reveal lining follows the solid jamb, lintel and sill,
@@ -281,7 +259,7 @@ export function buildApartmentHouse(THREE,config={}){
         box(.039,.065,depth-.24,mats.frameWhite,inX,2.01,floorMid);
         box(.045,.095,depth-.24,mats.frameWhite,inX,.795,floorMid);
       }
-      // 4.5.4.2: landing is NOW at the far/opposite end, where there
+      // 4.5.4.4: landing remains at the far/opposite end, where there
       // used to be a blank wall. All four flat doors open from that REAL
       // landing, not from a wall blocking the ascending flight.
       //
@@ -289,12 +267,19 @@ export function buildApartmentHouse(THREE,config={}){
       // forward along LEFT flight to front intermediate landing; turn
       // RIGHT; climb back along RIGHT flight to next full-floor rear landing.
       const rearWallZ=-3.38,rearLandingEndZ=-1.58;
-      const halfLandingZ=2.05,firstFrontZ=3.28;
+      // First residential landing rises one real 12-step flight above foyer.
+      // Remaining four storeys are 2.42m apart to preserve the existing
+      // building roof and full-sized 2.15m apartment doors.
+      const foyerFloor=.70,entryRise=1.39,baseFloor=foyerFloor+entryRise;
+      const storeyRise=2.42,rise=storeyRise/2,stepsPerFlight=12;
+      const halfLandingZ=2.05;
       const facadeInnerZ=C.width/2-wallDepth,frontZ=facadeInnerZ-.12;
-      const rise=C.floorHeight/2,stepsPerFlight=12;
+      const entranceStartZ=3.35,entranceRun=entranceStartZ-rearLandingEndZ;
       const run=halfLandingZ-rearLandingEndZ,runStep=run/stepsPerFlight;
-      const firstX=x-1.34,secondX=x+1.34,baseFloor=.70;
-      const stairHalfWidth=2.08,stairHeight=C.plinth+C.floors*C.floorHeight-.68;
+      const firstX=x-1.40,secondX=x+1.40,stairHalfWidth=2.18;
+      const stairHeight=C.plinth+C.floors*C.floorHeight-baseFloor-.08;
+      if(baseFloor+(C.floors-1)*storeyRise+2.19>C.plinth+C.floors*C.floorHeight)
+        throw Error("Apartment doors would cross existing roofline");
       // Widened stairwell: >1.65 m deep rear FULL floor platform versus
       // previous ~0.89 m turnaround. Central continuous aisle is kept
       // between flights to reach the rear floor-1 apartment doors.
@@ -310,29 +295,47 @@ export function buildApartmentHouse(THREE,config={}){
         baseFloor+stairHeight/2,rearWallZ);
       const railMat=mats.balconyMetal,railing={
         height:.94,postSpacing:run/7,balustersPerFlight:8,
-        railsPerFlight:3,continuous:true};
+        railsPerFlight:3,continuous:true,wallSideRails:0,
+        innerGuardLinks:4,flightWidth:1.27};
       const stairway=[];
+      // FIRST staircase: 12 treads rising from the .70m foyer to +2.09m.
+      const entranceTread=entranceRun/stepsPerFlight;
+      for(let i=0;i<stepsPerFlight;i++){
+        const tz=entranceStartZ-(i+.5)*entranceTread;
+        const ty=foyerFloor+(i+1)*entryRise/stepsPerFlight;
+        box(1.26,.12,entranceTread-.014,mats.foyerTileAlt,x,ty-.06,tz);
+        box(1.26,.06,entranceTread-.014,mats.foyerTile,x,ty-.03,tz);
+      }
+      // A guard along each side of the incoming centre flight.
+      for(const sign of [-1,1]){
+        const rx=x+sign*.735,railLength=Math.hypot(entranceRun,entryRise);
+        box(.075,.075,railLength,railMat,
+          rx,foyerFloor+entryRise/2+.94,(entranceStartZ+rearLandingEndZ)/2,
+          Math.atan2(entryRise,entranceRun));
+        for(let i=0;i<=9;i++){
+          const t=i/9;
+          box(.065,.94,.065,railMat,rx,
+            foyerFloor+entryRise*t+.47,entranceStartZ-t*entranceRun);
+        }
+      }
       function slantedRail(cx,cy,cz,len,angle,height,mat=railMat){
         box(.075,.075,len,mat,cx,cy+height,cz,angle);
       }
       for(let floor=0;floor<C.floors;floor++){
-        const level=baseFloor+floor*C.floorHeight;
+        const level=baseFloor+floor*storeyRise;
         // Full-floor rear landing: all FOUR apartment doors are here.
         // It is the same 1.8 m deep place on every storey.
         box(stairHalfWidth*2-.18,.16,
           rearLandingEndZ-rearWallZ-.10,mats.foyerTileAlt,
           x,level-.08,(rearLandingEndZ+rearWallZ)/2);
-        // Only the first floor needs a centre approach from the foyer.
-        // Four copies at floors 2–5 formed incorrect floating slabs.
-        if(floor===0)box(1.28,.16,firstFrontZ-rearLandingEndZ,
-          mats.foyerTileAlt,x,level-.08,(firstFrontZ+rearLandingEndZ)/2);
+        // No horizontal centre-floor strip: the entrance uses real steps.
         box(.37,.056,.35,mats.frameWhite,x,level+2.47,rearWallZ+.70);
         box(.28,.035,.24,mats.litGlass,x,level+2.44,rearWallZ+.70);
         if(floor===C.floors-1)continue;
         // Lower turnaround cannot overhang the active foyer at y=2.09:
         // 0.70 m floor + 1.82 m person must retain headroom. Higher
         // returns extend to the true exterior masonry's INNER face.
-        const turnEndZ=floor===0?firstFrontZ:frontZ;
+        const turnEndZ=frontZ;
         box(stairHalfWidth*2-.18,.16,turnEndZ-halfLandingZ,
           mats.foyerTileAlt,x,level+rise-.08,
           (turnEndZ+halfLandingZ)/2);
@@ -342,8 +345,8 @@ export function buildApartmentHouse(THREE,config={}){
           const yL=level+(i+1)*rise/stepsPerFlight;
           const yR=level+rise+(i+1)*rise/stepsPerFlight;
           for(const [cx,cz,y] of [[firstX,zL,yL],[secondX,zR,yR]]){
-            box(1.15,.120,runStep-.012,mats.foyerTileAlt,cx,y-.060,cz);
-            box(1.15,.060,runStep-.012,mats.foyerTile,cx,y-.030,cz);
+            box(1.27,.120,runStep-.012,mats.foyerTileAlt,cx,y-.060,cz);
+            box(1.27,.060,runStep-.012,mats.foyerTile,cx,y-.030,cz);
           }
         }
         // Continuous sloped handrails, flat return rails and properly
@@ -354,7 +357,7 @@ export function buildApartmentHouse(THREE,config={}){
           [-1,firstX,-Math.atan2(rise,run),level],
           [1,secondX,Math.atan2(rise,run),level+rise]
         ]){
-          for(const railX of [cx+side*.57,cx-side*.57]){
+          for(const railX of [cx-side*.635]){
             const centreY=bottom+rise/2;
             for(const elevation of [.25,.56,.94])
               slantedRail(railX,centreY,(rearLandingEndZ+halfLandingZ)/2,
@@ -368,33 +371,23 @@ export function buildApartmentHouse(THREE,config={}){
             }
           }
         }
-        // Wall-side half-landing rails follow the TURN, rather than
-        // blocking the cross-landing with random sticks.
-        for(const sign of [-1,1]){
-          const rx=x+sign*(stairHalfWidth-.16);
-          for(const h of [.47,.94])
-            box(.085,.075,turnEndZ-halfLandingZ-.10,railMat,
-              rx,level+rise+h,(turnEndZ+halfLandingZ)/2);
-          for(let k=0;k<=3;k++){
-            const postZ=halfLandingZ+.14+k*(turnEndZ-halfLandingZ-.28)/3;
-            box(.072,.94,.072,railMat,rx,level+rise+.47,postZ);
-          }
-        }
-        // The first return stops before the ground-floor foyer. Put a
-        // VISIBLE guard along its exposed edge to match the 3D collision.
-        if(floor===0){
-          const guardZ=firstFrontZ-.055;
-          box(stairHalfWidth*2-.20,.075,.075,railMat,
-            x,level+rise+.94,guardZ);
-          for(let k=0;k<=6;k++)
-            box(.070,.94,.070,railMat,
-              x-stairHalfWidth+.12+k*(2*stairHalfWidth-.24)/6,
-              level+rise+.47,guardZ);
+        // Across the rear edge of the central shaft: one linked guard.
+        // On floor 1 leave the gap open for the NEW ascending flight.
+        if(floor>0){
+          box(1.51,.08,.075,railMat,x,level+.94,rearLandingEndZ+.02);
+          for(const off of [-.72,0,.72])
+            box(.065,.94,.065,railMat,x+off,level+.47,rearLandingEndZ+.02);
         }
         stairway.push({fromFloor:floor+1,toFloor:floor+2,
           bottom:level,mid:level+rise,top:level+C.floorHeight,
           steps:stepsPerFlight*2,returnEndZ:turnEndZ});
       }
+      // Also protect the fifth-storey central shaft edge.
+      box(1.51,.08,.075,railMat,x,
+        baseFloor+4*storeyRise+.94,rearLandingEndZ+.02);
+      for(const off of [-.72,0,.72])
+        box(.065,.94,.065,railMat,
+          x+off,baseFloor+4*storeyRise+.47,rearLandingEndZ+.02);
       // Four doors in the OPPOSITE rear landing: two at centre rear
       // wall, and one each on the two SIDE walls. No extra room.
       const apartments=[],doorWidth=.77,sideDoorWidth=.82;
@@ -428,7 +421,7 @@ export function buildApartmentHouse(THREE,config={}){
       const apartmentPalette=[mats.frameGrey,mats.entryBrown,
         mats.entryBlue,mats.entry];
       for(let floor=0;floor<C.floors;floor++){
-        const level=baseFloor+floor*C.floorHeight;
+        const level=baseFloor+floor*storeyRise;
         // Green/cream paint on the rear and side wall of the REAL
         // landing. Door 1/2 face forward; 3/4 sit on side walls.
         box(4.04,1.18,.025,mats.foyerLower,
@@ -476,20 +469,24 @@ export function buildApartmentHouse(THREE,config={}){
       audit.firstStaircase={
         firstX,secondX,bottomZ:rearLandingEndZ,turnZ:halfLandingZ,
         backZ:rearWallZ,stepsPerFlight,stairwellWidth:stairHalfWidth*2,
-        storeyHeight:C.floorHeight,halfLandingHeight:baseFloor+rise,
-        secondFloorHeight:baseFloor+2*rise,stairFlights:2
+        storeyHeight:storeyRise,halfLandingHeight:baseFloor+rise,
+        secondFloorHeight:baseFloor+2*rise,stairFlights:2,
+        entryFlight:{bottom:foyerFloor,top:baseFloor,
+          steps:stepsPerFlight,minZ:rearLandingEndZ,maxZ:entranceStartZ,
+          width:1.26}
       };
       audit.completeStaircase={
-        floors:C.floors,flights:(C.floors-1)*2,
-        treads:(C.floors-1)*stepsPerFlight*2,
+        floors:C.floors,flights:(C.floors-1)*2+1,
+        treads:((C.floors-1)*2+1)*stepsPerFlight,
+        firstFloor:baseFloor,storeyRise,foyerFloor,
         levels:stairway,apartmentDoors:apartments,
         landing:{centreX:x,minX:x-stairHalfWidth,maxX:x+stairHalfWidth,
           minZ:rearWallZ,maxZ:rearLandingEndZ,doorsPerFloor:4,
           depth:rearLandingEndZ-rearWallZ},
-        opposite:{firstTurnEndZ:firstFrontZ,upperTurnEndZ:frontZ,
+        opposite:{firstTurnEndZ:frontZ,upperTurnEndZ:frontZ,
           facadeInnerZ,facadeOuterZ:C.width/2,
-          upperTurnDepth:frontZ-halfLandingZ,openCentreFloors:[2,3,4,5],
-          originalFirstTurnPreservedForFoyerClearance:true},
+          upperTurnDepth:frontZ-halfLandingZ,
+          openCentreFloors:[1,2,3,4,5],firstTurnClearsFoyer:true},
         railing,
         liftCount:0
       };
