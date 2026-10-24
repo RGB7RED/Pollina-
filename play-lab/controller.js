@@ -209,11 +209,14 @@ export class PlayerController{
       const dx=(side*Math.cos(this.lookYaw)+ahead*Math.sin(this.lookYaw))*this.speed*dt;
       const dz=(side*Math.sin(this.lookYaw)-ahead*Math.cos(this.lookYaw))*this.speed*dt;
       const step=resolveStep(this.position,dx,dz,this.obstacles);
-      const ground=this.entry?.groundHeight(step.x,step.z,this.position.y)||0;
+      const ground=this.entry?
+        this.entry.groundHeight(step.x,step.z,this.position.y):0;
       // One genuine stair riser is ~11.6 cm. Reject abrupt height changes:
       // prevents walking sideways from floor 1 directly onto flight 2
       // and keeps the actor attached to the physical stair surfaces.
-      const forbiddenLift=this.entry&&Math.abs(ground-this.position.y)>.19;
+      const forbiddenLift=!!this.entry&&(
+        ground===null||!Number.isFinite(ground)||
+        Math.abs(ground-this.position.y)>.19);
       if(forbiddenLift){
         step.x=this.position.x;step.z=this.position.z;
         step.distance=0;step.hit=true;

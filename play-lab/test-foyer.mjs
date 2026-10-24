@@ -21,7 +21,7 @@ assert.equal(e.innerDoor.name,"entrance-1-inner-closed-door");
 assert.ok(!collidesAt(e.x,5.25,e.buildingObstacles,PLAYER_RADIUS));
 assert.ok(collidesAt(e.x,e.innerDoorZ,[e.innerDoor]));
 assert.equal(e.zone(e.x,5.45),"тамбур");
-assert.equal(e.zone(e.x,4.20),"площадка 1-го этажа");
+assert.equal(e.zone(e.x,4.20),"тамбур");
 const c=new PlayerController({building:BUILDING,pads,entry:e,
  spawn:{x:e.x,z:10.85}});
 assert.equal(c.obstacles.length,e.buildingObstacles.length+2);
@@ -45,13 +45,14 @@ assert.ok(c.obstacles.includes(e.innerDoor));
 assert.equal(c.toggleNearestDoor(),true);
 assert.equal(c.innerDoorOpen,true);
 assert.ok(!c.obstacles.includes(e.innerDoor));
-let crossed=false,previous=c.position.z;
+let crossed=false,previous=c.position.z,lastY=c.position.y;
 for(let i=0;i<110;i++){
  const state=c.update(.05);
  assert.ok(previous-state.z<=.17,"no teleport through interior partition");
- assert.equal(state.y,.70,"both foyer rooms share the same genuine floor");
+ assert.ok(Math.abs(state.y-lastY)<.19,"physical 12-step ascent, no vertical teleport");
+  lastY=state.y;
  previous=state.z;
- if(state.entranceZone==="площадка 1-го этажа")crossed=true;
+ if(state.entranceZone==="площадка 1-го этажа · квартиры 1–4")crossed=true;
 }
 assert.ok(crossed,"player reaches the true first-floor landing");
 assert.ok(c.position.z>e.stair.backZ+.28,
