@@ -27,11 +27,14 @@ export function planFacade({length=BUILDING.length,bays=BUILDING.windowBays,floo
     for(let bay=0;bay<bays;bay++){
       const x=-length/2+1.85+(bay+.5)*step;
       const entrance=side===1&&floor===0&&ENTRANCE_BAYS.includes(bay);
+      // Reference plan: ONLY TWO ordinary windows remain from the
+      // first/last entrance to the respective end of the house.
+      const blindBay=side===1&&(bay===0||bay===bays-1);
       // A real-looking uneven residential rhythm, no fully random facade.
       const balcony=(side===1?[2,6,11,16,21,25]:[4,10,16,22]).includes(bay)
         &&floor>0 && !(bay===11&&floor===2) && !(bay===22&&floor===4);
       const variation=(bay*37+floor*19+(side===1?2:5))%9;
-      points.push({x,side,floor,bay,entrance,balcony,variation});
+      points.push({x,side,floor,bay,entrance,balcony,variation,blindBay});
     }
   }
   return points;
@@ -865,6 +868,20 @@ export function buildApartmentHouse(THREE,config={}){
     wallStrip("long",side,C.length/2-1.85,C.length/2,C.plinth,shellTop,mats.brick);
   }
   for(const w of plan){
+    // The outermost former window bay on EACH edge is now solid
+    // brick. Keep the footprint and all four entrances at their
+    // approved coordinates: from entry #1 to the west end there are
+    // bay 1 and 2; from entry #4 to the east end bay 25 and 26.
+    if(w.blindBay){
+      const y0=C.plinth+w.floor*C.floorHeight;
+      wallStrip("long",w.side,w.x-step/2,w.x+step/2,
+        y0,y0+C.floorHeight,mats.brick);
+      continue;
+    }
+    // Rebuild two facade modules together for 1F apartment windows:
+    // the first floor is raised to Y=2.09 relative to the old plinth.
+    if((w.floor===0||w.floor===1)&&[1,2,4,5].includes(w.bay))
+      continue;
     // Bay over the FIRST doorway is one continuous 5-storey stairwell.
     // Its four windows are cut separately below, at stair LANDING heights
     // instead of regular apartment-window heights, to avoid half windows.
@@ -881,6 +898,44 @@ export function buildApartmentHouse(THREE,config={}){
     else {
       windowDetail(hole,w.variation,balcony);
       if(balcony)balconyDetail(w);
+    }
+  }
+  // True two-storey masonry apertures for FIRST residential floor.
+  // Floor 1 starts at 2.09 m; the old 1.355 m sill was below the
+  // residential landing, so a flat behind it saw a cut-off window.
+  // Build both window openings in one wall segment WITHOUT stacking
+  // full duplicate brick rectangles. Preserve all 2F balcony fixtures.
+  const firstFlatWindowBays=[1,2,4,5];
+  audit.firstFloorWindowHoles=[];
+  for(const side of [-1,1])for(const bay of firstFlatWindowBays){
+    const pair=plan.filter(w=>w.side===side&&w.bay===bay&&w.floor<=1);
+    if(pair.length!==2)throw Error("First-floor facade bay missing");
+    const [f0,f1]=pair,x0=f0.x-step/2,x1=f0.x+step/2;
+    const mid=f0.x,y0=C.plinth,y2=C.plinth+2*C.floorHeight;
+    const w=.0+1.40,left=mid-w/2,right=mid+w/2;
+    const firstBottom=2.74,upperBottom=C.plinth+C.floorHeight+
+      (f1.balcony?.23:.695);
+    const firstHeight=f1.balcony?.82:1.22;
+    const upperHeight=f1.balcony?2.20:1.59;
+    if(firstBottom+firstHeight>=upperBottom-.07)
+      throw Error("First-floor window meets second-floor window");
+    wallStrip("long",side,x0,left,y0,y2,mats.brick);
+    wallStrip("long",side,right,x1,y0,y2,mats.brick);
+    for(const [bottom,top] of [
+      [y0,firstBottom],
+      [firstBottom+firstHeight,upperBottom],
+      [upperBottom+upperHeight,y2]
+    ])wallStrip("long",side,left,right,bottom,top,mats.brick);
+    for(const [floor,bottom,height,variation,balcony] of [
+      [0,firstBottom,firstHeight,f0.variation,false],
+      [1,upperBottom,upperHeight,f1.variation,f1.balcony]
+    ]){
+      const hole={axis:"long",side,centre:mid,width:w,bottom,
+        top:bottom+height,height,kind:"window"};
+      audit.holes.push(hole);stats.windowHoles++;
+      windowDetail(hole,variation,balcony);
+      if(balcony)balconyDetail(f1);
+      if(floor===0)audit.firstFloorWindowHoles.push(hole);
     }
   }
   // FIRST entrance: four full-height windows, each placed above its
