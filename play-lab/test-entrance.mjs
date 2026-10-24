@@ -22,7 +22,7 @@ const entry=planPlayableEntrance(BUILDING,realPads);
 assert.equal(entry.x,realPads[0].x);
 assert.equal(entry.facade,BUILDING.width/2);
 assert.equal(entry.insideEnd,3.35);
-assert.equal(entry.buildingObstacles.length,8);
+assert.equal(entry.buildingObstacles.length,11);
 assert.ok(!collidesAt(entry.x,5.1,entry.buildingObstacles,PLAYER_RADIUS),
   "first vestibule is walkable before the door collider is considered");
 assert.ok(collidesAt(entry.x,entry.door.minZ+.10,[entry.door]),
