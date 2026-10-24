@@ -89,6 +89,17 @@ for(const pane of a.stairwellInterior.windowApertures){
   assert.equal(crossing.length,0,
     "paint may only cover the SOLID portion of the facade beside windows");
 }
+// Entry must NOT be sealed off by the same interior wall plaster.
+const doorHole=a.stairwellInterior.entranceAperture;
+assert.ok(doorHole.top>2.90&&Math.abs(doorHole.halfWidth-.855)<eps);
+const doorCover=instances.filter(t=>Math.abs(t.position.z-
+    a.stairwellInterior.wallZ)<eps&&Math.abs(t.scale.z-.025)<eps&&
+    (t.materialColor===0x76978d||t.materialColor===0xd0c9b1)&&
+    t.position.y-t.scale.y/2<doorHole.top-eps&&
+    t.position.y+t.scale.y/2>doorHole.bottom+eps&&
+    t.position.x-t.scale.x/2<x+doorHole.halfWidth-eps&&
+    t.position.x+t.scale.x/2>x-doorHole.halfWidth+eps);
+assert.equal(doorCover.length,0,"the only real street door is not plastered over");
 assert.ok(instances.some(t=>t.materialColor===0x76978d&&
   Math.abs(t.rotation.x)>.2&&t.scale.z>3),
   "green paint also follows the sloped flights, not only the apartments");
