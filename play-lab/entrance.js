@@ -10,7 +10,7 @@ export function planPlayableEntrance(building,pads){
   // opposite the former door wall. Ascend forward on LEFT, then return
   // toward the BACK along RIGHT to the following complete-floor landing.
   const foyerFloor=.70,firstFloor=2.09,storeyHeight=2.42;
-  const stair={bottomZ:-1.58,turnZ:2.05,backZ:-3.38,
+  const stair={bottomZ:-1.58,turnZ:2.05,backZ:-4.85,
     frontZ:facade-.44,firstFrontZ:facade-.44,
     entryStartZ:3.35,entryRise:1.39,halfRise:storeyHeight/2,
     steps:12,entrySteps:12,firstFloor,foyerFloor,storeyHeight,
@@ -62,7 +62,23 @@ export function planPlayableEntrance(building,pads){
     rect("fifth-floor-wall-connected-rail",
       x-stairHalf+.12,x+.18,
       stair.bottomZ-.035,stair.bottomZ+.055,
-      firstFloor+4*storeyHeight-.10,firstFloor+4*storeyHeight+1.02)
+      firstFloor+4*storeyHeight-.10,firstFloor+4*storeyHeight+1.02),
+    // All four radiators are on the real window-facing masonry. Their
+    // collision only occupies the corresponding HALF-landing height.
+    ...Array.from({length:totalFloors-1},(_,i)=>{
+      const halfY=firstFloor+i*storeyHeight+stair.halfRise;
+      return rect("radiator-window-"+(i+1),x-.69,x+.69,
+        facade-.68,facade-.31,halfY-.06,halfY+.79);
+    }),
+    rect("heating-riser",x+1.38,x+1.53,
+      facade-.70,facade-.33,foyerFloor,building.plinth+
+        totalFloors*building.floorHeight),
+    ...Array.from({length:totalFloors},(_,i)=>{
+      const level=firstFloor+i*storeyHeight;
+      return rect("electric-meter-cabinet-"+(i+1),
+        x-.77,x+.77,stair.backZ+.045,stair.backZ+.30,
+        level-.07,level+2.13);
+    })
   ];
   // Preserve blocking porch geometry for entrances 2–4. The first porch
   // is walkable only through the central doorway approach.
