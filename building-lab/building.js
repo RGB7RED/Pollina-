@@ -553,7 +553,7 @@ export function buildApartmentHouse(THREE,config={}){
       const mailboxSize={depth:.10,height:.210,width:.19};
       let mailboxes=0;
       for(let row=0;row<4;row++)for(let col=0;col<5;col++){
-        const bz=3.58+col*.220,by=mailboxLevel+.56+row*.235;
+        const bz=3.58+col*.220,by=mailboxLevel+.47+row*.21;
         const frontX=mailboxWallX-.17;
         box(mailboxSize.depth,mailboxSize.height,mailboxSize.width,
           mats.foyerMailbox,mailboxWallX-.11,by,bz);
