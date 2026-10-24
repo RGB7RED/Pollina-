@@ -21,7 +21,7 @@ assert.match(game,/if\(ready&&!lab\)/);
 assert.match(game,/studio\.update\(\{fps:measuredFps,state\}\)/);
 assert.match(game,/camera\.position\.set\(pose\.eye\.x,pose\.eye\.y,pose\.eye\.z\)/);
 assert.match(game,/freeCamera\.reset\(\)/);
-assert.match(game,/id\]\)\{/); // touch elevation bound using actual button ids
+assert.match(game,/holdElevation\[direction\]=true/); // touch elevation held continuously
 for(const id of ["free-up","free-down","free-reset","free-landing"]){
  assert.match(html,new RegExp('id="'+id+'"'));
  assert.match(game,new RegExp(id));
