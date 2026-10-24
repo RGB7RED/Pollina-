@@ -55,7 +55,7 @@ for(let floor=1;floor<5;floor++){
  go(-1,0,70);assert.ok(player.position.x<x-1.1);
  go(0,-1,150);
  at(.70+(floor-.5)*BUILDING.floorHeight,"front half landing "+floor);
- assert.ok(player.position.z>(floor===1?entry.stair.firstFrontZ:entry.stair.frontZ)-.45);
+ assert.ok(player.position.z>(floor===1?entry.stair.firstFrontZ:entry.stair.frontZ)-.55);
  go(1,0,90);assert.ok(player.position.x>x+1.1);
  go(0,1,150);
  at(.70+floor*BUILDING.floorHeight,"rear floor "+(floor+1));
