@@ -289,7 +289,7 @@ export function buildApartmentHouse(THREE,config={}){
         .70+2*rise-.09,bottomZ-.32);
       // Two continuous handrails + posts; no inaccessible fake corridors.
       const railMat=mats.foyerMailbox;
-      for(const z of [2.80,2.13,1.47,.70,-.04]{
+      for(const z of [2.80,2.13,1.47,.70,-.04]){
         const t=(bottomZ-z)/run;
         const y=.70+rise*t;
         box(.044,1.01,.046,railMat,x-.085,y+.50,z);
