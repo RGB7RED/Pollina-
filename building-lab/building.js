@@ -93,6 +93,10 @@ export function buildApartmentHouse(THREE,config={}){
     foyerRubber:new THREE.MeshStandardMaterial({color:0x4a5050,roughness:1}),
     foyerMailbox:new THREE.MeshStandardMaterial({color:0x7b8584,roughness:.72,metalness:.22}),
     foyerDoor:new THREE.MeshStandardMaterial({color:0x777e79,roughness:.74}),
+    stairwellWindowGlass:new THREE.MeshStandardMaterial({
+      color:0xbfe9f1,roughness:.14,metalness:0,
+      transparent:true,opacity:.23,depthWrite:false,side:THREE.DoubleSide
+    }),
     foyerWindowGlass:new THREE.MeshStandardMaterial({
       color:0xc9e4e7,roughness:.12,metalness:0,
       transparent:true,opacity:.22,depthWrite:false,side:THREE.DoubleSide
@@ -152,11 +156,12 @@ export function buildApartmentHouse(THREE,config={}){
     wallBox(axis,openingWidth,lining,.17,mats.reveal,centre,bottom+lining/2,recess);
     return {axis,side,centre,width:openingWidth,bottom,top,height,kind};
   }
-  function windowDetail(hole,variation,isBalcony=false){
+  function windowDetail(hole,variation,isBalcony=false,clearGlass=false){
     const {axis,side,centre,width,bottom,top,height}=hole;
     const facadeExtent=(axis==="long"?C.width:C.length)/2;
     const frameMat=[mats.frame,mats.frameWhite,mats.frameGrey][variation%3];
-    const glassMat=(variation%5===0||variation%7===3)?mats.litGlass:mats.glass;
+    const glassMat=clearGlass?mats.stairwellWindowGlass:
+      (variation%5===0||variation%7===3)?mats.litGlass:mats.glass;
     const depth=side*(facadeExtent-.17);
     const innerW=width-.16,innerH=height-.17,centreY=(bottom+top)/2;
     // A single opaque glazed surface is INSIDE the perforated wall, not on it.
@@ -186,7 +191,7 @@ export function buildApartmentHouse(THREE,config={}){
     stats.windows++;
     if(glassMat===mats.litGlass)stats.litWindows++;
     audit.windowGlazing.push({axis,side,opening:hole,frontDepth:facadeExtent-.17,
-      glassDepth:facadeExtent-.235});
+      glassDepth:facadeExtent-.235,stairwell:clearGlass,transparent:clearGlass});
   }
   function entranceDetail(hole,index){
     const x=hole.centre,side=1,face=C.width/2;
@@ -260,7 +265,8 @@ export function buildApartmentHouse(THREE,config={}){
       // forward along LEFT flight to front intermediate landing; turn
       // RIGHT; climb back along RIGHT flight to next full-floor rear landing.
       const rearWallZ=-3.38,rearLandingEndZ=-1.58;
-      const halfLandingZ=2.05,frontZ=3.28;
+      const halfLandingZ=2.05,frontZ=C.width/2-.30;
+      const exteriorWallInnerZ=C.width/2-.32;
       const rise=C.floorHeight/2,stepsPerFlight=12;
       const run=halfLandingZ-rearLandingEndZ,runStep=run/stepsPerFlight;
       const firstX=x-1.34,secondX=x+1.34,baseFloor=.70;
@@ -292,14 +298,19 @@ export function buildApartmentHouse(THREE,config={}){
         box(stairHalfWidth*2-.18,.16,
           rearLandingEndZ-rearWallZ-.10,mats.foyerTileAlt,
           x,level-.08,(rearLandingEndZ+rearWallZ)/2);
-        // Permanent central approach under every flight; 1.28 m wide.
-        box(1.28,.16,frontZ-rearLandingEndZ,mats.foyerTileAlt,
-          x,level-.08,(frontZ+rearLandingEndZ)/2);
+        // IMPORTANT: no floating upper-floor slab between both flights.
+        // Only ground-level access connects the entrance vestibule to
+        // the rear apartment landing; upper floors leave an open shaft.
+        if(floor===0)
+          box(1.28,.16,3.35-rearLandingEndZ,mats.foyerTileAlt,
+            x,level-.08,(3.35+rearLandingEndZ)/2);
         box(.37,.056,.35,mats.frameWhite,x,level+2.47,rearWallZ+.70);
         box(.28,.035,.24,mats.litGlass,x,level+2.44,rearWallZ+.70);
         if(floor===C.floors-1)continue;
         // The half-storey turnaround is now at FRONT and not the
         // apartment-door end. Headroom of the vestibule is unchanged.
+        // Extended ALL the way to the genuine positive-Z exterior wall,
+        // not a short bridge opening into an unpartitioned house.
         box(stairHalfWidth*2-.18,.16,frontZ-halfLandingZ,
           mats.foyerTileAlt,x,level+rise-.08,
           (frontZ+halfLandingZ)/2);
@@ -443,6 +454,9 @@ export function buildApartmentHouse(THREE,config={}){
           minZ:rearWallZ,maxZ:rearLandingEndZ,doorsPerFloor:4,
           depth:rearLandingEndZ-rearWallZ},
         railing,
+        frontTurnaround:{minZ:halfLandingZ,maxZ:frontZ,
+          depth:frontZ-halfLandingZ,wallZ:exteriorWallInnerZ},
+        removedUpperShaftSlabs:true,
         liftCount:0
       };
       box(1.96,.13,depth,mats.foundation,x,3.41,floorMid);
@@ -642,6 +656,10 @@ export function buildApartmentHouse(THREE,config={}){
     wallStrip("long",side,C.length/2-1.85,C.length/2,C.plinth,shellTop,mats.brick);
   }
   for(const w of plan){
+    // Core bay receives four dedicated transparent windows aligned to the
+    // HALF-level landings. Standard window placements on this bay would
+    // remain opaque and block the real view outside the stairwell.
+    if(w.side===1&&w.bay===ENTRANCE_BAYS[0])continue;
     const y0=C.plinth+w.floor*C.floorHeight,y1=y0+C.floorHeight;
     const centre=w.x,side=w.side;
     const isDoor=w.entrance,balcony=w.balcony&&!isDoor;
@@ -655,6 +673,55 @@ export function buildApartmentHouse(THREE,config={}){
       windowDetail(hole,w.variation,balcony);
       if(balcony)balconyDetail(w);
     }
+  }
+  // One REAL masonry facade, not a second wall behind a transparent
+  // pane. Rebuild only the first entrance's original bay as a continuous
+  // wall from the ground entrance to roof, with its unchanged street door
+  // and FOUR actual cut-through windows at half-floor stair landings.
+  // This avoids the opaque standard windows and makes the STREET visible.
+  {
+    const coreX=plan.find(w=>w.side===1&&w.bay===ENTRANCE_BAYS[0]).x;
+    const x0=coreX-step/2,x1=coreX+step/2;
+    const entrances=[{kind:"door",bottom:C.plinth+.04,
+      top:C.plinth+.04+2.28,width:1.71}];
+    for(let f=0;f<C.floors-1;f++){
+      const halfY=.70+f*C.floorHeight+C.floorHeight/2;
+      entrances.push({kind:"window",bottom:halfY+.98,
+        top:halfY+2.08,width:1.40,landing:f+1});
+    }
+    let cursor=C.plinth;
+    const surfaces=[];
+    for(const [i,hole] of entrances.entries()){
+      if(hole.bottom<cursor-.000001)
+        throw Error("Overlapping stairwell facade windows");
+      wallStrip("long",1,x0,x1,cursor,hole.bottom,mats.brick);
+      const left=coreX-hole.width/2,right=coreX+hole.width/2;
+      wallStrip("long",1,x0,left,hole.bottom,hole.top,mats.brick);
+      wallStrip("long",1,right,x1,hole.bottom,hole.top,mats.brick);
+      const h={axis:"long",side:1,centre:coreX,width:hole.width,
+        bottom:hole.bottom,top:hole.top,height:hole.top-hole.bottom,
+        kind:hole.kind};
+      audit.holes.push(h);
+      if(hole.kind==="door"){
+        stats.doorHoles++;
+        entranceDetail(h,0);
+      }else{
+        stats.windowHoles++;
+        // Same physical facade frame as standard windows but a genuinely
+        // transparent skylight material; NEVER a black tinted opaque pane.
+        windowDetail(h,(i*3+2)%9,false,true);
+        surfaces.push({floor:hole.landing,windowBottom:hole.bottom,
+          windowTop:hole.top,x:coreX,z:C.width/2-.235,
+          transparent:true,openToStreet:true});
+      }
+      cursor=hole.top;
+    }
+    wallStrip("long",1,x0,x1,cursor,shellTop,mats.brick);
+    audit.stairwellFacade={
+      x:coreX,wallZ:C.width/2,
+      windows:surfaces,hasBackWall:false,
+      cutThroughMasonry:true,transparent:true
+    };
   }
   // Two side windows per storey. The end walls are perforated too.
   for(const side of [-1,1]){
