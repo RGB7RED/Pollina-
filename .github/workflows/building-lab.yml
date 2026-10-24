@@ -35,6 +35,7 @@ on:
       - fix/mini-city-v033-stage4547-deep-side-doors-heating-painted-stairwell
       - fix/mini-city-v033-stage4548-continuous-stair-paint-window-reveals
       - fix/mini-city-v033-stage4549-ceiling-mounted-stairwell-lights
+      - feat/mini-city-v033-stage460-first-enterable-apartment
     paths:
       - 'building-lab/**'
       - 'bus-stop-lab/**'
@@ -108,6 +109,8 @@ jobs:
         run: node play-lab/test-five-floors.mjs
       - name: Test stage 4.5.4.3 facade windows, real openings and upper landing headroom
         run: node play-lab/test-architecture-4543.mjs
+      - name: Test stage 4.6 first real apartment 17, in-place 3D rooms, original aligned windows and full player journey
+        run: node play-lab/test-apartment.mjs
       - name: Test stage 4.5.4.9 actual ceiling-mounted stairwell luminaires
         run: node play-lab/test-architecture-4549.mjs
       - name: Test stage 4.5.4.8 seamless sloped paint, correct green dado and plastered clear window jambs
