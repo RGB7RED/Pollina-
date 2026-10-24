@@ -18,7 +18,7 @@ assert.equal(e.stair.steps,12);
 assert.equal(e.stair.halfRise,e.stair.storeyHeight/2);
 assert.equal(e.stair.bottomZ,-1.58);
 assert.equal(e.stair.turnZ,2.05);
-assert.equal(e.stair.backZ,-3.38);
+assert.equal(e.stair.backZ,-4.85);
 assert.equal(e.stair.firstFrontZ,e.stair.frontZ);
 assert.ok(e.stair.frontZ>5.8);
 assert.ok(Math.abs(e.stair.entryX-(x+.97))<1e-8);
