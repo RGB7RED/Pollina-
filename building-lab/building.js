@@ -474,7 +474,7 @@ export function buildApartmentHouse(THREE,config={}){
         }
       }
       // Anti-slip mat immediately behind the street door.
-      box(1.18,.016,.50,mats.foyerRubber,x,.72,5.69);
+      box(1.18,.016,.50,mats.ventDark,x,.72,5.69);
       for(let i=-3;i<=3;i++)
         box(.015,.018,.44,mats.ventDark,
           x+i*.16,.737,5.69);
