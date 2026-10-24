@@ -9,7 +9,8 @@ export function planPlayableEntrance(building,pads){
   // The first floor and every complete-floor landing are at the BACK,
   // opposite the former door wall. Ascend forward on LEFT, then return
   // toward the BACK along RIGHT to the following complete-floor landing.
-  const stair={bottomZ:-1.58,turnZ:2.05,backZ:-3.38,frontZ:3.28,
+  const stair={bottomZ:-1.58,turnZ:2.05,backZ:-3.38,
+    frontZ:building.width/2-.30,
     halfRise:building.floorHeight/2,steps:12};
   const stairHalf=2.08,aisleHalf=.64;
   if(p.width<2||insideEnd>=facade||corridorHalf>=p.width/2)
@@ -66,13 +67,29 @@ export function planPlayableEntrance(building,pads){
     // world-space Y. The same X/Z staircase repeats at four distinct
     // storeys: a naive 2D height map would wrongly teleport to floor 1.
     groundHeight(px,z,currentY=0){
-      const width=z<insideEnd?stairHalf:corridorHalf;
+      const width=z<insideEnd||currentY>1.40?stairHalf:corridorHalf;
       if(Math.abs(px-x)>width-.03)return 0;
       if(z>=10.65)return 0;
       if(z>=9.42)return (10.65-z)/(10.65-9.42)*.50;
       if(z>=7.10)return .50;
       if(z>=6.23)return .50+(7.10-z)/(7.10-6.23)*.20;
-      if(z>=insideEnd)return firstFloor;
+      // Above the first-floor vestibule the 180-degree half-landings
+      // extend to the ACTUAL front masonry window wall. The ground-level
+      // vestibule remains independent beneath them.
+      if(z>=insideEnd){
+        if(currentY>1.40&&z<=stair.frontZ+.02&&
+            Math.abs(px-x)<stairHalf-.03){
+          // Ground entry must keep >2 m of doorway clearance. Its first
+          // half landing has two facade-reaching wings, NOT a centre slab.
+          if(Math.abs(currentY-firstFloor-stair.halfRise)<.20&&
+            Math.abs(px-x)<corridorHalf+.10)return firstFloor;
+          const candidates=Array.from({length:totalFloors-1},(_,f)=>
+            firstFloor+f*storeyHeight+stair.halfRise);
+          return candidates.reduce((best,y)=>
+            Math.abs(y-currentY)<Math.abs(best-currentY)?y:best);
+        }
+        return firstFloor;
+      }
       const candidates=[];
       for(let floor=0;floor<totalFloors;floor++){
         const base=floorHeight(floor);
@@ -103,9 +120,26 @@ export function planPlayableEntrance(building,pads){
       return candidates.reduce((best,y)=>
         Math.abs(y-currentY)<Math.abs(best-currentY)?y:best);
     },
-    isInside(px,z){
-      const width=z<insideEnd?stairHalf:corridorHalf;
-      return Math.abs(px-x)<width&&z>=stair.backZ&&z<facade-.07;
+    isInside(px,z,currentY=0){
+      const width=z<insideEnd||currentY>1.40?stairHalf:corridorHalf;
+      const endZ=currentY>1.40?stair.frontZ:facade-.07;
+      return Math.abs(px-x)<width&&z>=stair.backZ&&z<endZ;
+    },
+    elevatedLandingObstacles(y){
+      // Upper-floor players may use the full-width front landing.
+      // The accepted narrow ground foyer collision remains intact.
+      if(y<=1.40)return null;
+      const obstacles=[
+        rect("upper-front-left",-halfX,x-stairHalf,insideEnd,facade),
+        rect("upper-front-right",x+stairHalf,halfX,insideEnd,facade),
+        rect("upper-front-exterior-wall",x-stairHalf,
+          x+stairHalf,stair.frontZ+.05,facade+.30)
+      ];
+      if(Math.abs(y-firstFloor-stair.halfRise)<.20)
+        obstacles.push(rect("ground-foyer-headroom-void",
+          x-corridorHalf-.10,x+corridorHalf+.10,
+          insideEnd,stair.frontZ));
+      return obstacles;
     },
     canInteract(px,z){
       return Math.hypot(px-x,z-(facade-.12))<2.35;
@@ -114,9 +148,10 @@ export function planPlayableEntrance(building,pads){
       return Math.abs(px-x)<.95&&Math.abs(z-innerDoorZ)<1.15;
     },
     zone(px,z,y=0){
-      if(!this.isInside(px,z))return "street";
-      if(z>innerDoorZ)return "тамбур";
-      if(z>=insideEnd)return "площадка 1-го этажа";
+      if(!this.isInside(px,z,y))return "street";
+      if(z>innerDoorZ&&y<1.4)return "тамбур";
+      if(z>=insideEnd&&y<1.4)return "площадка 1-го этажа";
+      if(z>=stair.turnZ&&y>1.4)return "межэтажный разворот · окно на улицу";
       const f=nearestFloor(y)+1;
       if(z<=stair.bottomZ)
         return "площадка "+f+"-го этажа · квартиры "+

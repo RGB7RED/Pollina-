@@ -155,7 +155,17 @@ export class PlayerController{
       this.setInnerDoorOpen(!this.innerDoorOpen);
   }
   isInsideEntrance(){
-    return !!this.entry&&this.entry.isInside(this.position.x,this.position.z);
+    return !!this.entry&&this.entry.isInside(
+      this.position.x,this.position.z,this.position.y);
+  }
+  activeObstacles(){
+    const elevated=this.entry?.elevatedLandingObstacles?.(this.position.y);
+    if(!elevated)return this.obstacles;
+    return [
+      ...this.obstacles.filter(o=>o.name!=="entry-front-left"&&
+        o.name!=="entry-front-right"),
+      ...elevated
+    ];
   }
   setStick(x,z){this.axis.x=clamp(x,-1,1);this.axis.z=clamp(z,-1,1);}
   look(dx,dy,sensitivity=.0032){
@@ -204,7 +214,7 @@ export class PlayerController{
       // Camera forward is (sin(yaw), -cos(yaw)); right is (cos,sin).
       const dx=(side*Math.cos(this.lookYaw)+ahead*Math.sin(this.lookYaw))*this.speed*dt;
       const dz=(side*Math.sin(this.lookYaw)-ahead*Math.cos(this.lookYaw))*this.speed*dt;
-      const step=resolveStep(this.position,dx,dz,this.obstacles);
+      const step=resolveStep(this.position,dx,dz,this.activeObstacles());
       const ground=this.entry?.groundHeight(step.x,step.z,this.position.y)||0;
       // One genuine stair riser is ~11.6 cm. Reject abrupt height changes:
       // prevents walking sideways from floor 1 directly onto flight 2
@@ -249,7 +259,7 @@ export class PlayerController{
     const requested={x:x-Math.sin(this.lookYaw)*dist*cos,
       y:target.y+Math.sin(this.lookPitch)*dist+(inside?.12:1.05),
       z:z+Math.cos(this.lookYaw)*dist*cos};
-    const limit=cameraObstacleDistance(target,requested,this.obstacles);
+    const limit=cameraObstacleDistance(target,requested,this.activeObstacles());
     const scale=limit/Math.hypot(requested.x-x,requested.z-z);
     const horizontal=Math.min(1,scale);
     return {eye:{x:x+(requested.x-x)*horizontal,
