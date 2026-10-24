@@ -289,14 +289,43 @@ export function buildApartmentHouse(THREE,config={}){
       // Deepened full-floor platform: enough Z length for TWO 1.04m
       // apartment doors on EACH side wall. Its END masonry is intact
       // and reserved for the electricity cabinets instead of flat doors.
+      // One REAL apartment is now accessible: No.17 on the fifth
+      // floor, through the first LEFT side doorway. Keep the other
+      // stairwell wall surfaces and all lower floors unchanged.
+      const prototypeDoor={floor:5,number:17,side:-1,z:-2.42,
+        bottom:baseFloor+4*storeyRise,width:1.04,height:2.15};
+      const apertureLo=prototypeDoor.z-prototypeDoor.width/2;
+      const apertureHi=prototypeDoor.z+prototypeDoor.width/2;
       for(const side of [-1,1]){
         const wX=x+side*stairHalfWidth;
-        box(.14,stairHeight,facadeInnerZ-rearWallZ,mats.reveal,
-          wX,wallBase+stairHeight/2,(facadeInnerZ+rearWallZ)/2);
-        box(.019,stairHeight-.20,facadeInnerZ-rearWallZ-.12,mats.foyerPaint,
-          wX-side*.084,wallBase+(stairHeight-.20)/2,
-          (facadeInnerZ+rearWallZ)/2);
+        if(side===1){
+          box(.14,stairHeight,facadeInnerZ-rearWallZ,mats.reveal,
+            wX,wallBase+stairHeight/2,(facadeInnerZ+rearWallZ)/2);
+          box(.019,stairHeight-.20,facadeInnerZ-rearWallZ-.12,mats.foyerPaint,
+            wX-side*.084,wallBase+(stairHeight-.20)/2,
+            (facadeInnerZ+rearWallZ)/2);
+        }else{
+          const top=wallBase+stairHeight,openingTop=prototypeDoor.bottom+prototypeDoor.height;
+          if(openingTop>=top)throw Error("Apartment 17 opening crosses roof");
+          for(const [from,to] of [[wallBase,prototypeDoor.bottom],[openingTop,top]])
+            box(.14,to-from,facadeInnerZ-rearWallZ,mats.reveal,
+              wX,(from+to)/2,(facadeInnerZ+rearWallZ)/2);
+          for(const [z0,z1] of [[rearWallZ,apertureLo],[apertureHi,facadeInnerZ]])
+            box(.14,prototypeDoor.height,z1-z0,mats.reveal,
+              wX,prototypeDoor.bottom+prototypeDoor.height/2,(z0+z1)/2);
+          // Floor-level inner plaster has the SAME cut-out, so no
+          // invisible slab can obstruct the opened apartment door.
+          const px=wX+.084,dep=facadeInnerZ-rearWallZ-.12;
+          const zLow=rearWallZ+.06,zHigh=facadeInnerZ-.06;
+          for(const [from,to] of [[wallBase,prototypeDoor.bottom],[openingTop,top-.20]])
+            if(to>from)box(.019,to-from,dep,mats.foyerPaint,
+              px,(from+to)/2,(zLow+zHigh)/2);
+          for(const [z0,z1] of [[zLow,apertureLo],[apertureHi,zHigh]])
+            box(.019,prototypeDoor.height,z1-z0,mats.foyerPaint,
+              px,prototypeDoor.bottom+prototypeDoor.height/2,(z0+z1)/2);
+        }
       }
+      audit.firstApartmentAperture=prototypeDoor;
       box(stairHalfWidth*2+.14,stairHeight,.14,mats.reveal,x,
         wallBase+stairHeight/2,rearWallZ);
       const railMat=mats.balconyMetal,railing={
@@ -560,18 +589,20 @@ export function buildApartmentHouse(THREE,config={}){
           const doorX=x+side*(stairHalfWidth-.11),doorZ=sidePosition;
           const orientation=side<0?"left":"right";
           const yaw=Math.PI/2;
-          box(sideDoorWidth,2.15,.09,mats.frameWhite,
-            doorX,level+1.10,doorZ,0,yaw);
-          box(sideDoorWidth-.10,2.04,.10,apartmentPalette[local],
-            doorX,level+1.095,doorZ,0,yaw);
-          box(.034,.13,.075,mats.vent,
-            doorX+(side<0?.085:-.085),level+1.02,doorZ+.22,0,yaw);
-          numberOnDoor(number,doorX+(side<0?.100:-.100),
-            level+1.90,doorZ,orientation);
+          if(number!==17){
+            box(sideDoorWidth,2.15,.09,mats.frameWhite,
+              doorX,level+1.10,doorZ,0,yaw);
+            box(sideDoorWidth-.10,2.04,.10,apartmentPalette[local],
+              doorX,level+1.095,doorZ,0,yaw);
+            box(.034,.13,.075,mats.vent,
+              doorX+(side<0?.085:-.085),level+1.02,doorZ+.22,0,yaw);
+            numberOnDoor(number,doorX+(side<0?.100:-.100),
+              level+1.90,doorZ,orientation);
+          } // No.17 is an ACTUAL hinged door in apartment.js.
           apartments.push({number,floor:floor+1,entrance:1,
             x:doorX,z:doorZ,orientation,side,
             width:sideDoorWidth,zone:"rear-stair-landing",
-            accessible:false});
+            accessible:number===17});
         }
         // Electricity distribution and four apartment meters on the
         // now-doorless END wall. Shallow wall-mounted metal cabinets.
