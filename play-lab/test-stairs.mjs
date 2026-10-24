@@ -11,7 +11,7 @@ assert.match(game,/actorPivot\.position\.set\(state.x,state.y,state.z\)/);
 assert.match(game,/setInnerDoorOpen/);
 const pads=[-26.3625,-8.7875,8.7875,26.3625].map(x=>({x,width:5.5,depth:3.15,centreZ:7.875}));
 const e=planPlayableEntrance(BUILDING,pads);
-assert.equal(e.buildingObstacles.length,11);
+assert.equal(e.buildingObstacles.length,12);
 assert.equal(e.stair.steps,12);
 assert.equal(e.stair.halfRise,BUILDING.floorHeight/2);
 assert.equal(e.stair.bottomZ,3.00);
