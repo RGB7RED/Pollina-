@@ -67,7 +67,7 @@ export function planPlayableEntrance(building,pads){
     // world-space Y. The same X/Z staircase repeats at four distinct
     // storeys: a naive 2D height map would wrongly teleport to floor 1.
     groundHeight(px,z,currentY=0){
-      const width=z<insideEnd?stairHalf:corridorHalf;
+      const width=z<insideEnd||currentY>1.40?stairHalf:corridorHalf;
       if(Math.abs(px-x)>width-.03)return 0;
       if(z>=10.65)return 0;
       if(z>=9.42)return (10.65-z)/(10.65-9.42)*.50;
