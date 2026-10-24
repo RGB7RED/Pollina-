@@ -9,7 +9,7 @@ export function planPlayableEntrance(building,pads){
   // The first floor and every complete-floor landing are at the BACK,
   // opposite the former door wall. Ascend forward on LEFT, then return
   // toward the BACK along RIGHT to the following complete-floor landing.
-  const stair={bottomZ:-1.58,turnZ:2.45,backZ:-3.38,frontZ:3.28,
+  const stair={bottomZ:-1.58,turnZ:2.05,backZ:-3.38,frontZ:3.28,
     halfRise:building.floorHeight/2,steps:12};
   const stairHalf=2.08,aisleHalf=.64;
   if(p.width<2||insideEnd>=facade||corridorHalf>=p.width/2)
