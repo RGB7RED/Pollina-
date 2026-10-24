@@ -28,6 +28,7 @@ on:
       - feat/mini-city-v033-stage454-five-floors-apartment-doors
       - fix/mini-city-v033-stage4541-integrated-landings-free-camera
       - fix/mini-city-v033-stage4542-deeper-return-door-reversal-railings
+      - fix/mini-city-v033-stage4543-front-landing-facade-windows-open-shaft
     paths:
       - 'building-lab/**'
       - 'bus-stop-lab/**'
