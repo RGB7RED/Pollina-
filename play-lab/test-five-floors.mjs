@@ -37,7 +37,8 @@ for(let f=0;f<5;f++){
 assert.equal(entry.groundHeight(x,-2.4,19),entry.stair.firstFloor+4*entry.stair.storeyHeight);
 const player=new PlayerController({building:BUILDING,pads,entry,
  spawn:{x,z:10.85}});
-assert.ok(player.setEntryDoorOpen(true)&&player.setInnerDoorOpen(true));
+assert.ok(player.setEntryDoorOpen(true),"one outer door opens");
+assert.equal(entry.innerDoor,undefined,"the second door collider was removed");
 function go(a,z,n){
  player.setStick(a,z);
  for(let i=0;i<n;i++){
@@ -48,11 +49,15 @@ function go(a,z,n){
 }
 function at(y,name){assert.ok(Math.abs(player.position.y-y)<.000001,
  name+" got "+player.position.y+" expected "+y);}
-go(0,1,210);
+go(0,1,90); // enter the now spacious single-door vestibule
+assert.equal(player.position.y,.70);
+go(1,0,18); // align with stair that runs beside the RIGHT wall
+assert.ok(player.position.x>entry.stair.entryX-.20);
+go(0,1,155);
 at(entry.stair.firstFloor,"raised rear landing 1");
 assert.ok(player.position.z<-2.5);
 for(let floor=1;floor<5;floor++){
- go(-1,0,70);assert.ok(player.position.x<x-1.1);
+ go(-1,0,floor===1?40:70);assert.ok(player.position.x<x-1.0);
  go(0,-1,150);
  at(entry.stair.firstFloor+(floor-.5)*entry.stair.storeyHeight,"front half landing "+floor);
  assert.ok(player.position.z>(floor===1?entry.stair.firstFrontZ:entry.stair.frontZ)-.55);
@@ -72,14 +77,17 @@ for(let floor=4;floor>=1;floor--){
  at(entry.stair.firstFloor+(floor-1)*entry.stair.storeyHeight,"descending left "+floor);
  if(floor>1)go(1,0,70);
 }
-go(1,0,23); // centre aisle, not a stair flight
-assert.ok(Math.abs(player.position.x-x)<.43);
-go(0,-1,240);
+go(1,0,43); // move from left U-flight to RIGHT entrance flight
+assert.ok(Math.abs(player.position.x-entry.stair.entryX)<.3);
+go(0,-1,135); // descend all twelve entry steps into the foyer
+assert.equal(player.position.y,.70);
+go(-1,0,18); // centre on ORIGINAL exterior doorway
+assert.ok(Math.abs(player.position.x-x)<.3);
+go(0,-1,160);
 assert.ok(player.position.z>10,"back outside in same city");
 assert.equal(player.position.y,0);
 player.reset();
 assert.equal(player.entryDoorOpen,false);
-assert.equal(player.innerDoorOpen,false);
 class Vec{constructor(){this.x=0;this.y=0;this.z=0;}
  set(x,y,z){this.x=x;this.y=y;this.z=z;}}
 class Obj{
@@ -136,8 +144,10 @@ for(let f=1;f<=5;f++){
  assert.ok(Math.abs(four[0].x+four[1].x-2*x)<1e-5);
  assert.ok(four[2].x<x-1.90&&four[3].x>x+1.90);
 }
-const glass=house.innerDoorPivot.children.filter(m=>m.material.transparent);
-assert.equal(glass.length,1,"accepted transparent interior door intact");
+assert.equal(house.innerDoorPivot,null,"the deleted partition door has no 3D pivot");
+assert.equal(audit.foyer.doorCount,1,"only the original facade door remains");
+assert.equal(audit.foyer.tiles,80,"wider entrance has actual floor tiles");
+assert.equal(audit.foyer.mailboxLevel,3.30,"mailboxes now live between floors 1–2");
 const instanced=house.root.children.filter(o=>o instanceof InstancedMesh);
 assert.ok(instanced.length<=33,"one dedicated batch for real transparent stairwell glass");
-console.log("MINI CITY 4.5.4.2 PASS: 4 reversed U climbs & descents, 20 opposite-end doors, deep landing, 3-level rails and posts");
+console.log("MINI CITY 4.5.4.5 PASS: right-hand entry steps, 4 U climbs/descents, exit through one door, 20 relocated mailboxes");
