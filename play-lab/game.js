@@ -6,6 +6,7 @@ import {ActorAnimator} from "./animation.js";
 import {planStreet,buildStreet} from "./street.js";
 import {planPlayableEntrance} from "./entrance.js";
 import {DeveloperStudio} from "./studio.js";
+import {FreeSceneCamera} from "./free-camera.js";
 import {PlayerController,joystickValue,PLAYER_HEIGHT} from "./controller.js";
 
 // Separate playable prototype. It neither changes MINI CITY's main game
@@ -55,6 +56,9 @@ const controller=new PlayerController({
 const studio=new DeveloperStudio({
   THREE,scene,renderer,controller,house,street,streetPlan
 });
+const freeCamera=new FreeSceneCamera();
+let modeBefore=studio.mode,actorLoadStarted=false;
+actorPivot.visible=studio.mode==="game";
 $("hud-toggle").addEventListener("click",()=>{
   const collapsed=document.querySelector(".brand").classList.toggle("collapsed");
   $("hud-toggle").setAttribute("aria-expanded",String(!collapsed));
@@ -104,7 +108,7 @@ function installActor(gltf,sourceIndex){
  actorPivot.add(actor);
  animator=new ActorAnimator(THREE,gltf);
  ready=animator.canWalk&&rigged;
- actor.visible=controller.view==="third";
+ actor.visible=controller.view==="third"&&studio.mode==="game";
  $("actor-status").textContent=ready?
    sources[sourceIndex].name+" · ходьба и бег":
    "Анимации ходьбы отсутствуют — только осмотр";
@@ -146,7 +150,7 @@ function updateViewControls(){
  $("camera-hint").textContent=first?
    "Глаза персонажа. Свайп — смотреть по сторонам.":
    "Камера следует сзади. Свайп — осмотреться.";
- if(actor)actor.visible=!first;
+ if(actor)actor.visible=!first&&studio.mode==="game";
 }
 function toggleView(){controller.toggleView();updateViewControls();}
 $("camera-mode").addEventListener("click",toggleView);
@@ -192,13 +196,15 @@ stage.addEventListener("pointerdown",e=>{
 stage.addEventListener("pointermove",e=>{
  if(e.pointerId!==pointerLook)return;
  e.preventDefault();
- controller.look(e.clientX-lastLookX,e.clientY-lastLookY);
+ (studio.mode==="lab"?freeCamera:controller).look(
+   e.clientX-lastLookX,e.clientY-lastLookY);
  lastLookX=e.clientX;lastLookY=e.clientY;
 });
 for(const event of ["pointerup","pointercancel","lostpointercapture"])
  stage.addEventListener(event,e=>{if(e.pointerId===pointerLook)pointerLook=null;});
 const entryAction=$("entry-action");
 function updateEntryAction(){
+ if(studio.mode==="lab"){entryAction.hidden=true;return;}
  const near=controller.nearestDoor();
  entryAction.hidden=!near;
  if(!near)return;
@@ -208,6 +214,7 @@ function updateEntryAction(){
  entryAction.title=near.label+" · E";
 }
 function toggleEntryDoor(){
+ if(studio.mode==="lab")return;
  const near=controller.nearestDoor();
  if(!near)return;
  const ok=near.id==="inner"?
@@ -238,13 +245,17 @@ function resetActor(){
 }
 $("reset").addEventListener("click",resetActor);
 const moveKeys=new Set(["KeyW","KeyA","KeyS","KeyD","ArrowUp","ArrowDown",
- "ArrowLeft","ArrowRight","ShiftLeft","ShiftRight","KeyF","KeyR","KeyE"]);
+ "ArrowLeft","ArrowRight","ShiftLeft","ShiftRight","KeyF","KeyR","KeyE","Space","KeyQ"]);
 window.addEventListener("keydown",e=>{
  if(!moveKeys.has(e.code))return;
  e.preventDefault();
- if(!e.repeat&&e.code==="KeyF")toggleView();
- if(!e.repeat&&e.code==="KeyR")resetActor();
- if(!e.repeat&&e.code==="KeyE")toggleEntryDoor();
+ if(studio.mode==="lab"){
+  if(!e.repeat&&e.code==="KeyR")freeCamera.reset();
+ }else{
+  if(!e.repeat&&e.code==="KeyF")toggleView();
+  if(!e.repeat&&e.code==="KeyR")resetActor();
+  if(!e.repeat&&e.code==="KeyE")toggleEntryDoor();
+ }
  heldKeys.add(e.code);
 });
 window.addEventListener("keyup",e=>heldKeys.delete(e.code));
@@ -258,13 +269,47 @@ function resize(){
  renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.15));
 }
 window.addEventListener("resize",resize);
-resize();updateViewControls();loadActor();
+resize();updateViewControls();
+if(studio.mode==="game"){actorLoadStarted=true;loadActor();}
+const holdElevation={up:false,down:false};
+for(const [id,direction] of [["free-up","up"],["free-down","down"]]){
+ const button=$(id);
+ button.addEventListener("pointerdown",e=>{
+  e.preventDefault();holdElevation[direction]=true;
+  try{button.setPointerCapture(e.pointerId);}catch(_){}
+ });
+ for(const ev of ["pointerup","pointercancel","lostpointercapture"])
+  button.addEventListener(ev,()=>holdElevation[direction]=false);
+}
+$("free-reset").addEventListener("click",()=>freeCamera.reset());
 const lookTarget=new THREE.Vector3(),eyeTarget=new THREE.Vector3();
 const clock=new THREE.Clock();
 let frames=0,lastReport=performance.now(),lastState="idle";
 function animate(){
  requestAnimationFrame(animate);
  const dt=Math.min(.05,clock.getDelta());
+ const lab=studio.mode==="lab";
+ if(lab!==(modeBefore==="lab")){
+  releaseControls();
+  actorPivot.visible=!lab;
+  if(!lab&&!actorLoadStarted){actorLoadStarted=true;loadActor();}
+  modeBefore=studio.mode;updateViewControls();updateEntryAction();
+ }
+ let state;
+ if(lab){
+  const axisX=joystick.x+Number(heldKeys.has("KeyD")||heldKeys.has("ArrowRight"))-
+    Number(heldKeys.has("KeyA")||heldKeys.has("ArrowLeft"));
+  const axisZ=joystick.z+Number(heldKeys.has("KeyW")||heldKeys.has("ArrowUp"))-
+    Number(heldKeys.has("KeyS")||heldKeys.has("ArrowDown"));
+  const rise=Number(heldKeys.has("Space")||holdElevation.up)-
+    Number(heldKeys.has("KeyQ")||holdElevation.down);
+  const p=freeCamera.update(dt,axisX,axisZ,rise,
+    heldKeys.has("ShiftLeft")||heldKeys.has("ShiftRight"));
+  const pose=freeCamera.getCameraPose();
+  camera.position.set(pose.eye.x,pose.eye.y,pose.eye.z);
+  lookTarget.set(pose.aim.x,pose.aim.y,pose.aim.z);camera.lookAt(lookTarget);
+  state={...p,state:"inspect",collided:false,view:"free",speed:0};
+ }else{
  if(ready){
   const axisX=joystick.x+Number(heldKeys.has("KeyD")||heldKeys.has("ArrowRight"))-
     Number(heldKeys.has("KeyA")||heldKeys.has("ArrowLeft"));
@@ -274,7 +319,7 @@ function animate(){
   const mobileRun=$("run").getAttribute("aria-pressed")==="true";
   controller.setRun(mobileRun||heldKeys.has("ShiftLeft")||heldKeys.has("ShiftRight"));
  }else controller.setStick(0,0);
- const state=controller.update(dt);
+ state=controller.update(dt);
  // Same scene, same player. Elevation follows exterior ramp, threshold
  // and first-floor vestibule smoothly; no teleport or world replacement.
  const openAngle=controller.entryDoorOpen?Math.PI*.47:0;
@@ -295,15 +340,17 @@ function animate(){
  const amount=1-Math.exp(-15*dt);
  camera.position.lerp(eyeTarget,amount);
  camera.lookAt(lookTarget);
+ }
  renderer.render(scene,camera);
  frames++;
  const now=performance.now();
  if(now-lastReport>1050){
   const measuredFps=frames*1000/(now-lastReport);
   $("fps").textContent="FPS: "+Math.round(measuredFps)+
-   " · "+(controller.view==="first"?"1-е лицо":"3-е лицо");
+   (lab?" · СВОБОДНАЯ КАМЕРА":
+    " · "+(controller.view==="first"?"1-е лицо":"3-е лицо"));
   studio.update({fps:measuredFps,state});
-  if(ready){
+  if(ready&&!lab){
    $("actor-status").textContent=state.inside?
       "Подъезд №1 · "+state.entranceZone+" · отметка "+state.y.toFixed(2)+" м":
       state.collided?"Стена: проход закрыт":
