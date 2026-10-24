@@ -32,14 +32,17 @@ sun.shadow.camera.left=-65;sun.shadow.camera.right=65;
 sun.shadow.camera.top=48;sun.shadow.camera.bottom=-48;
 sun.shadow.camera.near=1;sun.shadow.camera.far=115;sun.shadow.normalBias=.035;
 scene.add(sun);
-const {root:house,config,doorPivot}=buildApartmentHouse(THREE);
-if(!doorPivot)throw Error("First entrance hinged door is missing");
+const {root:house,config,doorPivot,innerDoorPivot}=buildApartmentHouse(THREE);
+if(!doorPivot||!innerDoorPivot)throw Error("Both real hinged doors required");
 applyFacadeFinishes(THREE,house);
 scene.add(house);
 // Stage 4.2.1: the approved building is NOT duplicated. Replace temporary
 // blank road/ground with one deterministic street plan and batched furnishing.
 const pads=house.userData.geometryAudit.entryPads;
 const entry=planPlayableEntrance(config,pads);
+const foyerLight=new THREE.PointLight(0xffeac5,1.45,6.2,2);
+foyerLight.position.set(entry.x,3.08,5.14);foyerLight.castShadow=false;
+scene.add(foyerLight);
 const streetPlan=planStreet(config,pads);
 const street=buildStreet(THREE,streetPlan);
 scene.add(street);
@@ -57,7 +60,7 @@ $("hud-toggle").addEventListener("click",()=>{
   $("hud-toggle").setAttribute("aria-expanded",String(!collapsed));
   $("hud-toggle").textContent=collapsed?"▾ Показать описание":"▴ Свернуть описание";
 });
-$("world-info").textContent="Подъезд №1: дверь открывается без перехода · улица 108 м · "+streetPlan.info.trees+
+$("world-info").textContent="Подъезд №1: тамбур, внутренняя дверь и площадка · улица 108 м · "+streetPlan.info.trees+
   " деревьев · "+streetPlan.info.lamps+" фонарей · "+
   streetPlan.info.benches+" скамейки";
 actorPivot.position.set(controller.position.x,0,controller.position.z);
@@ -196,20 +199,22 @@ for(const event of ["pointerup","pointercancel","lostpointercapture"])
  stage.addEventListener(event,e=>{if(e.pointerId===pointerLook)pointerLook=null;});
 const entryAction=$("entry-action");
 function updateEntryAction(){
-  const near=controller.canUseEntryDoor();
-  entryAction.hidden=!near;
-  entryAction.textContent=controller.entryDoorOpen?
-    "🚪 Закрыть дверь":"🚪 Открыть дверь";
-  entryAction.setAttribute("aria-pressed",String(controller.entryDoorOpen));
-  entryAction.title="Подъезд №1 · E";
+ const near=controller.nearestDoor();
+ entryAction.hidden=!near;
+ if(!near)return;
+ entryAction.textContent="🚪 "+(near.open?"Закрыть ":"Открыть ")+
+   (near.id==="inner"?"внутреннюю":"входную");
+ entryAction.setAttribute("aria-pressed",String(near.open));
+ entryAction.title=near.label+" · E";
 }
 function toggleEntryDoor(){
-  if(!controller.canUseEntryDoor())return;
-  if(controller.setEntryDoorOpen(!controller.entryDoorOpen)){
-    updateEntryAction();
-    studio.refreshCollisions();
-  }else $("actor-status").textContent=
-    "Сначала отойди от дверного проёма, чтобы закрыть дверь";
+ const near=controller.nearestDoor();
+ if(!near)return;
+ const ok=near.id==="inner"?
+   controller.setInnerDoorOpen(!controller.innerDoorOpen):
+   controller.setEntryDoorOpen(!controller.entryDoorOpen);
+ if(ok){updateEntryAction();studio.refreshCollisions();}
+ else $("actor-status").textContent="Отойди от дверного проёма, чтобы закрыть дверь";
 }
 entryAction.addEventListener("click",toggleEntryDoor);
 updateEntryAction();
@@ -223,6 +228,8 @@ $("run").addEventListener("click",()=>{
 function resetActor(){
  controller.reset();
  doorPivot.rotation.y=0;
+ innerDoorPivot.rotation.y=0;
+ updateEntryAction();
  studio.refreshCollisions();
  releaseControls();
  actorPivot.position.set(controller.position.x,0,controller.position.z);
@@ -272,6 +279,8 @@ function animate(){
  // and first-floor vestibule smoothly; no teleport or world replacement.
  const openAngle=controller.entryDoorOpen?Math.PI*.47:0;
  doorPivot.rotation.y+=(openAngle-doorPivot.rotation.y)*(1-Math.exp(-12*dt));
+ const innerAngle=controller.innerDoorOpen?1.30:0;
+ innerDoorPivot.rotation.y+=(innerAngle-innerDoorPivot.rotation.y)*(1-Math.exp(-12*dt));
  actorPivot.position.set(state.x,state.y,state.z);
  updateEntryAction();
  actorPivot.rotation.y=state.heading;
@@ -296,7 +305,7 @@ function animate(){
   studio.update({fps:measuredFps,state});
   if(ready){
    $("actor-status").textContent=state.inside?
-      "Внутри подъезда №1 · первая площадка (лестница на следующем этапе)":
+      "Подъезд №1 · "+state.entranceZone+" · лестница на следующем этапе":
       state.collided?"Стена: проход закрыт":
      animator.warning||"Скорость: "+state.speed.toFixed(1)+" м/с";
   }

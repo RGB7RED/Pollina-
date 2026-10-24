@@ -280,7 +280,7 @@ export function buildApartmentHouse(THREE,config={}){
         box(.135,2.30,.14,mats.foyerTrim,
           x+side*.777,1.86,innerZ);
       }
-      box(1.69,.40,.14,mats.foyerTrim,x,3.00,innerZ);
+      box(1.69,.48,.14,mats.foyerTrim,x,3.10,innerZ);
       const inner=new THREE.Group();
       inner.name="entrance-1-inner-hinged-door";
       const innerWidth=1.39,innerHeight=2.13;
