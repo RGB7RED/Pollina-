@@ -19,7 +19,7 @@ assert.equal(e.stair.halfRise,BUILDING.floorHeight/2);
 assert.equal(e.stair.bottomZ,-1.58);
 assert.equal(e.stair.turnZ,2.05);
 assert.equal(e.stair.backZ,-3.38);
-assert.equal(e.stair.frontZ,3.28);
+assert.ok(e.stair.frontZ>6.0&&e.stair.frontZ<BUILDING.width/2);
 assert.ok(e.stair.bottomZ-e.stair.backZ>=1.75,
  "opposite end landing is physically deeper");
 assert.ok(e.stair.frontZ-e.stair.turnZ>=1.20,
@@ -46,12 +46,12 @@ assert.ok(p.position.z<-2.5&&p.position.z>e.stair.backZ);
 assert.equal(p.position.y,.70);
 go(-1,0,70);
 assert.ok(p.position.x<x-1);
-go(0,-1,150);
-assert.ok(p.position.z>2.75,"first march reaches FRONT half turnaround");
+go(0,-1,230);
+assert.ok(p.position.z>5.60,"front half landing extends to TRUE street facade");
 assert.equal(p.position.y,.70+BUILDING.floorHeight/2);
 go(1,0,90);
 assert.ok(p.position.x>x+1,"turn across the front");
-go(0,1,150);
+go(0,1,230);
 assert.ok(p.position.z<-2.5,"SECOND march leads BACK to apartment doors");
 assert.equal(p.position.y,.70+BUILDING.floorHeight);
 assert.equal(e.zone(p.position.x,p.position.z,p.position.y),
