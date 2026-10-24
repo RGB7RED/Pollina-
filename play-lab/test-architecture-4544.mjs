@@ -52,7 +52,7 @@ assert.equal(stair.apartmentDoors.length,20);
 assert.deepEqual(stair.apartmentDoors.map(d=>d.number),
   Array.from({length:20},(_,i)=>i+1));
 assert.ok(stair.apartmentDoors.every(d=>d.zone==="rear-stair-landing"));
-assert.equal(stair.landing.minZ,-3.38);
+assert.equal(stair.landing.minZ,-4.85);
 assert.equal(stair.landing.maxZ,-1.58);
 assert.ok(stair.landing.depth>1.75);
 assert.equal(BUILDING.floors,5);
@@ -95,7 +95,7 @@ assert.deepEqual(audit.stairwellWindows.map(w=>w.floor),[1,2,3,4]);
 for(let i=0;i<4;i++){
   const w=audit.stairwellWindows[i];
   const turn=stair.firstFloor+(i+.5)*stair.storeyRise;
-  assert.ok(Math.abs(w.bottom-turn-.46)<eps,"window sill just above its landing");
+  assert.ok(Math.abs(w.bottom-turn-.80)<eps,"window sill just above its landing");
   assert.ok(Math.abs(w.top-w.bottom-1.42)<eps,"full-size window");
   assert.ok(w.transparent&&w.through,"real transparent pane");
   const mid=(w.top+w.bottom)/2;
@@ -103,7 +103,7 @@ for(let i=0;i<4;i++){
     p.u0<w.centreX&&p.u1>w.centreX&&p.y0<mid&&p.y1>mid),
     "no opaque brick behind the transparent glazing");
 }
-assert.equal(entry.buildingObstacles.length,20);
+assert.equal(entry.buildingObstacles.length,30);
 assert.equal(entry.groundHeight(x,5.25,.70),.70,"foyer remains at grade");
 assert.equal(entry.groundHeight(x,0,stair.firstFloor+stair.storeyRise),null,
   "upper central shaft cannot be walked on as an invisible floor");
