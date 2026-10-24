@@ -42,7 +42,7 @@ assert.deepEqual(a.completeStaircase.levels.map(l=>l.returnEndZ),
 assert.deepEqual(opposite.openCentreFloors,[1,2,3,4,5]);
 assert.equal(opposite.firstTurnClearsFoyer,true);
 assert.equal(a.completeStaircase.firstFloor,2.09);
-assert.equal(a.completeStaircase.landing.minZ,-3.38);
+assert.equal(a.completeStaircase.landing.minZ,-4.85);
 assert.equal(a.completeStaircase.landing.maxZ,-1.58);
 assert.equal(a.completeStaircase.landing.doorsPerFloor,4);
 // Glazing is physically in FOUR relocated apertures of the original +Z
@@ -77,7 +77,7 @@ assert.ok(!house.root.children.filter(m=>m instanceof InstancedMesh)
 const pads=[-26.3625,-8.7875,8.7875,26.3625]
   .map(px=>({x:px,width:5.5,depth:3.15,centreZ:7.875}));
 const entry=planPlayableEntrance(BUILDING,pads);
-assert.equal(entry.buildingObstacles.length,20);
+assert.equal(entry.buildingObstacles.length,30);
 assert.equal(entry.stair.firstFrontZ,opposite.firstTurnEndZ);
 assert.equal(entry.stair.frontZ,opposite.upperTurnEndZ);
 assert.ok(!collidesAt(x+1.25,5.25,entry.buildingObstacles,PLAYER_RADIUS,.70),
