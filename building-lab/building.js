@@ -570,17 +570,27 @@ export function buildApartmentHouse(THREE,config={}){
           x,level+1.82,rearWallZ+.088);
         box(stairHalfWidth*2-.30,.052,.036,mats.frameWhite,
           x,level+1.18,rearWallZ+.10);
-        // Side paint continues for the FULL depth of the extended landing.
+        // Side paint follows the SAME structural door aperture on 5F.
         for(const sign of [-1,1]){
           const wallX=x+sign*(stairHalfWidth-.09);
-          const paintDepth=rearLandingEndZ-rearWallZ;
-          const midZ=(rearWallZ+rearLandingEndZ)/2;
-          box(.025,1.20,paintDepth,mats.foyerLower,
-            wallX,level+.60,midZ);
-          box(.025,1.20,paintDepth,mats.foyerPaint,
-            wallX,level+1.80,midZ);
-          box(.030,.045,paintDepth,mats.frameWhite,
-            wallX,level+1.20,midZ);
+          const intervals=(floor===4&&sign===-1)?
+            [[rearWallZ,apertureLo],[apertureHi,rearLandingEndZ]]:
+            [[rearWallZ,rearLandingEndZ]];
+          for(const [z0,z1] of intervals){
+            const paintDepth=z1-z0,midZ=(z0+z1)/2;
+            box(.025,1.20,paintDepth,mats.foyerLower,
+              wallX,level+.60,midZ);
+            box(.025,1.20,paintDepth,mats.foyerPaint,
+              wallX,level+1.80,midZ);
+            box(.030,.045,paintDepth,mats.frameWhite,
+              wallX,level+1.20,midZ);
+          }
+          if(floor===4&&sign===-1){
+            const remaining=2.40-prototypeDoor.height;
+            box(.025,remaining,prototypeDoor.width,mats.foyerPaint,
+              wallX,level+prototypeDoor.height+remaining/2,
+              prototypeDoor.z);
+          }
         }
         for(let local=0;local<4;local++){
           const number=floor*4+local+1;
