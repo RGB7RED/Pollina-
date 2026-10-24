@@ -35,9 +35,9 @@ export function planPlayableEntrance(building,pads){
     // Low/wall dividers along INNER rails: cross from aisle to flights
     // at landing ends, not through elevated risers in the middle.
     rect("first-flight-rail-base",x-aisleHalf-.10,x-aisleHalf-.065,
-      stair.bottomZ+.44,stair.turnZ-.38),
+      stair.bottomZ+.10,stair.turnZ-.10),
     rect("second-flight-rail-base",x+aisleHalf+.065,x+aisleHalf+.10,
-      stair.bottomZ+.44,stair.turnZ-.38),
+      stair.bottomZ+.10,stair.turnZ-.10),
     // A ground-floor foyer and the wider U-stair occupy DIFFERENT
     // height bands: never block upper landings with 2D vestibule walls.
     rect("upper-front-left",-halfX,x-stairHalf,insideEnd,halfZ,
@@ -105,7 +105,7 @@ export function planPlayableEntrance(building,pads){
         const base=floorHeight(floor);
         // The centre walk from entrance to the rear floor-level
         // apartment landing remains flat at each floor's OWN Y.
-        if(Math.abs(px-x)<aisleHalf+.12)
+        if(floor===0&&Math.abs(px-x)<aisleHalf+.12)
           candidates.push(base);
         if(z<=stair.bottomZ)candidates.push(base);
         if(floor>=totalFloors-1)continue;
