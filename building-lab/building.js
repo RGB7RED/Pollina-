@@ -289,7 +289,8 @@ export function buildApartmentHouse(THREE,config={}){
       // forward along LEFT flight to front intermediate landing; turn
       // RIGHT; climb back along RIGHT flight to next full-floor rear landing.
       const rearWallZ=-3.38,rearLandingEndZ=-1.58;
-      const halfLandingZ=2.05,frontZ=3.28;
+      const halfLandingZ=2.05,firstFrontZ=3.28;
+      const facadeInnerZ=C.width/2-wallDepth,frontZ=facadeInnerZ-.12;
       const rise=C.floorHeight/2,stepsPerFlight=12;
       const run=halfLandingZ-rearLandingEndZ,runStep=run/stepsPerFlight;
       const firstX=x-1.34,secondX=x+1.34,baseFloor=.70;
@@ -299,11 +300,11 @@ export function buildApartmentHouse(THREE,config={}){
       // between flights to reach the rear floor-1 apartment doors.
       for(const side of [-1,1]){
         const wX=x+side*stairHalfWidth;
-        box(.14,stairHeight,frontZ-rearWallZ,mats.reveal,
-          wX,baseFloor+stairHeight/2,(frontZ+rearWallZ)/2);
-        box(.019,stairHeight-.20,frontZ-rearWallZ-.12,mats.foyerPaint,
+        box(.14,stairHeight,facadeInnerZ-rearWallZ,mats.reveal,
+          wX,baseFloor+stairHeight/2,(facadeInnerZ+rearWallZ)/2);
+        box(.019,stairHeight-.20,facadeInnerZ-rearWallZ-.12,mats.foyerPaint,
           wX-side*.084,baseFloor+(stairHeight-.20)/2,
-          (frontZ+rearWallZ)/2);
+          (facadeInnerZ+rearWallZ)/2);
       }
       box(stairHalfWidth*2+.14,stairHeight,.14,mats.reveal,x,
         baseFloor+stairHeight/2,rearWallZ);
@@ -321,17 +322,20 @@ export function buildApartmentHouse(THREE,config={}){
         box(stairHalfWidth*2-.18,.16,
           rearLandingEndZ-rearWallZ-.10,mats.foyerTileAlt,
           x,level-.08,(rearLandingEndZ+rearWallZ)/2);
-        // Permanent central approach under every flight; 1.28 m wide.
-        box(1.28,.16,frontZ-rearLandingEndZ,mats.foyerTileAlt,
-          x,level-.08,(frontZ+rearLandingEndZ)/2);
+        // Only the first floor needs a centre approach from the foyer.
+        // Four copies at floors 2–5 formed incorrect floating slabs.
+        if(floor===0)box(1.28,.16,firstFrontZ-rearLandingEndZ,
+          mats.foyerTileAlt,x,level-.08,(firstFrontZ+rearLandingEndZ)/2);
         box(.37,.056,.35,mats.frameWhite,x,level+2.47,rearWallZ+.70);
         box(.28,.035,.24,mats.litGlass,x,level+2.44,rearWallZ+.70);
         if(floor===C.floors-1)continue;
-        // The half-storey turnaround is now at FRONT and not the
-        // apartment-door end. Headroom of the vestibule is unchanged.
-        box(stairHalfWidth*2-.18,.16,frontZ-halfLandingZ,
+        // Lower turnaround cannot overhang the active foyer at y=2.09:
+        // 0.70 m floor + 1.82 m person must retain headroom. Higher
+        // returns extend to the true exterior masonry's INNER face.
+        const turnEndZ=floor===0?firstFrontZ:frontZ;
+        box(stairHalfWidth*2-.18,.16,turnEndZ-halfLandingZ,
           mats.foyerTileAlt,x,level+rise-.08,
-          (frontZ+halfLandingZ)/2);
+          (turnEndZ+halfLandingZ)/2);
         for(let i=0;i<stepsPerFlight;i++){
           const zL=rearLandingEndZ+(i+.5)*runStep;
           const zR=halfLandingZ-(i+.5)*runStep;
@@ -369,16 +373,16 @@ export function buildApartmentHouse(THREE,config={}){
         for(const sign of [-1,1]){
           const rx=x+sign*(stairHalfWidth-.16);
           for(const h of [.47,.94])
-            box(.085,.075,frontZ-halfLandingZ-.10,railMat,
-              rx,level+rise+h,(frontZ+halfLandingZ)/2);
+            box(.085,.075,turnEndZ-halfLandingZ-.10,railMat,
+              rx,level+rise+h,(turnEndZ+halfLandingZ)/2);
           for(let k=0;k<=3;k++){
-            const postZ=halfLandingZ+.14+k*(frontZ-halfLandingZ-.28)/3;
+            const postZ=halfLandingZ+.14+k*(turnEndZ-halfLandingZ-.28)/3;
             box(.072,.94,.072,railMat,rx,level+rise+.47,postZ);
           }
         }
         stairway.push({fromFloor:floor+1,toFloor:floor+2,
           bottom:level,mid:level+rise,top:level+C.floorHeight,
-          steps:stepsPerFlight*2});
+          steps:stepsPerFlight*2,returnEndZ:turnEndZ});
       }
       // Four doors in the OPPOSITE rear landing: two at centre rear
       // wall, and one each on the two SIDE walls. No extra room.
@@ -471,10 +475,15 @@ export function buildApartmentHouse(THREE,config={}){
         landing:{centreX:x,minX:x-stairHalfWidth,maxX:x+stairHalfWidth,
           minZ:rearWallZ,maxZ:rearLandingEndZ,doorsPerFloor:4,
           depth:rearLandingEndZ-rearWallZ},
+        opposite:{firstTurnEndZ:firstFrontZ,upperTurnEndZ:frontZ,
+          facadeInnerZ,facadeOuterZ:C.width/2,
+          upperTurnDepth:frontZ-halfLandingZ,openCentreFloors:[2,3,4,5],
+          originalFirstTurnPreservedForFoyerClearance:true},
         railing,
         liftCount:0
       };
-      box(1.96,.13,depth,mats.foundation,x,3.41,floorMid);
+      // Removed former full-width y=3.41 foyer ceiling slab: it occluded
+      // the vertical stair void / first transom and was not load-bearing.
       // Individual stone slabs with tiny grouted gaps, batched by only
       // two materials to preserve mobile draw-call and memory budgets.
       let tiles=0;
