@@ -18,7 +18,7 @@ const pads=[-26.3625,-8.7875,8.7875,26.3625].map(x=>({
 const entry=planPlayableEntrance(BUILDING,pads);
 assert.equal(entry.totalFloors,5);
 assert.equal(entry.buildingObstacles.length,12);
-assert.equal(entry.corridor.endX-entry.x,6.4);
+assert.ok(Math.abs(entry.corridor.endX-entry.x-6.4)<1e-6);
 assert.ok(entry.corridor.minZ>entry.stair.turnZ);
 assert.equal(entry.stair.steps,12);
 assert.equal(entry.stair.halfRise,1.39);
