@@ -29,6 +29,7 @@ on:
       - fix/mini-city-v033-stage4541-integrated-landings-free-camera
       - fix/mini-city-v033-stage4542-deeper-return-door-reversal-railings
       - fix/mini-city-v033-stage4543-facade-windows-clear-void
+      - fix/mini-city-v033-stage4544-raised-first-floor-central-entry-flight
     paths:
       - 'building-lab/**'
       - 'bus-stop-lab/**'
@@ -102,6 +103,8 @@ jobs:
         run: node play-lab/test-five-floors.mjs
       - name: Test stage 4.5.4.3 facade windows, real openings and upper landing headroom
         run: node play-lab/test-architecture-4543.mjs
+      - name: Test stage 4.5.4.4 raised first floor, real entry flight, aligned windows and linked central handrails
+        run: node play-lab/test-architecture-4544.mjs
       - name: Test 4.5.4.1: 20 apartment doors ON stair landings, no avatar in scene lab, 6DoF camera
         run: node play-lab/test-free-camera.mjs
       - name: Test stage 4.1 first/third-person movement and house collisions
