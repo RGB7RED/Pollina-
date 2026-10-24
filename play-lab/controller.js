@@ -129,10 +129,11 @@ export class PlayerController{
     return true;
   }
   canUseEntryDoor(){
-    return !!this.entry&&this.entry.canInteract(this.position.x,this.position.z);
+    return !!this.entry&&this.position.y<1.35&&
+      this.entry.canInteract(this.position.x,this.position.z);
   }
   canUseInnerDoor(){
-    return !!this.entry&&!!this.innerDoorBlocker&&
+    return !!this.entry&&!!this.innerDoorBlocker&&this.position.y<1.35&&
       this.entry.canInteractInner(this.position.x,this.position.z);
   }
   nearestDoor(){
