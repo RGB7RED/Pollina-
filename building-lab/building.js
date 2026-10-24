@@ -289,43 +289,44 @@ export function buildApartmentHouse(THREE,config={}){
       // Deepened full-floor platform: enough Z length for TWO 1.04m
       // apartment doors on EACH side wall. Its END masonry is intact
       // and reserved for the electricity cabinets instead of flat doors.
-      // One REAL apartment is now accessible: No.17 on the fifth
-      // floor, through the first LEFT side doorway. Keep the other
-      // stairwell wall surfaces and all lower floors unchanged.
+      // All first-floor apartment doors and fifth-floor flat 17 are
+      // REAL openings in the original side masonry and painted lining.
       const prototypeDoor={floor:5,number:17,side:-1,z:-2.42,
         bottom:baseFloor+4*storeyRise,width:1.04,height:2.15};
-      const apertureLo=prototypeDoor.z-prototypeDoor.width/2;
-      const apertureHi=prototypeDoor.z+prototypeDoor.width/2;
+      const firstFloorDoors=[-1,1].flatMap(side=>
+        [-2.42,-4.00].map(z=>({side,z,bottom:baseFloor,
+          width:1.04,height:2.15})));
+      const structuralApertures=[...firstFloorDoors,prototypeDoor];
+      function solidSpans(lo,hi,holes){
+        let result=[[lo,hi]];
+        for(const d of holes){
+          const l=d.z-d.width/2,r=d.z+d.width/2;
+          result=result.flatMap(([a,b])=>[
+            ...(a<l?[[a,Math.min(l,b)]]:[]),
+            ...(b>r?[[Math.max(a,r),b]]:[])
+          ]).filter(([a,b])=>b-a>.001);
+        }
+        return result;
+      }
+      const wallTop=wallBase+stairHeight;
       for(const side of [-1,1]){
         const wX=x+side*stairHalfWidth;
-        if(side===1){
-          box(.14,stairHeight,facadeInnerZ-rearWallZ,mats.reveal,
-            wX,wallBase+stairHeight/2,(facadeInnerZ+rearWallZ)/2);
-          box(.019,stairHeight-.20,facadeInnerZ-rearWallZ-.12,mats.foyerPaint,
-            wX-side*.084,wallBase+(stairHeight-.20)/2,
-            (facadeInnerZ+rearWallZ)/2);
-        }else{
-          const top=wallBase+stairHeight,openingTop=prototypeDoor.bottom+prototypeDoor.height;
-          if(openingTop>=top)throw Error("Apartment 17 opening crosses roof");
-          for(const [from,to] of [[wallBase,prototypeDoor.bottom],[openingTop,top]])
-            box(.14,to-from,facadeInnerZ-rearWallZ,mats.reveal,
-              wX,(from+to)/2,(facadeInnerZ+rearWallZ)/2);
-          for(const [z0,z1] of [[rearWallZ,apertureLo],[apertureHi,facadeInnerZ]])
-            box(.14,prototypeDoor.height,z1-z0,mats.reveal,
-              wX,prototypeDoor.bottom+prototypeDoor.height/2,(z0+z1)/2);
-          // Floor-level inner plaster has the SAME cut-out, so no
-          // invisible slab can obstruct the opened apartment door.
-          const px=wX+.084,dep=facadeInnerZ-rearWallZ-.12;
-          const zLow=rearWallZ+.06,zHigh=facadeInnerZ-.06;
-          for(const [from,to] of [[wallBase,prototypeDoor.bottom],[openingTop,top-.20]])
-            if(to>from)box(.019,to-from,dep,mats.foyerPaint,
-              px,(from+to)/2,(zLow+zHigh)/2);
-          for(const [z0,z1] of [[zLow,apertureLo],[apertureHi,zHigh]])
-            box(.019,prototypeDoor.height,z1-z0,mats.foyerPaint,
-              px,prototypeDoor.bottom+prototypeDoor.height/2,(z0+z1)/2);
+        const holes=structuralApertures.filter(d=>d.side===side);
+        const cuts=[wallBase,wallTop,...holes.flatMap(d=>[d.bottom,d.bottom+d.height])]
+          .sort((a,b)=>a-b);
+        for(let i=0;i<cuts.length-1;i++){
+          const bottom=cuts[i],top=cuts[i+1],y=(bottom+top)/2;
+          if(top-bottom<.001)continue;
+          const active=holes.filter(d=>y>d.bottom&&y<d.bottom+d.height);
+          for(const [z0,z1] of solidSpans(rearWallZ,facadeInnerZ,active))
+            box(.14,top-bottom,z1-z0,mats.reveal,wX,y,(z0+z1)/2);
+          for(const [z0,z1] of solidSpans(rearWallZ+.06,facadeInnerZ-.06,active))
+            box(.019,top-bottom,z1-z0,mats.foyerPaint,
+              wX-side*.084,y,(z0+z1)/2);
         }
       }
       audit.firstApartmentAperture=prototypeDoor;
+      audit.firstFloorApertures=firstFloorDoors;
       box(stairHalfWidth*2+.14,stairHeight,.14,mats.reveal,x,
         wallBase+stairHeight/2,rearWallZ);
       const railMat=mats.balconyMetal,railing={
@@ -570,26 +571,21 @@ export function buildApartmentHouse(THREE,config={}){
           x,level+1.82,rearWallZ+.088);
         box(stairHalfWidth*2-.30,.052,.036,mats.frameWhite,
           x,level+1.18,rearWallZ+.10);
-        // Side paint follows the SAME structural door aperture on 5F.
         for(const sign of [-1,1]){
           const wallX=x+sign*(stairHalfWidth-.09);
-          const intervals=(floor===4&&sign===-1)?
-            [[rearWallZ,apertureLo],[apertureHi,rearLandingEndZ]]:
-            [[rearWallZ,rearLandingEndZ]];
-          for(const [z0,z1] of intervals){
-            const paintDepth=z1-z0,midZ=(z0+z1)/2;
-            box(.025,1.20,paintDepth,mats.foyerLower,
-              wallX,level+.60,midZ);
-            box(.025,1.20,paintDepth,mats.foyerPaint,
-              wallX,level+1.80,midZ);
-            box(.030,.045,paintDepth,mats.frameWhite,
-              wallX,level+1.20,midZ);
+          const holes=structuralApertures.filter(d=>
+            d.side===sign&&d.bottom===level);
+          for(const [z0,z1] of solidSpans(rearWallZ,rearLandingEndZ,holes)){
+            const depth=z1-z0,midZ=(z0+z1)/2;
+            box(.025,1.20,depth,mats.foyerLower,wallX,level+.60,midZ);
+            box(.025,1.20,depth,mats.foyerPaint,wallX,level+1.80,midZ);
+            box(.030,.045,depth,mats.frameWhite,wallX,level+1.20,midZ);
           }
-          if(floor===4&&sign===-1){
-            const remaining=2.40-prototypeDoor.height;
-            box(.025,remaining,prototypeDoor.width,mats.foyerPaint,
-              wallX,level+prototypeDoor.height+remaining/2,
-              prototypeDoor.z);
+          for(const hole of holes){
+            const remaining=2.40-hole.height;
+            if(remaining>.01)
+              box(.025,remaining,hole.width,mats.foyerPaint,
+                wallX,level+hole.height+remaining/2,hole.z);
           }
         }
         for(let local=0;local<4;local++){
@@ -599,7 +595,7 @@ export function buildApartmentHouse(THREE,config={}){
           const doorX=x+side*(stairHalfWidth-.11),doorZ=sidePosition;
           const orientation=side<0?"left":"right";
           const yaw=Math.PI/2;
-          if(number!==17){
+          if(number!==17&&floor!==0){
             box(sideDoorWidth,2.15,.09,mats.frameWhite,
               doorX,level+1.10,doorZ,0,yaw);
             box(sideDoorWidth-.10,2.04,.10,apartmentPalette[local],
@@ -612,7 +608,7 @@ export function buildApartmentHouse(THREE,config={}){
           apartments.push({number,floor:floor+1,entrance:1,
             x:doorX,z:doorZ,orientation,side,
             width:sideDoorWidth,zone:"rear-stair-landing",
-            accessible:number===17});
+            accessible:number===17||floor===0});
         }
         // Electricity distribution and four apartment meters on the
         // now-doorless END wall. Shallow wall-mounted metal cabinets.
