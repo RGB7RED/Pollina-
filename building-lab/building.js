@@ -260,7 +260,7 @@ export function buildApartmentHouse(THREE,config={}){
       // forward along LEFT flight to front intermediate landing; turn
       // RIGHT; climb back along RIGHT flight to next full-floor rear landing.
       const rearWallZ=-3.38,rearLandingEndZ=-1.58;
-      const halfLandingZ=2.45,frontZ=3.28;
+      const halfLandingZ=2.05,frontZ=3.28;
       const rise=C.floorHeight/2,stepsPerFlight=12;
       const run=halfLandingZ-rearLandingEndZ,runStep=run/stepsPerFlight;
       const firstX=x-1.34,secondX=x+1.34,baseFloor=.70;
