@@ -100,9 +100,10 @@ const doorCover=instances.filter(t=>Math.abs(t.position.z-
     t.position.x-t.scale.x/2<x+doorHole.halfWidth-eps&&
     t.position.x+t.scale.x/2>x-doorHole.halfWidth+eps);
 assert.equal(doorCover.length,0,"the only real street door is not plastered over");
-assert.ok(instances.some(t=>t.materialColor===0x76978d&&
-  Math.abs(t.rotation.x)>.2&&t.scale.z>3),
-  "green paint also follows the sloped flights, not only the apartments");
+assert.equal(a.slopedWallFinish.bands,8,
+  "eight accurately joined green paint bands along four double flights");
+assert.equal(a.slopedWallFinish.noTiltedBoxes,true,
+  "the old tilted stair-wall paint cubes must not return");
 assert.equal(stair.floors,5);
 assert.equal(stair.flights,9);
 assert.equal(stair.treads,108);
