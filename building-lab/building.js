@@ -862,13 +862,15 @@ export function buildApartmentHouse(THREE,config={}){
   // Preserve the ORIGINAL operable entrance opening as well.
   const entryDoorVoid={bottom:C.plinth+.04,top:C.plinth+.04+2.28,
     halfWidth:1.71/2};
-  // Paint a horizontal GREEN DADO under each window, ending just
-  // BELOW the windowsill. In 4.5.4.7 painting followed an apartment
+  // Paint the GREEN DADO up to the SAME 1.18m height as both side
+  // walls. The green zone surrounds only the BOTTOM of each window,
+  // leaving its upper sash against cream plaster. In 4.5.4.7 a band
+  // restarted near the window top because it followed an apartment
   // floor modulo and restarted halfway through each window, producing
   // an inverted green strip across the top of the real glass.
   const greenBands=Array.from({length:C.floors-1},(_,i)=>{
     const landingY=firstMid+i*2.42;
-    return {bottom:landingY-.12,top:landingY+.78};
+    return {bottom:landingY-.12,top:landingY+1.18};
   });
   const cuts=[.70,shellTop,entryDoorVoid.top,
     ...windowIntervals.flatMap(w=>[w.bottom,w.top]),
@@ -880,8 +882,8 @@ export function buildApartmentHouse(THREE,config={}){
     const y0=sorted[j],y1=sorted[j+1];
     if(y1-y0<.005)continue;
     const midY=(y0+y1)/2;
-    // Never put green ABOVE the sill, or in the upper half of the
-    // glazing. The entire opening shares the cream upper finish.
+    // Never restart green near the TOP of an opening. The lower green
+    // dado is aligned across the side/front wall corner at +1.18m.
     const lower=midY<1.90||
       greenBands.some(b=>midY>=b.bottom&&midY<b.top);
     const mat=lower?mats.foyerLower:mats.foyerPaint;
