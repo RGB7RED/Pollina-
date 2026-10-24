@@ -12,7 +12,7 @@ const pads=[-26.3625,-8.7875,8.7875,26.3625].map(x=>({
  x,width:5.5,depth:3.15,centreZ:7.875
 }));
 const entry=planPlayableEntrance(BUILDING,pads),x=entry.x;
-assert.equal(entry.buildingObstacles.length,12);
+assert.equal(entry.buildingObstacles.length,16);
 assert.equal(entry.totalFloors,5);
 assert.equal(entry.stair.steps,12);
 assert.equal(entry.stair.turnZ,2.05);
@@ -55,7 +55,7 @@ for(let floor=1;floor<5;floor++){
  go(-1,0,70);assert.ok(player.position.x<x-1.1);
  go(0,-1,150);
  at(.70+(floor-.5)*BUILDING.floorHeight,"front half landing "+floor);
- assert.ok(player.position.z>entry.stair.frontZ-.45);
+ assert.ok(player.position.z>(floor===1?entry.stair.firstFrontZ:entry.stair.frontZ)-.45);
  go(1,0,90);assert.ok(player.position.x>x+1.1);
  go(0,1,150);
  at(.70+floor*BUILDING.floorHeight,"rear floor "+(floor+1));
