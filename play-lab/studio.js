@@ -6,12 +6,14 @@ export function parseStudioMode(search=""){
   return query.get("mode")===MODES.GAME?MODES.GAME:MODES.LAB;
 }
 export function renderDebugInfo({fps=0,drawCalls=0,triangles=0,geometries=0,
-  textures=0,position={x:0,z:0},view="third",collided=false}={}){
+  textures=0,position={x:0,y:0,z:0},view="third",collided=false}={}){
   const n=value=>Number.isFinite(value)?value:0;
   return {
     performance:`FPS: ${Math.round(n(fps))} · Вызовы: ${Math.round(n(drawCalls))} · Треугольники: ${Math.round(n(triangles))}`,
     resources:`Геометрии: ${Math.round(n(geometries))} · Текстуры: ${Math.round(n(textures))}`,
-    actor:`X: ${n(position.x).toFixed(2)} м · Z: ${n(position.z).toFixed(2)} м · ${view==="first"?"1-е":"3-е"} лицо`,
+    actor:view==="free"?
+      `Свободная камера · X: ${n(position.x).toFixed(2)} · Y: ${n(position.y).toFixed(2)} · Z: ${n(position.z).toFixed(2)} м`:
+      `X: ${n(position.x).toFixed(2)} м · Z: ${n(position.z).toFixed(2)} м · ${view==="first"?"1-е":"3-е"} лицо`,
     collision:collided?"Столкновение: ДА":"Столкновение: нет"
   };
 }
@@ -63,7 +65,7 @@ export class DeveloperStudio{
       objects:get("dev-objects"),route:get("dev-route")
     };
     const n=this.nodes;
-    n.objects.textContent=`Объекты: 1 дом · 1 персонаж · ${streetPlan.info.trees} деревьев · ${streetPlan.info.lamps} фонарей · ${streetPlan.info.benches} скамейки`;
+    n.objects.textContent=`Объекты лаборатории: 1 дом · ${streetPlan.info.trees} деревьев · ${streetPlan.info.lamps} фонарей · ${streetPlan.info.benches} скамейки · свободная камера без персонажа`;
     n.route.textContent=`Сцена: дом (${house.children.length} групп) + улица (${street.children.length} групп). Всего препятствий: ${controller.obstacles.length}.`;
     n.toggle.addEventListener("click",()=>this.setMode(
       this.mode===MODES.LAB?MODES.GAME:MODES.LAB,true));
@@ -97,14 +99,14 @@ export class DeveloperStudio{
     document.body.classList.toggle("game-mode",!lab);
     document.body.classList.toggle("lab-mode",lab);
     n.panel.hidden=!lab;
-    n.title.textContent=lab?"MINI CITY · Лаборатория игры":"MINI CITY";
+    n.title.textContent=lab?"MINI CITY · Лаборатория сцены":"MINI CITY";
     n.toggle.textContent=lab?"🎮 Перейти в игру":"🧪 Режим разработчика";
     n.toggle.setAttribute("aria-label",lab?
       "Перейти в игру без панели разработчика":
       "Вернуться в лабораторию игры");
     if(!lab)this.setCollisions(false);
-    document.title=lab?"MINI CITY · Лаборатория игры 4.2.2":
-      "MINI CITY · Играть 4.2.2";
+    document.title=lab?"MINI CITY · Лаборатория сцены · свободная камера":
+      "MINI CITY · Играть 4.5.4.1";
   }
   refreshCollisions(){
     // The first door adds/removes one REAL blocking rectangle on swing.
@@ -139,7 +141,7 @@ export class DeveloperStudio{
     const out=renderDebugInfo({
       fps,drawCalls:r.render.calls,triangles:r.render.triangles,
       geometries:r.memory.geometries,textures:r.memory.textures,
-      position:{x:state.x,z:state.z},view:this.controller.view,
+      position:{x:state.x,y:state.y||0,z:state.z},view:state.view||this.controller.view,
       collided:state.collided
     });
     const n=this.nodes;

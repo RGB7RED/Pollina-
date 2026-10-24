@@ -12,7 +12,6 @@ export function planPlayableEntrance(building,pads){
     throw Error("Entrance dimensions invalid");
   const rect=(name,minX,maxX,minZ,maxZ)=>({name,minX,maxX,minZ,maxZ});
   const stairHalf=1.44;
-  const corridor={minZ:2.02,maxZ:3.35,startX:x+1.39,endX:x+6.40};
   const totalFloors=building.floors,storeyHeight=building.floorHeight;
   const firstFloor=.70,clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
   const nearestFloor=currentY=>clamp(
@@ -24,8 +23,7 @@ export function planPlayableEntrance(building,pads){
     rect("entry-front-left",-halfX,x-corridorHalf,insideEnd,halfZ),
     rect("entry-front-right",x+corridorHalf,halfX,insideEnd,halfZ),
     rect("stair-left",-halfX,x-stairHalf,-halfZ,insideEnd),
-    rect("stair-right-rear",x+stairHalf,halfX,-halfZ,corridor.minZ),
-    rect("apartment-corridor-end",corridor.endX,halfX,corridor.minZ,insideEnd),
+    rect("stair-right",x+stairHalf,halfX,-halfZ,insideEnd),
     rect("stairwell-back",x-stairHalf,x+stairHalf,-halfZ,stair.backZ),
     rect("stair-center-divider",x-.02,x+.02,stair.turnZ+.12,
       stair.bottomZ-.65)
@@ -52,7 +50,7 @@ export function planPlayableEntrance(building,pads){
     minZ:insideEnd,maxZ:facade};
   const entry={
     index:0,x,facade,insideEnd,corridorHalf,door,innerDoor,
-    innerDoorZ,inside,stair,stairHalf,corridor,totalFloors,
+    innerDoorZ,inside,stair,stairHalf,totalFloors,
     floorHeight,
     buildingObstacles:[...house,...porch],
     // Same continuous world coordinate from sidewalk through the first
@@ -61,10 +59,6 @@ export function planPlayableEntrance(building,pads){
     // world-space Y. The same X/Z staircase repeats at four distinct
     // storeys: a naive 2D height map would wrongly teleport to floor 1.
     groundHeight(px,z,currentY=0){
-      const inHall=px>=corridor.startX-.10&&
-        px<=corridor.endX+.06&&
-        z>=corridor.minZ&&z<=corridor.maxZ;
-      if(inHall)return floorHeight(nearestFloor(currentY));
       const stairWidth=z<insideEnd?stairHalf:corridorHalf;
       if(Math.abs(px-x)>stairWidth-.03)return 0;
       if(z>=10.65)return 0;
@@ -101,8 +95,6 @@ export function planPlayableEntrance(building,pads){
       return 0;
     },
     isInside(px,z){
-      if(px>=corridor.startX-.10&&px<corridor.endX&&
-         z>=corridor.minZ&&z<=corridor.maxZ)return true;
       const width=z<insideEnd?stairHalf:corridorHalf;
       return Math.abs(px-x)<width&&z>=stair.backZ&&z<facade-.07;
     },
@@ -117,10 +109,9 @@ export function planPlayableEntrance(building,pads){
       if(z>innerDoorZ)return "тамбур";
       if(z>=insideEnd)return "площадка 1-го этажа";
       const floor=nearestFloor(y)+1;
-      if(px>=corridor.startX-.10)
-        return "коридор "+floor+"-го этажа · квартиры "+
+      if(z>=stair.bottomZ-.40)
+        return "площадка "+floor+"-го этажа · квартиры "+
           ((floor-1)*4+1)+"–"+(floor*4);
-      if(z>=stair.bottomZ)return "площадка "+floor+"-го этажа";
       if(z<=stair.turnZ)return "межэтажная площадка";
       return px<x?"марш вверх":"марш вниз";
     }

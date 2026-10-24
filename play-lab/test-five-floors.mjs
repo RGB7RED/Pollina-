@@ -11,7 +11,7 @@ assert.match(game,/actorPivot\.position\.set\(state.x,state.y,state.z\)/);
 assert.match(game,/buildApartmentHouse\(THREE\)/);
 assert.doesNotMatch(game,/window\.location.*(stairs|apartment|floor)/);
 assert.match(html,/4.5.4/);
-assert.match(html,/20 пронумерованных квартирных дверей/);
+assert.match(html,/две квартиры перед лестничной площадкой/);
 assert.equal(BUILDING.floors,5);
 assert.equal(BUILDING.entrances,4);
 const pads=[-26.3625,-8.7875,8.7875,26.3625].map(x=>({
@@ -19,30 +19,30 @@ const pads=[-26.3625,-8.7875,8.7875,26.3625].map(x=>({
 }));
 const entry=planPlayableEntrance(BUILDING,pads);
 assert.equal(entry.totalFloors,5);
-assert.equal(entry.buildingObstacles.length,12);
-assert.ok(Math.abs(entry.corridor.endX-entry.x-6.4)<1e-6);
-assert.ok(entry.corridor.minZ>entry.stair.turnZ);
+assert.equal(entry.buildingObstacles.length,11);
+assert.equal(entry.corridor,undefined,"removed ghost corridor");
 assert.equal(entry.stair.steps,12);
 assert.equal(entry.stair.halfRise,1.39);
 const x=entry.x;
 assert.ok(collidesAt(x,1,entry.buildingObstacles,PLAYER_RADIUS),
- "central stair divider blocks shortcuts between adjacent flights");
-assert.ok(!collidesAt(x+.88,2.7,entry.buildingObstacles,PLAYER_RADIUS));
-assert.ok(collidesAt(x+7,2.7,entry.buildingObstacles,PLAYER_RADIUS),
- "hallway has a real terminal wall");
+ "central stair divider separates left and right flights");
+assert.ok(!collidesAt(x+.88,2.7,entry.buildingObstacles,PLAYER_RADIUS),
+ "the actual upper landing is walkable");
+assert.ok(collidesAt(x+2.2,2.7,entry.buildingObstacles,PLAYER_RADIUS),
+ "no path into the fake room through the stairwell wall");
 assert.ok(collidesAt(pads[1].x,5.1,entry.buildingObstacles,PLAYER_RADIUS),
  "other three entrances remain blocked");
 for(let level=0;level<5;level++){
  const y=.70+level*BUILDING.floorHeight;
  assert.equal(entry.floorHeight(level),y);
- assert.equal(entry.groundHeight(x+3.2,2.65,y),y,
-  "each apartment corridor uses its real Y plane");
- assert.equal(entry.zone(x+3.2,2.65,y),
-  "коридор "+(level+1)+"-го этажа · квартиры "+
-    (level*4+1)+"–"+(level*4+4));
+ assert.equal(entry.groundHeight(x+.8,2.96,y),y,
+   "all five REAL stair landings share XZ but have distinct Y");
+ assert.equal(entry.zone(x+.8,2.96,y),
+  "площадка "+(level+1)+"-го этажа · квартиры "+
+  (level*4+1)+"–"+(level*4+4));
 }
-assert.equal(entry.groundHeight(x+3.2,2.65,15),.70+4*BUILDING.floorHeight,
- "the fifth floor is the top; no impossible sixth floor");
+assert.equal(entry.groundHeight(x+.8,2.96,15),.70+4*BUILDING.floorHeight,
+ "can't ascend through the roof");
 const player=new PlayerController({building:BUILDING,pads,entry,
  spawn:{x,z:10.85}});
 assert.equal(player.toggleNearestDoor(),false,"doors cannot toggle from street");
@@ -64,54 +64,44 @@ function at(y,label){
  assert.ok(Math.abs(player.position.y-y)<.0001,
    label+": actual feet Y "+player.position.y+" expected "+y);
 }
-go(0,1,145);at(.70,"first floor foyer");
-go(0,1,5);
-go(1,0,100);
-assert.ok(player.position.x-x>5.7,"first-floor corridor is walkable");
-at(.70,"first-floor apartment corridor");
-assert.match(entry.zone(player.position.x,player.position.z,player.position.y),
- /квартиры 1–4/);
-go(-1,0,100);
-assert.ok(player.position.x-x<.45,"return to first stair landing");
+go(0,1,145);at(.70,"first-floor foyer");
+go(0,1,5); // first-floor central landing is reached, no side corridor
+assert.ok(player.position.z<3,"stair area has actual access");
+assert.ok(Math.abs(player.position.x-x)<.1);
 go(-1,0,17);
-assert.ok(player.position.x-x<-.40,"start the first, left-side flight");
+assert.ok(player.position.x<x-.4,"align with left flight");
 for(let floor=1;floor<5;floor++){
  go(0,1,155);
- at(.70+(floor-.5)*BUILDING.floorHeight,"turnaround floor "+floor);
+ at(.70+(floor-.5)*BUILDING.floorHeight,"half landing "+floor);
  assert.ok(player.position.z<entry.stair.turnZ-.2);
  go(1,0,40);
- assert.ok(player.position.x-x>.7,"cross actual half-landing");
+ assert.ok(player.position.x-x>.7,"cross at far intermediate landing");
  go(0,-1,145);
- at(.70+floor*BUILDING.floorHeight,"arrival at floor "+(floor+1));
- assert.ok(player.position.z>2.75&&player.position.z<3.05);
- go(1,0,100);
- at(.70+floor*BUILDING.floorHeight,"corridor "+(floor+1));
- assert.ok(player.position.x-x>5.7,"reach the apartment doors");
+ at(.70+floor*BUILDING.floorHeight,"reach floor "+(floor+1));
+ assert.ok(player.position.z>2.7&&player.position.z<3.1);
  assert.equal(entry.zone(player.position.x,player.position.z,player.position.y),
- "коридор "+(floor+1)+"-го этажа · квартиры "+
-   (floor*4+1)+"–"+(floor*4+4));
+  "площадка "+(floor+1)+"-го этажа · квартиры "+
+    (floor*4+1)+"–"+(floor*4+4));
  if(floor<4){
   go(-1,0,100);
   assert.ok(player.position.x-x<-.40,
-    "walk back to the left flight of the next floor");
+    "cross over actual landing onto next left flight");
  }
 }
-assert.ok(player.position.y>11.8,"fifth floor genuinely reached");
-assert.equal(player.nearestDoor(),null,"no ground-floor door UI on top floor");
-go(-1,0,70); // back from the fifth-floor flats to RIGHT down-flight
-assert.ok(player.position.x-x>.70&&player.position.x-x<1.10);
+assert.ok(player.position.y>11.8,"physically reach fifth floor");
+assert.equal(player.nearestDoor(),null,"ground-floor door can't be reached from top floor");
 for(let floor=4;floor>=1;floor--){
  go(0,1,160);
  at(.70+(floor-.5)*BUILDING.floorHeight,"descent midway "+floor);
  go(-1,0,40);
  go(0,-1,155);
  if(floor>1){
-  go(1,0,27); // centre of right-hand flight, not hall wall
+  go(1,0,27);
   at(.70+(floor-1)*BUILDING.floorHeight,"descent to floor "+floor);
  }
 }
 go(1,0,15);go(0,-1,160);
-assert.ok(player.position.z>10,"return to original street from fifth floor");
+assert.ok(player.position.z>10,"return to original city through same entrance");
 assert.equal(player.position.y,0);
 assert.ok(!player.isInsideEntrance());
 player.reset();
@@ -159,13 +149,20 @@ assert.deepEqual(doors.map(d=>d.number),
  Array.from({length:20},(_,i)=>i+1));
 assert.ok(doors.every(d=>d.entrance===1&&!d.accessible),
  "apartment entrances exist, but apartment interiors are NOT claimed ready");
+assert.equal(audit.completeStaircase.corridor,undefined,
+ "separate apartment corridor must NOT be constructed");
+assert.equal(audit.completeStaircase.landing.doorsPerFloor,4);
 for(let f=1;f<=5;f++){
  const each=doors.filter(d=>d.floor===f);
- assert.equal(each.length,4,"exactly four doors per floor");
- assert.equal(each.filter(d=>d.side===-1).length,2);
- assert.equal(each.filter(d=>d.side===1).length,2);
- assert.ok(each.every(d=>d.x>x+1.6&&d.x<x+5.1));
- assert.ok(each.every(d=>Number.isFinite(d.z)));
+ assert.equal(each.length,4,"four doors physically on same landing");
+ assert.deepEqual(each.map(d=>d.orientation),
+  ["front","front","left","right"]);
+ assert.ok(each.every(d=>d.zone==="stair-landing"));
+ assert.ok(each.every(d=>Math.abs(d.x-x)<=1.44&&d.z>=2.5&&d.z<=3.35),
+  "all doors are within real staircase footprint");
+ assert.ok(Math.abs(each[0].x+each[1].x-2*x)<.00001,
+  "two centre apartment doors are symmetrical");
+ assert.ok(each[2].x<x-1.30&&each[3].x>x+1.30);
 }
 assert.equal(house.innerDoorPivot.name,"entrance-1-inner-hinged-door");
 assert.ok(house.root.children.includes(house.innerDoorPivot));
@@ -174,4 +171,4 @@ assert.equal(glass.length,1,"previously accepted truly glazed door retained");
 assert.ok(glass[0].material.opacity<.35);
 const batch=house.root.children.filter(o=>o instanceof InstancedMesh);
 assert.ok(batch.length<=32,"mobile draw group budget unchanged");
-console.log("MINI CITY 4.5.4 PASS: five navigable floors, eight actual flights, 96 treads, 20 numbered doors, seamless ascent AND descent, no lift");
+console.log("MINI CITY 4.5.4.1 PASS: five navigable floors, eight actual flights, 96 treads, 20 numbered doors, seamless ascent AND descent, no lift");

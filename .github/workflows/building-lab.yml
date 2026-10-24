@@ -26,6 +26,7 @@ on:
       - feat/mini-city-v033-stage452-first-floor-foyer
       - feat/mini-city-v033-stage453-real-stairs-glazed-door
       - feat/mini-city-v033-stage454-five-floors-apartment-doors
+      - fix/mini-city-v033-stage4541-integrated-landings-free-camera
     paths:
       - 'building-lab/**'
       - 'bus-stop-lab/**'
@@ -60,6 +61,7 @@ jobs:
           node --check play-lab/game.js
           node --check play-lab/controller.js
           node --check play-lab/entrance.js
+          node --check play-lab/free-camera.js
           node --check play-lab/animation.js
           node --check play-lab/street.js
           node --check play-lab/grass.js
@@ -96,6 +98,8 @@ jobs:
         run: node play-lab/test-stairs.mjs
       - name: Test stage 4.5.4 five actual levels, 20 doors, round-trip movement
         run: node play-lab/test-five-floors.mjs
+      - name: Test 4.5.4.1: 20 apartment doors ON stair landings, no avatar in scene lab, 6DoF camera
+        run: node play-lab/test-free-camera.mjs
       - name: Test stage 4.1 first/third-person movement and house collisions
         run: node play-lab/test-controller.mjs
       - name: Check stage 4.1.1 model orientation and non-reversed swipe

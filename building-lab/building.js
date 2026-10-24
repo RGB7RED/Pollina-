@@ -256,11 +256,9 @@ export function buildApartmentHouse(THREE,config={}){
       // Both 12-tread flights exist at EVERY storey (1→2, 2→3, 3→4,
       // 4→5). Levels and geometry share one explicit set of constants.
       const bottomZ=3.00,turnZ=-.74,backZ=-1.63;
-      const corridorMinZ=2.02,corridorMaxZ=3.35;
       const rise=C.floorHeight/2,stepsPerFlight=12;
       const run=bottomZ-turnZ,runStep=run/stepsPerFlight;
       const firstX=x-.72,secondX=x+.72,baseFloor=.70;
-      const corridorEndX=x+6.40;
       const stairHeight=C.plinth+C.floors*C.floorHeight-.68;
       // Tall, continuous stairwell walls. The original exterior brick
       // facade stays intact; stairs are only within the interior plan.
@@ -307,83 +305,91 @@ export function buildApartmentHouse(THREE,config={}){
           bottom:level,mid:level+rise,top:level+C.floorHeight,
           steps:stepsPerFlight*2});
       }
-      // A continuous, accessible east-facing common corridor at each
-      // of the FIVE floor elevations. Four closed doors per floor.
-      // The first floor's vestibule and mailbox wall are untouched.
-      // Apartment interiors remain for a later stage.
-      const apartments=[],hallDepth=corridorMaxZ-corridorMinZ;
-      const hallFromX=x+1.39,hallToX=corridorEndX;
-      const hallCentreX=(hallFromX+hallToX)/2;
-      const hallWidth=hallToX-hallFromX,hallZ=(corridorMinZ+corridorMaxZ)/2;
+      // 4.5.4.1: four doors ON the existing stair landing, NOT beyond a
+      // wall in a separately constructed side corridor. The actual landing
+      // spans X ±1.44, by the head of each U-shaped staircase.
+      // Two doors face the player ahead; one is in each side wall.
+      const apartments=[],doorWidth=.73,sideDoorWidth=.80;
+      const doorCenters=[-.88,.88],sideDoorZ=2.72,frontDoorZ=3.327;
       const numeralSegments={
         0:"abcfed",1:"bc",2:"abged",3:"abgcd",4:"fgbc",
         5:"afgcd",6:"afgecd",7:"abc",8:"abcdefg",9:"abcdfg"
       };
-      function numberOnDoor(n,atX,atY,atZ,side){
-        // Self-contained 7-segment numbers, no canvas/textures and no
-        // external fonts; legible on the live 3D door close up.
+      function numberOnDoor(n,atX,atY,atZ,orientation){
         const chars=String(n).split("");
-        const positions={
+        const segments={
           a:[0,.043,.063,.011],b:[.036,.020,.012,.041],
           c:[.036,-.024,.012,.041],d:[0,-.047,.063,.011],
           e:[-.036,-.024,.012,.041],f:[-.036,.020,.012,.041],
           g:[0,-.002,.063,.011]
         };
-        const w=.095,total=chars.length*w;
-        box(total+.06,.145,.018,mats.frameWhite,atX,atY,atZ);
-        for(let i=0;i<chars.length;i++){
-          const segs=numeralSegments[chars[i]];
-          for(const symbol of segs){
-            const [dx,dy,sw,sh]=positions[symbol];
-            box(sw,sh,.023,mats.ventDark,
-              atX+(i-(chars.length-1)/2)*w+dx,atY+dy,
-              atZ+side*.023);
-          }
+        const width=.095,total=chars.length*width;
+        const side=orientation==="left"?1:orientation==="right"?-1:0;
+        const angle=side?Math.PI/2:0;
+        box(total+.06,.145,.018,mats.frameWhite,
+          atX+(side?side*.015:0),atY,atZ+(side?0:-.018),0,angle);
+        for(let i=0;i<chars.length;i++)for(const symbol of numeralSegments[chars[i]]){
+          const [dx,dy,sw,sh]=segments[symbol],offset=(i-(chars.length-1)/2)*width+dx;
+          box(sw,sh,.023,mats.ventDark,
+            atX+(side?side*.034:offset),atY+dy,
+            atZ+(side?offset:-.038),0,angle);
         }
       }
+      const apartmentPalette=[mats.frameGrey,mats.entryBrown,
+        mats.entryBlue,mats.entry];
       for(let floor=0;floor<C.floors;floor++){
         const level=baseFloor+floor*C.floorHeight;
-        // The first-floor corridor joins the actual existing landing;
-        // floors 2–5 join the actual upper right-hand stair landing.
-        box(hallWidth,.17,hallDepth-.10,mats.foyerTileAlt,
-          hallCentreX,level-.085,hallZ);
-        // Support 2.6 m-high corridor walls along both edges; door
-        // panels lie on the room-facing surfaces, never as floating sheets.
-        for(const side of [-1,1]){
-          const wallZ=side>0?corridorMaxZ+.13:corridorMinZ-.13;
-          box(hallWidth,2.60,.21,mats.reveal,
-            hallCentreX,level+1.30,wallZ);
-          box(hallWidth-.08,1.16,.018,mats.foyerLower,
-            hallCentreX,level+.58,wallZ-side*.114);
-          box(hallWidth-.08,1.30,.018,mats.foyerPaint,
-            hallCentreX,level+1.79,wallZ-side*.114);
-          box(hallWidth-.08,.052,.022,mats.frameWhite,
-            hallCentreX,level+1.16,wallZ-side*.132);
+        // No rectangular room off to the east and no horizontal hallway.
+        // Extend the CURRENT landing, where the second ascending flight
+        // arrives; all four doors can be seen directly from this area.
+        box(2.68,.16,.85,mats.foyerTileAlt,
+          x,level-.08,2.925);
+        // A short painted wall contains the two centre doors on floors 2–5.
+        // The ground floor keeps the accepted open connection to the foyer.
+        if(floor>0){
+          box(2.80,2.55,.16,mats.reveal,x,level+1.275,3.435);
+          box(2.75,1.15,.024,mats.foyerLower,x,level+.575,3.34);
+          box(2.75,1.30,.024,mats.foyerPaint,x,level+1.80,3.34);
+          box(2.75,.055,.028,mats.frameWhite,x,level+1.17,3.32);
         }
-        box(.22,2.60,hallDepth+.40,mats.reveal,
-          hallToX+.11,level+1.30,hallZ);
-        box(.44,.052,.40,mats.frameWhite,
-          hallCentreX,level+2.58,hallZ);
-        box(.34,.035,.32,mats.litGlass,
-          hallCentreX,level+2.54,hallZ);
-        // Two doors per side, staggered along corridor.
-        // Flat numbers 1–20 belong to first entrance only, 4 per floor.
+        // Paint the SIDE walls in this existing landing space; no new
+        // hall wall is added. Four clear isolated door leaves / frames.
+        for(const sign of [-1,1]){
+          box(.018,1.20,.95,mats.foyerLower,
+            x+sign*1.35,level+.60,2.89);
+          box(.018,1.30,.95,mats.foyerPaint,
+            x+sign*1.35,level+1.85,2.89);
+        }
+        box(.40,.052,.31,mats.frameWhite,x,level+2.50,2.96);
+        box(.30,.035,.22,mats.litGlass,x,level+2.47,2.96);
         for(let local=0;local<4;local++){
           const number=floor*4+local+1;
-          const dx=[2.24,4.55,2.24,4.55][local];
-          const side=local<2?-1:1;
-          const doorZ=side<0?corridorMinZ+.025:corridorMaxZ-.025;
-          const doorX=x+dx;
-          box(1.03,2.18,.08,mats.frameWhite,doorX,level+1.13,doorZ);
-          box(.89,2.06,.09,[mats.frameGrey,mats.entryBrown,
-            mats.entryBlue,mats.entry][local],
-            doorX,level+1.10,doorZ-side*.051);
-          box(.035,.115,.072,mats.vent,
-            doorX+.29,level+1.04,doorZ-side*.109);
-          numberOnDoor(number,doorX,level+1.88,
-            doorZ-side*.112,-side);
+          const centre=local<2,orientation=centre?"front":local===2?"left":"right";
+          const offset=centre?doorCenters[local]:(local===2?-1.35:1.35);
+          const doorX=x+offset,doorZ=centre?frontDoorZ:sideDoorZ;
+          const yaw=centre?0:Math.PI/2;
+          const actualWidth=centre?doorWidth:sideDoorWidth;
+          const mat=apartmentPalette[local];
+          box(actualWidth,2.15,.09,mats.frameWhite,
+            doorX,level+1.10,doorZ,0,yaw);
+          box(actualWidth-.11,2.04,.10,mat,
+            doorX,level+1.095,
+            centre?doorZ-.065:doorZ,
+            0,yaw);
+          if(centre){
+            box(.034,.13,.075,mats.vent,
+              doorX+.24,level+1.02,doorZ-.15);
+            numberOnDoor(number,doorX,level+1.90,doorZ-.134,orientation);
+          }else{
+            const sign=orientation==="left"?1:-1;
+            box(.034,.13,.075,mats.vent,
+              doorX+sign*.095,level+1.02,doorZ+.22,0,yaw);
+            numberOnDoor(number,doorX+sign*.097,
+              level+1.90,doorZ,orientation);
+          }
           apartments.push({number,floor:floor+1,entrance:1,
-            x:doorX,z:doorZ,side,accessible:false});
+            x:doorX,z:doorZ,orientation,zone:"stair-landing",
+            accessible:false});
         }
       }
       audit.firstStaircase={
@@ -396,8 +402,8 @@ export function buildApartmentHouse(THREE,config={}){
         floors:C.floors,flights:(C.floors-1)*2,
         treads:(C.floors-1)*stepsPerFlight*2,
         levels:stairway,apartmentDoors:apartments,
-        corridor:{minZ:corridorMinZ,maxZ:corridorMaxZ,
-          startX:hallFromX,endX:hallToX},
+        landing:{centreX:x,minX:x-1.44,maxX:x+1.44,
+          minZ:2.5,maxZ:3.35,doorsPerFloor:4},
         liftCount:0
       };
       box(1.96,.13,depth,mats.foundation,x,3.41,floorMid);

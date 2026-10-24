@@ -1,0 +1,62 @@
+import assert from "node:assert/strict";
+import {readFileSync} from "node:fs";
+import {FreeSceneCamera,FREE_CAMERA_START} from "./free-camera.js";
+import {parseStudioMode,MODES} from "./studio.js";
+const read=p=>readFileSync(new URL(p,import.meta.url),"utf8");
+const game=read("./game.js"),html=read("./index.html"),building=read("../building-lab/building.js");
+assert.equal(parseStudioMode("?mode=lab"),MODES.LAB);
+assert.equal(parseStudioMode("?mode=game"),MODES.GAME);
+assert.equal(parseStudioMode(""),MODES.LAB);
+assert.equal((game.match(/new THREE\.Scene\(/g)||[]).length,1,
+ "free camera inspects same city scene, not separate editor world");
+assert.match(game,/const freeCamera=new FreeSceneCamera\(\)/);
+assert.match(game,/actorPivot\.visible=studio\.mode==="game"/);
+assert.match(game,/if\(studio\.mode==="game"\)\{actorLoadStarted=true;loadActor\(\);\}/);
+assert.match(game,/const lab=studio\.mode==="lab"/);
+assert.match(game,/if\(!lab&&!actorLoadStarted\)/);
+assert.match(game,/state=controller\.update\(dt\)/);
+assert.match(game,/freeCamera\.update\(dt,axisX,axisZ,rise,/);
+assert.match(game,/freeCamera\.getCameraPose\(\)/);
+assert.match(game,/if\(ready&&!lab\)/);
+assert.match(game,/studio\.update\(\{fps:measuredFps,state\}\)/);
+assert.match(game,/camera\.position\.set\(pose\.eye\.x,pose\.eye\.y,pose\.eye\.z\)/);
+assert.match(game,/freeCamera\.reset\(\)/);
+assert.match(game,/holdElevation\[direction\]=true/); // touch elevation held continuously
+for(const id of ["free-up","free-down","free-reset","free-landing"]){
+ assert.match(html,new RegExp('id="'+id+'"'));
+ assert.match(game,new RegExp(id));
+}
+assert.match(html,/body\.lab-mode #actions/);
+assert.match(html,/body\.lab-mode #camera-mode/);
+assert.match(html,/body\.lab-mode #status/);
+assert.match(html,/body\.game-mode #free-controls/);
+assert.match(html,/body\.lab-mode #free-controls/);
+assert.match(html,/в свободном режиме|свободн|Без персонажа/i);
+assert.doesNotMatch(game,/new THREE\.Scene\(\).*new THREE\.Scene\(/);
+assert.doesNotMatch(building,/const corridorEndX|hallFromX|hallToX/,
+ "no off-stair apartment corridor is built");
+assert.match(building,/orientation=centre\?"front":local===2\?"left":"right"/);
+assert.match(building,/const doorCenters=\[-\.88,\.88\]/);
+assert.match(building,/zone:"stair-landing"/);
+const fly=new FreeSceneCamera();
+assert.deepEqual(fly.position,{x:FREE_CAMERA_START.x,y:FREE_CAMERA_START.y,z:FREE_CAMERA_START.z});
+assert.equal(fly.getCameraPose().mode,"free");
+assert.ok(fly.getCameraPose().aim.z<fly.position.z);
+const z=fly.position.z;
+fly.update(.05,0,1,0);
+assert.ok(fly.position.z<z,"forward movement independent of player");
+const y=fly.position.y;
+fly.update(.05,0,0,1);
+assert.ok(fly.position.y>y,"up works in free mode");
+fly.update(.05,0,0,-1);
+assert.ok(Math.abs(fly.position.y-y)<.00001,"down works");
+fly.look(60,-25);
+assert.ok(fly.yaw>0&&fly.pitch>-1.5);
+assert.ok(fly.getCameraPose().aim.x>fly.position.x);
+for(let i=0;i<5000;i++)fly.update(.05,0,0,-1,true);
+assert.equal(fly.position.y,.45,"camera can inspect lower floor but cannot vanish infinitely");
+fly.reset();
+assert.equal(fly.position.y,FREE_CAMERA_START.y);
+assert.equal(fly.position.z,FREE_CAMERA_START.z);
+assert.equal(fly.pitch,FREE_CAMERA_START.pitch);
+console.log("MINI CITY 4.5.4.1 PASS: same live scene, real lab-only free flying, no avatar/GLB until game, no side room, five-floor landing doors");
