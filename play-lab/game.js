@@ -60,7 +60,7 @@ $("hud-toggle").addEventListener("click",()=>{
   $("hud-toggle").setAttribute("aria-expanded",String(!collapsed));
   $("hud-toggle").textContent=collapsed?"▾ Показать описание":"▴ Свернуть описание";
 });
-$("world-info").textContent="4.5.3: прозрачное окно второй двери · два лестничных марша на 2-й этаж · "+streetPlan.info.trees+
+$("world-info").textContent="4.5.4: 5 этажей без лифта · 20 дверей квартир в подъезде №1 · "+streetPlan.info.trees+
   " деревьев · "+streetPlan.info.lamps+" фонарей · "+
   streetPlan.info.benches+" скамейки";
 actorPivot.position.set(controller.position.x,0,controller.position.z);
