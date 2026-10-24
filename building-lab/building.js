@@ -255,7 +255,7 @@ export function buildApartmentHouse(THREE,config={}){
       // 4.5.3: remove the temporary blind rear wall — the first flight
       // is genuinely behind the second glazed door, inside the same house.
       // One U-shaped staircase links floors 1 → 2 without any scene change.
-      const bottomZ=3.35,turnZ=-.74,backZ=-1.63;
+      const bottomZ=3.00,turnZ=-.74,backZ=-1.63;
       const rise=C.floorHeight/2,stepsPerFlight=12;
       const run=bottomZ-turnZ,runStep=run/stepsPerFlight;
       const firstX=x-.72,secondX=x+.72;
@@ -289,7 +289,7 @@ export function buildApartmentHouse(THREE,config={}){
         .70+2*rise-.09,bottomZ-.32);
       // Two continuous handrails + posts; no inaccessible fake corridors.
       const railMat=mats.foyerMailbox;
-      for(const z of [2.84,2.24,1.47,.70,-.04]){
+      for(const z of [2.80,2.13,1.47,.70,-.04]{
         const t=(bottomZ-z)/run;
         const y=.70+rise*t;
         box(.044,1.01,.046,railMat,x-.085,y+.50,z);
