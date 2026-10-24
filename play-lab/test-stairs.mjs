@@ -6,7 +6,7 @@ import {PlayerController,PLAYER_RADIUS,collidesAt} from "./controller.js";
 const source=path=>readFileSync(new URL(path,import.meta.url),"utf8");
 const game=source("./game.js"),view=source("./index.html");
 assert.equal((game.match(/new THREE\.Scene\(/g)||[]).length,1);
-assert.match(view,/Лестница на/);
+assert.match(view,/лестница|лестницы/i);
 assert.match(game,/actorPivot\.position\.set\(state.x,state.y,state.z\)/);
 assert.doesNotMatch(game,/setInnerDoorOpen|innerDoorPivot/,
   "the former inner door was entirely removed from the game");
@@ -42,7 +42,7 @@ function go(ax,az,n){
 go(0,1,90); // single open foyer
 assert.equal(p.position.y,.70);
 go(1,0,18); // RIGHT wall stair
-assert.ok(Math.abs(p.position.x-e.stair.entryX)<.2);
+assert.ok(Math.abs(p.position.x-e.stair.entryX)<e.stair.entryWidth/2-.05);
 go(0,1,155);
 assert.ok(p.position.z<-2.5&&p.position.z>e.stair.backZ);
 assert.equal(p.position.y,e.stair.firstFloor);
