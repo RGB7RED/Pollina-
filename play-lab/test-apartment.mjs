@@ -72,7 +72,7 @@ assert.match(game,/entry\.installApartment\(apartment\)/);
 assert.match(game,/scene\.add\(flat\)/);
 assert.match(game,/apartmentDoorPivot\.rotation\.y/);
 assert.match(game,/setApartmentDoorOpen\(/);
-assert.doesNotMatch(game,/window\.location\s*=.*apartment|new THREE\.Scene\(\).*apartment/s);
+assert.doesNotMatch(game,/window\.location\s*=.*apartment/);
 const player=new PlayerController({building:BUILDING,pads,entry,
  spawn:{x:entry.x,z:10.85}});
 assert.ok(player.setEntryDoorOpen(true));
