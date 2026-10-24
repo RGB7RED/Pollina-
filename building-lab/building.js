@@ -311,9 +311,26 @@ export function buildApartmentHouse(THREE,config={}){
         // apartment-door end. Headroom of the vestibule is unchanged.
         // Extended ALL the way to the genuine positive-Z exterior wall,
         // not a short bridge opening into an unpartitioned house.
-        box(stairHalfWidth*2-.18,.16,frontZ-halfLandingZ,
-          mats.foyerTileAlt,x,level+rise-.08,
-          (frontZ+halfLandingZ)/2);
+        // IMPORTANT: the first half-landing is above the accepted foyer.
+        // A full slab would slice THROUGH the inner entry door at 2.09 m
+        // and leave a 1.3 m headroom above the first-floor entry. Preserve
+        // the 1.42 m door's clear opening by splitting the first extension
+        // into two side wings, both reaching the REAL window wall. At
+        // levels 2-4 the same half landing is solid and fully crossable.
+        if(floor===0){
+          box(stairHalfWidth*2-.18,.16,3.35-halfLandingZ,
+            mats.foyerTileAlt,x,level+rise-.08,
+            (3.35+halfLandingZ)/2);
+          const wingW=stairHalfWidth-.91;
+          for(const sign of [-1,1])
+            box(wingW,.16,frontZ-3.35,mats.foyerTileAlt,
+              x+sign*(.91+wingW/2),level+rise-.08,
+              (frontZ+3.35)/2);
+        }else{
+          box(stairHalfWidth*2-.18,.16,frontZ-halfLandingZ,
+            mats.foyerTileAlt,x,level+rise-.08,
+            (frontZ+halfLandingZ)/2);
+        }
         for(let i=0;i<stepsPerFlight;i++){
           const zL=rearLandingEndZ+(i+.5)*runStep;
           const zR=halfLandingZ-(i+.5)*runStep;
