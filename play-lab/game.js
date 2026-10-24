@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import {GLTFLoader} from "three/addons/loaders/GLTFLoader.js";
 import {buildApartmentHouse} from "../building-lab/building.js";
+import {planFirstApartment,buildFirstApartment} from "./apartment.js";
 import {applyFacadeFinishes} from "../building-lab/materials.js";
 import {ActorAnimator} from "./animation.js";
 import {planStreet,buildStreet} from "./street.js";
@@ -41,6 +42,10 @@ scene.add(house);
 // blank road/ground with one deterministic street plan and batched furnishing.
 const pads=house.userData.geometryAudit.entryPads;
 const entry=planPlayableEntrance(config,pads);
+const apartment=planFirstApartment(config,entry);
+entry.installApartment(apartment);
+const {root:flat,doorPivot:apartmentDoorPivot}=buildFirstApartment(THREE,apartment);
+scene.add(flat);
 const foyerLight=new THREE.PointLight(0xffeac5,1.45,6.2,2);
 foyerLight.position.set(entry.x,3.08,5.14);foyerLight.castShadow=false;
 scene.add(foyerLight);
@@ -208,7 +213,8 @@ function updateEntryAction(){
  const near=controller.nearestDoor();
  entryAction.hidden=!near;
  if(!near)return;
- entryAction.textContent="🚪 "+(near.open?"Закрыть входную":"Открыть входную");
+ entryAction.textContent="🚪 "+(near.open?"Закрыть ":"Открыть ")+
+    (near.id==="apartment-17"?"квартиру №17":"входную");
  entryAction.setAttribute("aria-pressed",String(near.open));
  entryAction.title=near.label+" · E";
 }
@@ -216,7 +222,7 @@ function toggleEntryDoor(){
  if(studio.mode==="lab")return;
  const near=controller.nearestDoor();
  if(!near)return;
- const ok=controller.setEntryDoorOpen(!controller.entryDoorOpen);
+ const ok=controller.toggleNearestDoor();
  if(ok){updateEntryAction();studio.refreshCollisions();}
  else $("actor-status").textContent="Отойди от дверного проёма, чтобы закрыть дверь";
 }
@@ -232,6 +238,7 @@ $("run").addEventListener("click",()=>{
 function resetActor(){
  controller.reset();
  doorPivot.rotation.y=0;
+ apartmentDoorPivot.rotation.y=0;
  updateEntryAction();
  studio.refreshCollisions();
  releaseControls();
@@ -279,8 +286,8 @@ for(const [id,direction] of [["free-up","up"],["free-down","down"]]){
 }
 $("free-reset").addEventListener("click",()=>freeCamera.reset());
 $("free-landing").addEventListener("click",()=>{
-  // 3rd-floor stair landing, facing the two centre apartment doors.
-  freeCamera.position={x:entry.x,y:entry.floorHeight(2)+1.62,z:-.70};
+  // Fifth-floor landing: inspect first real apartment 17.
+  freeCamera.position={x:entry.x,y:entry.floorHeight(4)+1.55,z:-2.42};
   freeCamera.yaw=0;freeCamera.pitch=-.16;
 });
 const lookTarget=new THREE.Vector3(),eyeTarget=new THREE.Vector3();
@@ -325,6 +332,9 @@ function animate(){
  // and first-floor vestibule smoothly; no teleport or world replacement.
  const openAngle=controller.entryDoorOpen?Math.PI*.47:0;
  doorPivot.rotation.y+=(openAngle-doorPivot.rotation.y)*(1-Math.exp(-12*dt));
+  const aptAngle=controller.apartmentDoorOpen?-Math.PI*.48:0;
+  apartmentDoorPivot.rotation.y+=(aptAngle-apartmentDoorPivot.rotation.y)*
+    (1-Math.exp(-12*dt));
  actorPivot.position.set(state.x,state.y,state.z);
  updateEntryAction();
  actorPivot.rotation.y=state.heading;
