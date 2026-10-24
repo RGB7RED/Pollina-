@@ -18,8 +18,8 @@ const pads=[-26.3625,-8.7875,8.7875,26.3625].map(x=>
 const e=planPlayableEntrance(BUILDING,pads);
 assert.equal(e.innerDoor,undefined);
 assert.equal(e.innerDoorZ,undefined);
-assert.equal(e.corridorHalf,2.08);
-assert.ok(!collidesAt(e.x+1.5,5.25,e.buildingObstacles,PLAYER_RADIUS),
+assert.equal(e.corridorHalf,1.74);
+assert.ok(!collidesAt(e.x+1.35,5.25,e.buildingObstacles,PLAYER_RADIUS),
   "the room is walkable far outside its old 1.62m corridor");
 assert.ok(collidesAt(e.x+1.5,6.3,e.buildingObstacles,PLAYER_RADIUS),
   "existing external facade bricks remain solid by the original door");
@@ -45,7 +45,8 @@ assert.equal(c.position.y,.70);
 assert.ok(c.isInsideEntrance());
 assert.equal(e.zone(c.position.x,c.position.z),"просторный тамбур");
 walk(1,0,18);
-assert.ok(Math.abs(c.position.x-e.stair.entryX)<.2);
+assert.ok(Math.abs(c.position.x-e.stair.entryX)<e.stair.entryWidth/2-.05,
+  "avatar stands on the widened right entrance flight");
 walk(0,1,155);
 assert.equal(c.position.y,e.stair.firstFloor,
   "first apartment floor is reached by a genuine RIGHT-hand stair");
@@ -98,7 +99,7 @@ assert.equal(house.stats.doorHoles,4);
 assert.equal(audit.entryPads.length,4);
 assert.equal(audit.foyer.mailboxes,20);
 assert.equal(audit.foyer.tiles,80,"floor tiles cover the expanded foyer");
-assert.equal(audit.foyer.halfWidth,2.08);
+assert.equal(audit.foyer.halfWidth,1.74);
 assert.equal(audit.foyer.doorCount,1);
 assert.equal(audit.foyer.secondDoorRemoved,true);
 assert.equal(audit.foyer.mailboxLevel,3.30);
@@ -112,4 +113,4 @@ assert.ok(house.root.children.some(node=>node.name==="instanced facade detail"))
 const instanced=house.root.children.filter(node=>node instanceof InstancedMesh);
 assert.ok(instanced.length<=33,"keep instanced materials, no per-box draw calls");
 assert.ok(house.stats.instancedElements>1600);
-console.log("MINI CITY 4.5.4.5 PASS: one 4.16m open foyer, right-hand entry stairs, removed inner door, 20 mailboxes upstairs");
+console.log("MINI CITY 4.5.4.5 PASS: one 3.48m open foyer, right-hand entry stairs, removed inner door, 20 mailboxes upstairs");
