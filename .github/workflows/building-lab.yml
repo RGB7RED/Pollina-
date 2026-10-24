@@ -27,6 +27,7 @@ on:
       - feat/mini-city-v033-stage453-real-stairs-glazed-door
       - feat/mini-city-v033-stage454-five-floors-apartment-doors
       - fix/mini-city-v033-stage4541-integrated-landings-free-camera
+      - fix/mini-city-v033-stage4542-deeper-return-door-reversal-railings
     paths:
       - 'building-lab/**'
       - 'bus-stop-lab/**'
@@ -96,7 +97,7 @@ jobs:
         run: node play-lab/test-foyer.mjs
       - name: Test stage 4.5.3 physical U stairs and transparent second-door window
         run: node play-lab/test-stairs.mjs
-      - name: Test stage 4.5.4 five actual levels, 20 doors, round-trip movement
+      - name: Test 4.5.4.2 deeper return landings, opposite rear doors and continuous guarded handrails
         run: node play-lab/test-five-floors.mjs
       - name: Test 4.5.4.1: 20 apartment doors ON stair landings, no avatar in scene lab, 6DoF camera
         run: node play-lab/test-free-camera.mjs

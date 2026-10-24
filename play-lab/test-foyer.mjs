@@ -54,12 +54,12 @@ for(let i=0;i<110;i++){
  if(state.entranceZone==="площадка 1-го этажа")crossed=true;
 }
 assert.ok(crossed,"player reaches the true first-floor landing");
-assert.ok(c.position.z>e.stair.bottomZ-.5,
- "stair requires choosing one of two flights");
+assert.ok(c.position.z>e.stair.backZ+.28,
+ "the deep rear apartment landing stops at a real back wall");
 // Now that stairs exist, the landing is deeper than door interaction
 // distance. Walk back to the real door before attempting to close it.
 c.setStick(0,-1);
-for(let i=0;i<15;i++)c.update(.05);
+for(let i=0;i<90;i++)c.update(.05);
 assert.equal(c.nearestDoor()?.id,"inner");
 assert.equal(c.toggleNearestDoor(),true,"door closes from the landing");
 assert.equal(c.innerDoorOpen,false);

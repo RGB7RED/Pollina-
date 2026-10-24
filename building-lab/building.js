@@ -252,65 +252,110 @@ export function buildApartmentHouse(THREE,config={}){
         box(.039,.065,depth-.24,mats.frameWhite,inX,2.01,floorMid);
         box(.045,.095,depth-.24,mats.frameWhite,inX,.795,floorMid);
       }
-      // 4.5.4: four levels of the exact same U-stair inside the one house.
-      // Both 12-tread flights exist at EVERY storey (1→2, 2→3, 3→4,
-      // 4→5). Levels and geometry share one explicit set of constants.
-      const bottomZ=3.00,turnZ=-.74,backZ=-1.63;
+      // 4.5.4.2: landing is NOW at the far/opposite end, where there
+      // used to be a blank wall. All four flat doors open from that REAL
+      // landing, not from a wall blocking the ascending flight.
+      //
+      // Reverse the U-stair slope: go from the full-floor REAR landing
+      // forward along LEFT flight to front intermediate landing; turn
+      // RIGHT; climb back along RIGHT flight to next full-floor rear landing.
+      const rearWallZ=-3.38,rearLandingEndZ=-1.58;
+      const halfLandingZ=2.05,frontZ=3.28;
       const rise=C.floorHeight/2,stepsPerFlight=12;
-      const run=bottomZ-turnZ,runStep=run/stepsPerFlight;
-      const firstX=x-.72,secondX=x+.72,baseFloor=.70;
-      const stairHeight=C.plinth+C.floors*C.floorHeight-.68;
-      // Tall, continuous stairwell walls. The original exterior brick
-      // facade stays intact; stairs are only within the interior plan.
+      const run=halfLandingZ-rearLandingEndZ,runStep=run/stepsPerFlight;
+      const firstX=x-1.34,secondX=x+1.34,baseFloor=.70;
+      const stairHalfWidth=2.08,stairHeight=C.plinth+C.floors*C.floorHeight-.68;
+      // Widened stairwell: >1.65 m deep rear FULL floor platform versus
+      // previous ~0.89 m turnaround. Central continuous aisle is kept
+      // between flights to reach the rear floor-1 apartment doors.
       for(const side of [-1,1]){
-        const wallX=x+side*1.44;
-        box(.14,stairHeight,bottomZ-backZ,mats.reveal,
-          wallX,baseFloor+stairHeight/2,(bottomZ+backZ)/2);
-        box(.018,stairHeight-.2,bottomZ-backZ-.12,mats.foyerPaint,
-          wallX-side*.084,baseFloor+(stairHeight-.2)/2,(bottomZ+backZ)/2);
+        const wX=x+side*stairHalfWidth;
+        box(.14,stairHeight,frontZ-rearWallZ,mats.reveal,
+          wX,baseFloor+stairHeight/2,(frontZ+rearWallZ)/2);
+        box(.019,stairHeight-.20,frontZ-rearWallZ-.12,mats.foyerPaint,
+          wX-side*.084,baseFloor+(stairHeight-.20)/2,
+          (frontZ+rearWallZ)/2);
       }
-      box(2.99,stairHeight,.14,mats.reveal,x,
-        baseFloor+stairHeight/2,backZ);
-      const railMat=mats.foyerMailbox;
+      box(stairHalfWidth*2+.14,stairHeight,.14,mats.reveal,x,
+        baseFloor+stairHeight/2,rearWallZ);
+      const railMat=mats.balconyMetal,railing={
+        height:.94,postSpacing:run/7,balustersPerFlight:8,
+        railsPerFlight:3,continuous:true};
       const stairway=[];
-      for(let floor=0;floor<C.floors-1;floor++){
+      function slantedRail(cx,cy,cz,len,angle,height,mat=railMat){
+        box(.075,.075,len,mat,cx,cy+height,cz,angle);
+      }
+      for(let floor=0;floor<C.floors;floor++){
         const level=baseFloor+floor*C.floorHeight;
-        box(2.74,.16,backZ*-1+turnZ,mats.foyerTileAlt,
-          x,level+rise-.08,(turnZ+backZ)/2);
+        // Full-floor rear landing: all FOUR apartment doors are here.
+        // It is the same 1.8 m deep place on every storey.
+        box(stairHalfWidth*2-.18,.16,
+          rearLandingEndZ-rearWallZ-.10,mats.foyerTileAlt,
+          x,level-.08,(rearLandingEndZ+rearWallZ)/2);
+        // Permanent central approach under every flight; 1.28 m wide.
+        box(1.28,.16,frontZ-rearLandingEndZ,mats.foyerTileAlt,
+          x,level-.08,(frontZ+rearLandingEndZ)/2);
+        box(.37,.056,.35,mats.frameWhite,x,level+2.47,rearWallZ+.70);
+        box(.28,.035,.24,mats.litGlass,x,level+2.44,rearWallZ+.70);
+        if(floor===C.floors-1)continue;
+        // The half-storey turnaround is now at FRONT and not the
+        // apartment-door end. Headroom of the vestibule is unchanged.
+        box(stairHalfWidth*2-.18,.16,frontZ-halfLandingZ,
+          mats.foyerTileAlt,x,level+rise-.08,
+          (frontZ+halfLandingZ)/2);
         for(let i=0;i<stepsPerFlight;i++){
-          const zA=bottomZ-(i+.5)*runStep;
-          const zB=turnZ+(i+.5)*runStep;
-          const yA=level+(i+1)*rise/stepsPerFlight;
-          const yB=level+rise+(i+1)*rise/stepsPerFlight;
-          for(const [cx,cz,y] of [[firstX,zA,yA],[secondX,zB,yB]]){
-            box(1.245,.115,runStep-.012,mats.foyerTileAlt,cx,y-.057,cz);
-            box(1.245,.064,runStep-.012,mats.foyerTile,cx,y-.030,cz);
+          const zL=rearLandingEndZ+(i+.5)*runStep;
+          const zR=halfLandingZ-(i+.5)*runStep;
+          const yL=level+(i+1)*rise/stepsPerFlight;
+          const yR=level+rise+(i+1)*rise/stepsPerFlight;
+          for(const [cx,cz,y] of [[firstX,zL,yL],[secondX,zR,yR]]){
+            box(1.15,.120,runStep-.012,mats.foyerTileAlt,cx,y-.060,cz);
+            box(1.15,.060,runStep-.012,mats.foyerTile,cx,y-.030,cz);
           }
         }
-        box(1.24,.18,.63,mats.foyerTileAlt,secondX,
-          level+2*rise-.09,bottomZ-.32);
-        for(const z of [2.80,2.13,1.47,.70,-.04]){
-          const t=(bottomZ-z)/run;
-          const y=level+rise*t;
-          box(.044,1.01,.046,railMat,x-.085,y+.50,z);
-          box(.044,1.01,.046,railMat,x+.085,
-            level+2*rise-(y-level)+.50,z);
-        }
+        // Continuous sloped handrails, flat return rails and properly
+        // spaced vertical balusters at both INNER and OUTER flight sides.
+        // No unsupported long sticks leaning through treads.
         const diagonal=Math.hypot(run,rise);
-        box(.053,.057,diagonal,railMat,x-.085,
-          level+rise/2+1.01,(bottomZ+turnZ)/2,-Math.atan2(rise,run));
-        box(.053,.057,diagonal,railMat,x+.085,
-          level+rise+rise/2+1.01,(bottomZ+turnZ)/2,Math.atan2(rise,run));
+        for(const [side,cx,angle,bottom] of [
+          [-1,firstX,-Math.atan2(rise,run),level],
+          [1,secondX,Math.atan2(rise,run),level+rise]
+        ]){
+          for(const railX of [cx+side*.57,cx-side*.57]){
+            const centreY=bottom+rise/2;
+            for(const elevation of [.25,.56,.94])
+              slantedRail(railX,centreY,(rearLandingEndZ+halfLandingZ)/2,
+                diagonal,angle,elevation);
+            for(let i=0;i<=7;i++){
+              const t=i/7,z=side<0?
+                rearLandingEndZ+t*run:halfLandingZ-t*run;
+              const foot=bottom+t*rise;
+              box(.065,.94,.065,railMat,railX,foot+.47,z);
+              box(.095,.045,.095,mats.frameGrey,railX,foot+.91,z);
+            }
+          }
+        }
+        // Wall-side half-landing rails follow the TURN, rather than
+        // blocking the cross-landing with random sticks.
+        for(const sign of [-1,1]){
+          const rx=x+sign*(stairHalfWidth-.16);
+          for(const h of [.47,.94])
+            box(.085,.075,frontZ-halfLandingZ-.10,railMat,
+              rx,level+rise+h,(frontZ+halfLandingZ)/2);
+          for(let k=0;k<=3;k++){
+            const postZ=halfLandingZ+.14+k*(frontZ-halfLandingZ-.28)/3;
+            box(.072,.94,.072,railMat,rx,level+rise+.47,postZ);
+          }
+        }
         stairway.push({fromFloor:floor+1,toFloor:floor+2,
           bottom:level,mid:level+rise,top:level+C.floorHeight,
           steps:stepsPerFlight*2});
       }
-      // 4.5.4.1: four doors ON the existing stair landing, NOT beyond a
-      // wall in a separately constructed side corridor. The actual landing
-      // spans X ±1.44, by the head of each U-shaped staircase.
-      // Two doors face the player ahead; one is in each side wall.
-      const apartments=[],doorWidth=.73,sideDoorWidth=.80;
-      const doorCenters=[-.88,.88],sideDoorZ=2.72,frontDoorZ=3.327;
+      // Four doors in the OPPOSITE rear landing: two at centre rear
+      // wall, and one each on the two SIDE walls. No extra room.
+      const apartments=[],doorWidth=.77,sideDoorWidth=.82;
+      const doorCenters=[-.92,.92],sideDoorZ=-2.40,
+        rearDoorZ=rearWallZ+.14;
       const numeralSegments={
         0:"abcfed",1:"bc",2:"abged",3:"abgcd",4:"fgbc",
         5:"afgcd",6:"afgecd",7:"abc",8:"abcdefg",9:"abcdfg"
@@ -327,74 +372,66 @@ export function buildApartmentHouse(THREE,config={}){
         const side=orientation==="left"?1:orientation==="right"?-1:0;
         const angle=side?Math.PI/2:0;
         box(total+.06,.145,.018,mats.frameWhite,
-          atX+(side?side*.015:0),atY,atZ+(side?0:-.018),0,angle);
+          atX+(side?side*.018:0),atY,atZ+(side?0:.022),0,angle);
         for(let i=0;i<chars.length;i++)for(const symbol of numeralSegments[chars[i]]){
-          const [dx,dy,sw,sh]=segments[symbol],offset=(i-(chars.length-1)/2)*width+dx;
+          const [dx,dy,sw,sh]=segments[symbol];
+          const off=(i-(chars.length-1)/2)*width+dx;
           box(sw,sh,.023,mats.ventDark,
-            atX+(side?side*.034:offset),atY+dy,
-            atZ+(side?offset:-.038),0,angle);
+            atX+(side?side*.036:off),atY+dy,
+            atZ+(side?off:.043),0,angle);
         }
       }
       const apartmentPalette=[mats.frameGrey,mats.entryBrown,
         mats.entryBlue,mats.entry];
       for(let floor=0;floor<C.floors;floor++){
         const level=baseFloor+floor*C.floorHeight;
-        // No rectangular room off to the east and no horizontal hallway.
-        // Extend the CURRENT landing, where the second ascending flight
-        // arrives; all four doors can be seen directly from this area.
-        box(2.68,.16,.85,mats.foyerTileAlt,
-          x,level-.08,2.925);
-        // A short painted wall contains the two centre doors on floors 2–5.
-        // The ground floor keeps the accepted open connection to the foyer.
-        if(floor>0){
-          box(2.80,2.55,.16,mats.reveal,x,level+1.275,3.435);
-          box(2.75,1.15,.024,mats.foyerLower,x,level+.575,3.34);
-          box(2.75,1.30,.024,mats.foyerPaint,x,level+1.80,3.34);
-          box(2.75,.055,.028,mats.frameWhite,x,level+1.17,3.32);
-        }
-        // Paint the SIDE walls in this existing landing space; no new
-        // hall wall is added. Four clear isolated door leaves / frames.
+        // Green/cream paint on the rear and side wall of the REAL
+        // landing. Door 1/2 face forward; 3/4 sit on side walls.
+        box(4.04,1.18,.025,mats.foyerLower,
+          x,level+.59,rearWallZ+.088);
+        box(4.04,1.28,.025,mats.foyerPaint,
+          x,level+1.82,rearWallZ+.088);
+        box(4.04,.052,.036,mats.frameWhite,
+          x,level+1.18,rearWallZ+.10);
         for(const sign of [-1,1]){
-          box(.018,1.20,.95,mats.foyerLower,
-            x+sign*1.35,level+.60,2.89);
-          box(.018,1.30,.95,mats.foyerPaint,
-            x+sign*1.35,level+1.85,2.89);
+          const wallX=x+sign*(stairHalfWidth-.09);
+          box(.025,1.20,1.68,mats.foyerLower,
+            wallX,level+.60,(rearWallZ+rearLandingEndZ)/2);
+          box(.025,1.30,1.68,mats.foyerPaint,
+            wallX,level+1.85,(rearWallZ+rearLandingEndZ)/2);
         }
-        box(.40,.052,.31,mats.frameWhite,x,level+2.50,2.96);
-        box(.30,.035,.22,mats.litGlass,x,level+2.47,2.96);
         for(let local=0;local<4;local++){
-          const number=floor*4+local+1;
-          const centre=local<2,orientation=centre?"front":local===2?"left":"right";
-          const offset=centre?doorCenters[local]:(local===2?-1.35:1.35);
-          const doorX=x+offset,doorZ=centre?frontDoorZ:sideDoorZ;
+          const number=floor*4+local+1,centre=local<2;
+          const orientation=centre?"front":local===2?"left":"right";
+          const off=centre?doorCenters[local]:
+            (local===2?-stairHalfWidth+.11:stairHalfWidth-.11);
+          const doorX=x+off,doorZ=centre?rearDoorZ:sideDoorZ;
           const yaw=centre?0:Math.PI/2;
-          const actualWidth=centre?doorWidth:sideDoorWidth;
-          const mat=apartmentPalette[local];
-          box(actualWidth,2.15,.09,mats.frameWhite,
+          const width=centre?doorWidth:sideDoorWidth;
+          box(width,2.15,.09,mats.frameWhite,
             doorX,level+1.10,doorZ,0,yaw);
-          box(actualWidth-.11,2.04,.10,mat,
+          box(width-.10,2.04,.10,apartmentPalette[local],
             doorX,level+1.095,
-            centre?doorZ-.065:doorZ,
-            0,yaw);
+            centre?doorZ+.065:doorZ,0,yaw);
           if(centre){
             box(.034,.13,.075,mats.vent,
-              doorX+.24,level+1.02,doorZ-.15);
-            numberOnDoor(number,doorX,level+1.90,doorZ-.134,orientation);
+              doorX+.23,level+1.02,doorZ+.15);
+            numberOnDoor(number,doorX,level+1.90,doorZ+.130,orientation);
           }else{
             const sign=orientation==="left"?1:-1;
             box(.034,.13,.075,mats.vent,
-              doorX+sign*.095,level+1.02,doorZ+.22,0,yaw);
-            numberOnDoor(number,doorX+sign*.097,
+              doorX+sign*.085,level+1.02,doorZ+.22,0,yaw);
+            numberOnDoor(number,doorX+sign*.100,
               level+1.90,doorZ,orientation);
           }
           apartments.push({number,floor:floor+1,entrance:1,
-            x:doorX,z:doorZ,orientation,zone:"stair-landing",
+            x:doorX,z:doorZ,orientation,zone:"rear-stair-landing",
             accessible:false});
         }
       }
       audit.firstStaircase={
-        firstX,secondX,bottomZ,turnZ,backZ,stepsPerFlight,
-        stairwellWidth:2.88,
+        firstX,secondX,bottomZ:rearLandingEndZ,turnZ:halfLandingZ,
+        backZ:rearWallZ,stepsPerFlight,stairwellWidth:stairHalfWidth*2,
         storeyHeight:C.floorHeight,halfLandingHeight:baseFloor+rise,
         secondFloorHeight:baseFloor+2*rise,stairFlights:2
       };
@@ -402,8 +439,10 @@ export function buildApartmentHouse(THREE,config={}){
         floors:C.floors,flights:(C.floors-1)*2,
         treads:(C.floors-1)*stepsPerFlight*2,
         levels:stairway,apartmentDoors:apartments,
-        landing:{centreX:x,minX:x-1.44,maxX:x+1.44,
-          minZ:2.5,maxZ:3.35,doorsPerFloor:4},
+        landing:{centreX:x,minX:x-stairHalfWidth,maxX:x+stairHalfWidth,
+          minZ:rearWallZ,maxZ:rearLandingEndZ,doorsPerFloor:4,
+          depth:rearLandingEndZ-rearWallZ},
+        railing,
         liftCount:0
       };
       box(1.96,.13,depth,mats.foundation,x,3.41,floorMid);
