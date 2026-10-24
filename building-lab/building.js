@@ -540,6 +540,44 @@ export function buildApartmentHouse(THREE,config={}){
         electricPanels.push({floor:floor+1,centreX:x,
           y:panelY,z:panelZ,meters:4,width:1.43});
       }
+      // A single continuous, low-poly heating RISER beside the +Z
+      // stairwell windows. The 4 real cast-iron radiators sit BELOW
+      // four intermediate landing windows; the riser runs the full cage.
+      // Mesh boxes form an octagonal-looking pipe, batched per material.
+      const radiatorRiser={x:x+1.45,z:facadeInnerZ-.19,
+        bottom:.76,top:shellTop-.22};
+      const pipeY=(radiatorRiser.bottom+radiatorRiser.top)/2;
+      const pipeH=radiatorRiser.top-radiatorRiser.bottom;
+      box(.064,pipeH,.064,mats.frameGrey,
+        radiatorRiser.x,pipeY,radiatorRiser.z);
+      box(.047,pipeH,.076,mats.frameGrey,
+        radiatorRiser.x,pipeY,radiatorRiser.z,0,Math.PI/4);
+      const radiators=[];
+      for(let i=0;i<C.floors-1;i++){
+        const landingY=baseFloor+i*storeyRise+rise;
+        const radY=landingY+.40;
+        const radZ=facadeInnerZ-.17;
+        // Backplate, two horizontal manifolds, 10 heat-dissipating ribs.
+        box(1.24,.56,.055,mats.frameWhite,x,radY,radZ+.038);
+        for(const dy of [-.23,.23])
+          box(1.32,.065,.10,mats.frameGrey,x,radY+dy,radZ-.055);
+        for(let j=0;j<10;j++){
+          const rx=x+(j-4.5)*.115;
+          box(.083,.53,.12,mats.frameWhite,rx,radY,radZ-.08);
+          box(.035,.41,.126,mats.foyerMailbox,rx,radY,radZ-.115);
+        }
+        // Two small supply/return tubes to the vertical wall riser.
+        for(const dy of [-.19,.19]){
+          const connectorLength=radiatorRiser.x-(x+.62);
+          box(connectorLength,.055,.055,mats.frameGrey,
+            x+.62+connectorLength/2,radY+dy,radZ-.13);
+        }
+        radiators.push({floorFrom:i+1,floorTo:i+2,
+          landingY,x,y:radY,z:radZ,width:1.32,height:.59,
+          windowSillY:landingY+.80,clearance:.80-.695});
+      }
+      audit.heating={riser:radiatorRiser,radiators,
+        windowWallZ:facadeInnerZ,instanced:true};
       audit.firstStaircase={
         firstX,secondX,bottomZ:rearLandingEndZ,turnZ:halfLandingZ,
         backZ:rearWallZ,stepsPerFlight,stairwellWidth:stairHalfWidth*2,
