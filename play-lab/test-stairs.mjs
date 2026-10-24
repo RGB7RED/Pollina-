@@ -43,17 +43,17 @@ go(0,1,90); // single open foyer
 assert.equal(p.position.y,.70);
 go(1,0,18); // RIGHT wall stair
 assert.ok(Math.abs(p.position.x-e.stair.entryX)<e.stair.entryWidth/2-.05);
-go(0,1,155);
+go(0,1,100);
 assert.ok(p.position.z<-2.5&&p.position.z>e.stair.backZ);
 assert.equal(p.position.y,e.stair.firstFloor);
 go(-1,0,40);
 assert.ok(p.position.x<x-1);
-go(0,-1,150);
-assert.ok(p.position.z>5.5);
+go(0,-1,108);
+assert.ok(p.position.z>4.6&&p.position.z<5.35);
 assert.equal(p.position.y,e.stair.firstFloor+e.stair.halfRise);
 go(1,0,80);
 assert.ok(p.position.x>x+1);
-go(0,1,150);
+go(0,1,109);
 assert.ok(p.position.z<-2.5);
 assert.equal(p.position.y,e.stair.firstFloor+e.stair.storeyHeight);
 assert.equal(e.zone(p.position.x,p.position.z,p.position.y),
