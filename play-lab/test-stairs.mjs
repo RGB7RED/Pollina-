@@ -13,19 +13,19 @@ const pads=[-26.3625,-8.7875,8.7875,26.3625].map(x=>({
  x,width:5.5,depth:3.15,centreZ:7.875
 }));
 const e=planPlayableEntrance(BUILDING,pads),x=e.x;
-assert.equal(e.buildingObstacles.length,16);
+assert.equal(e.buildingObstacles.length,18);
 assert.equal(e.stair.steps,12);
-assert.equal(e.stair.halfRise,BUILDING.floorHeight/2);
+assert.equal(e.stair.halfRise,e.stair.storeyHeight/2);
 assert.equal(e.stair.bottomZ,-1.58);
 assert.equal(e.stair.turnZ,2.05);
 assert.equal(e.stair.backZ,-3.38);
-assert.equal(e.stair.firstFrontZ,3.28);
+assert.equal(e.stair.firstFrontZ,e.stair.frontZ);
 assert.equal(e.stair.frontZ,BUILDING.width/2-.44);
 assert.ok(e.stair.bottomZ-e.stair.backZ>=1.75,
  "opposite end landing is physically deeper");
 assert.ok(e.stair.frontZ-e.stair.turnZ>=1.20,
  "front intermediate turnaround is also deepened");
-assert.equal(e.groundHeight(x,-2.4),.70);
+assert.equal(e.groundHeight(x,-2.4),e.stair.firstFloor);
 assert.ok(collidesAt(x,-4.1,e.buildingObstacles,PLAYER_RADIUS),
  "rear wall stops player before exterior facade");
 assert.ok(!collidesAt(x-1.5,1,e.buildingObstacles,PLAYER_RADIUS));
@@ -44,17 +44,17 @@ function go(ax,az,n){
 }
 go(0,1,210);
 assert.ok(p.position.z<-2.5&&p.position.z>e.stair.backZ);
-assert.equal(p.position.y,.70);
+assert.equal(p.position.y,e.stair.firstFloor);
 go(-1,0,70);
 assert.ok(p.position.x<x-1);
 go(0,-1,150);
 assert.ok(p.position.z>2.75,"first march reaches FRONT half turnaround");
-assert.equal(p.position.y,.70+BUILDING.floorHeight/2);
+assert.equal(p.position.y,e.stair.firstFloor+e.stair.halfRise);
 go(1,0,90);
 assert.ok(p.position.x>x+1,"turn across the front");
 go(0,1,150);
 assert.ok(p.position.z<-2.5,"SECOND march leads BACK to apartment doors");
-assert.equal(p.position.y,.70+BUILDING.floorHeight);
+assert.equal(p.position.y,e.stair.firstFloor+e.stair.storeyHeight);
 assert.equal(e.zone(p.position.x,p.position.z,p.position.y),
  "площадка 2-го этажа · квартиры 5–8");
 assert.ok(record.some(v=>v.y>2&&v.y<3));
@@ -88,12 +88,12 @@ const audit=house.root.userData.geometryAudit;
 const stairs=audit.firstStaircase;
 assert.equal(stairs.stairFlights,2);
 assert.equal(stairs.stepsPerFlight,12);
-assert.equal(stairs.stairwellWidth,4.16);
+assert.equal(stairs.stairwellWidth,4.36);
 assert.equal(stairs.bottomZ,e.stair.bottomZ);
 assert.equal(stairs.turnZ,e.stair.turnZ);
 assert.equal(stairs.backZ,e.stair.backZ);
-assert.equal(stairs.halfLandingHeight,.70+BUILDING.floorHeight/2);
-assert.equal(stairs.secondFloorHeight,.70+BUILDING.floorHeight);
+assert.equal(stairs.halfLandingHeight,e.stair.firstFloor+e.stair.halfRise);
+assert.equal(stairs.secondFloorHeight,e.stair.firstFloor+e.stair.storeyHeight);
 assert.equal(house.stats.doorHoles,4);
 assert.equal(house.stats.entrances,4);
 assert.equal(audit.foyer.mailboxes,20);
