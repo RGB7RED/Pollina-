@@ -56,13 +56,21 @@ export function planFirstFloor(building,entrance){
     if(left < -building.length/2||right > building.length/2)
       throw Error("Apartment crosses outer facade");
   }
+  // Rendered by building.js, but represented independently in the
+  // numerical collision plan: do not allow walking through solid
+  // side masonry anywhere except the four actual door openings.
+  const stairWallColliders=wings.flatMap(wing=>{
+    const intervals=[[back,-4.52],[-3.48,-2.94],[-1.90,front]];
+    return intervals.map(([z0,z1],i)=>rect("flat-side-wall-"+wing.side+"-"+i,
+      wing.innerX-.075,wing.innerX+.075,z0,z1));
+  });
   const doorBlockers=doors.map(d=>rect("flat-"+d.number+"-closed",
     d.x-.06,d.x+.06,d.z-.52,d.z+.52));
   return {floor:1,y,ceilingY,x,wall,wings,doors,rooms,segments,
     doorBlockers,back,front,unfurnished:true,template:"Khrushchevka-4-flats",
     contains:(px,pz,py)=>Math.abs(py-y)<.24&&wings.some(w=>
       px>=w.minX&&px<=w.maxX&&pz>=back&&pz<=front),
-    obstacles:segments};
+    obstacles:[...segments,...stairWallColliders]};
 }
 export function buildFirstFloor(THREE,plan){
   const root=new THREE.Group();root.name="FIRST FLOOR: FOUR UNFURNISHED FLATS";
