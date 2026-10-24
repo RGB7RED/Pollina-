@@ -284,7 +284,7 @@ for(const [id,direction] of [["free-up","up"],["free-down","down"]]){
 $("free-reset").addEventListener("click",()=>freeCamera.reset());
 $("free-landing").addEventListener("click",()=>{
   // 3rd-floor stair landing, facing the two centre apartment doors.
-  freeCamera.position={x:entry.x,y:.70+2*config.floorHeight+1.62,z:-.70};
+  freeCamera.position={x:entry.x,y:entry.floorHeight(2)+1.62,z:-.70};
   freeCamera.yaw=0;freeCamera.pitch=-.16;
 });
 const lookTarget=new THREE.Vector3(),eyeTarget=new THREE.Vector3();
