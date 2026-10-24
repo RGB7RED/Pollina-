@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1a3037"><title>MINI CITY — отдельная модель</title>
+<style>:root{font:14px system-ui,Arial;color:#eef5ee;background:#728893}*{box-sizing:border-box}body{margin:0;overflow:hidden}
+#stage{position:fixed;inset:0;touch-action:none}canvas{display:block;width:100%;height:100%}
+header{position:fixed;top:max(8px,env(safe-area-inset-top));left:8px;max-width:min(330px,55vw);background:#1b343be9;border:1px solid #a4c5bc;border-radius:14px;padding:11px;z-index:2}
+h1{margin:5px 0;font-size:clamp(13px,3vw,21px)}p{font-size:11px;margin:4px 0;color:#d3e6d8}
+a{color:#d9f6de}#views{position:fixed;bottom:max(14px,env(safe-area-inset-bottom));left:5px;right:5px;display:flex;justify-content:center;gap:6px;z-index:2}
+button{border:1px solid #a6cdb9;border-radius:10px;background:#183940e5;color:#edf5ec;padding:12px;font-weight:bold;min-width:55px}
+#fail{position:fixed;inset:25%;background:#301f21;color:white;padding:20px;z-index:5}#fail[hidden]{display:none}
+</style><script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script></head>
+<body><div id="stage"></div><header><small>MINI CITY / КАТАЛОГ ОБЪЕКТОВ</small><h1 id="title">Загрузка модели…</h1><p id="info">Один компонент из игры, без жилого дома.</p><p id="metrics">WebGL / FPS —</p><a id="back" href="../studio/catalog.html">← Назад в каталог</a></header>
+<div id="views"><button data-view="front">Спереди</button><button data-view="side">Сбоку</button><button data-view="top">Сверху</button><button data-view="three">Объём</button></div><div id="fail" hidden></div>
+<script type="module" src="./lab.js"></script></body></html>
