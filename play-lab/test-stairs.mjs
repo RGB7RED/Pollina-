@@ -60,7 +60,7 @@ const maxHeight=Math.max(...record.map(p=>p.y));
 assert.ok(maxHeight>=3.47);
 assert.ok(record.some(v=>v.y>2&&v.y<3));
 assert.ok(p.position.y>.70+BUILDING.floorHeight-.01);
-assert.equal(p.entry.zone(p.position.x,p.position.z,p.position.y),"марш вниз");
+assert.equal(p.entry.zone(p.position.x,p.position.z,p.position.y),"площадка 2-го этажа · квартиры 5–8");
 p.reset();
 assert.equal(p.position.y,0);
 assert.equal(p.innerDoorOpen,false);
