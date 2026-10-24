@@ -380,6 +380,17 @@ export function buildApartmentHouse(THREE,config={}){
             box(.072,.94,.072,railMat,rx,level+rise+.47,postZ);
           }
         }
+        // The first return stops before the ground-floor foyer. Put a
+        // VISIBLE guard along its exposed edge to match the 3D collision.
+        if(floor===0){
+          const guardZ=firstFrontZ-.055;
+          box(stairHalfWidth*2-.20,.075,.075,railMat,
+            x,level+rise+.94,guardZ);
+          for(let k=0;k<=6;k++)
+            box(.070,.94,.070,railMat,
+              x-stairHalfWidth+.12+k*(2*stairHalfWidth-.24)/6,
+              level+rise+.47,guardZ);
+        }
         stairway.push({fromFloor:floor+1,toFloor:floor+2,
           bottom:level,mid:level+rise,top:level+C.floorHeight,
           steps:stepsPerFlight*2,returnEndZ:turnEndZ});
