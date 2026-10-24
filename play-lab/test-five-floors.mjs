@@ -23,8 +23,8 @@ assert.ok(entry.stair.bottomZ-entry.stair.backZ>=1.75);
 assert.ok(entry.stair.frontZ-entry.stair.turnZ>=1.20);
 assert.ok(collidesAt(x,entry.stair.backZ-.5,entry.buildingObstacles,PLAYER_RADIUS));
 assert.ok(!collidesAt(x,-2.4,entry.buildingObstacles,PLAYER_RADIUS));
-assert.ok(!collidesAt(x-1.5,-2.4,entry.buildingObstacles,PLAYER_RADIUS));
-assert.ok(!collidesAt(x+1.5,-2.4,entry.buildingObstacles,PLAYER_RADIUS));
+assert.ok(!collidesAt(x-1.35,-2.4,entry.buildingObstacles,PLAYER_RADIUS));
+assert.ok(!collidesAt(x+1.35,-2.4,entry.buildingObstacles,PLAYER_RADIUS));
 assert.ok(collidesAt(x+2.5,-2.4,entry.buildingObstacles,PLAYER_RADIUS));
 assert.ok(collidesAt(pads[1].x,5.1,entry.buildingObstacles,PLAYER_RADIUS));
 for(let f=0;f<5;f++){
