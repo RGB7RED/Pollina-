@@ -20,7 +20,7 @@ export function planPlayableEntrance(building,pads){
     rect("stair-left",-halfX,x-stairHalf,-halfZ,stair.bottomZ),
     rect("stair-right",x+stairHalf,halfX,-halfZ,stair.bottomZ),
     rect("stairwell-back",x-stairHalf,x+stairHalf,-halfZ,stair.backZ),
-    rect("stair-center-divider",x-.10,x+.10,stair.turnZ+.12,
+    rect("stair-center-divider",x-.02,x+.02,stair.turnZ+.12,
       stair.bottomZ-.36)
   ];
   // Preserve blocking porch geometry for entrances 2–4. The first porch
