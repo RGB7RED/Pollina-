@@ -22,15 +22,17 @@ const entry=planPlayableEntrance(BUILDING,realPads);
 assert.equal(entry.x,realPads[0].x);
 assert.equal(entry.facade,BUILDING.width/2);
 assert.equal(entry.insideEnd,3.35);
-assert.equal(entry.buildingObstacles.length,18);
+assert.equal(entry.buildingObstacles.length,19);
 assert.ok(!collidesAt(entry.x,5.1,entry.buildingObstacles,PLAYER_RADIUS),
   "first vestibule is walkable before the door collider is considered");
 assert.ok(collidesAt(entry.x,entry.door.minZ+.10,[entry.door]),
   "closed leaf physically blocks facade");
 assert.ok(collidesAt(realPads[1].x,5.1,entry.buildingObstacles),
   "second entrance remains solid");
-assert.ok(collidesAt(entry.x+1.30,5.2,entry.buildingObstacles),
-  "cannot enter sideways through masonry");
+assert.ok(!collidesAt(entry.x+1.30,5.2,entry.buildingObstacles),
+  "foyer is walkable outside previous narrow partition");
+assert.ok(collidesAt(entry.x+1.30,6.30,entry.buildingObstacles),
+  "existing exterior masonry remains closed beside actual door");
 assert.ok(!entry.canInteract(entry.x,12.0));
 assert.ok(entry.canInteract(entry.x,8.0));
 const nearHeight=[10.65,10.0,9.42,7.1,6.23,5,3.35].map(z=>
@@ -65,8 +67,9 @@ for(let i=0;i<105;i++){
  if(player.isInsideEntrance())entered=true;
 }
 assert.ok(entered,"the avatar walks INSIDE the same house scene");
-assert.ok(player.position.z>entry.insideEnd+PLAYER_RADIUS-.02,
- "solid rear vestibule wall blocks traversal beyond current stage");
+assert.ok(player.position.z>=entry.insideEnd-.02,
+ "open shaft at the bottom of the first flight has no imaginary flat passage");
+assert.equal(entry.groundHeight(entry.x,1.5,.70),null);
 assert.equal(player.position.y,.70);
 assert.equal(player.setEntryDoorOpen(false),true,
  "door closes after avatar clears threshold into interior");

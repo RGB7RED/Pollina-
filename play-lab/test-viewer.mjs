@@ -39,11 +39,12 @@ assert.match(js,/setEntryDoorOpen/);
 assert.match(js,/actorPivot.position.set\(state.x,state.y,state.z\)/);
 assert.match(js,/doorPivot.rotation.y/);
 assert.match(js,/function updateEntryAction/);
-assert.match(js,/innerDoorPivot.rotation.y/);
+assert.doesNotMatch(js,/innerDoorPivot/, "removed inner door must not render");
 assert.match(js,/controller.nearestDoor/);
-assert.match(js,/setInnerDoorOpen/);
+assert.doesNotMatch(js,/setInnerDoorOpen/, "removed inner door has no interaction");
 assert.match(js,/new THREE.PointLight/);
-assert.match(html,/внутренн/);
+assert.match(html,/широкий тамбур|Одна дверь|ОДНУ дверь/,
+ "HUD explains newly enlarged one-door entrance");
 assert.match(js,/studio.refreshCollisions/);
 assert.match(html,/id="hud-toggle"/);
 for(const id of ["mode-toggle","play-title","devtools","devtools-toggle",

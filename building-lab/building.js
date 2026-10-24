@@ -243,21 +243,19 @@ export function buildApartmentHouse(THREE,config={}){
       box(1.52,.075,sillDepth,mats.entryRamp,x,.60,6.665,
         Math.atan2(.20,.87));
       const floorMid=(3.35+face)/2;
-      box(1.70,.12,face-3.35,mats.foundation,x,.64,floorMid);
-      // Stage 4.5.2: real, authored Khrushchev entrance in this SAME
-      // building volume. Split into a street-side vestibule and a small
-      // first-floor landing, joined by a second genuinely hinged door.
-      const innerZ=4.82;
-      const depth=face-3.35;
-      for(const off of [-.91,.91]){
-        box(.14,2.39,depth,mats.reveal,x+off,1.945,floorMid);
-        // Thin paint strips on the INSIDE of the structural wall:
-        // mint-green lower half, warm limewash upper half.
-        const inX=x+Math.sign(off)*.829;
-        box(.018,1.20,depth-.24,mats.foyerLower,inX,1.36,floorMid);
-        box(.018,1.18,depth-.24,mats.foyerPaint,inX,2.54,floorMid);
-        box(.039,.065,depth-.24,mats.frameWhite,inX,2.01,floorMid);
-        box(.045,.095,depth-.24,mats.frameWhite,inX,.795,floorMid);
+      // 4.5.4.5: one OPEN, room-sized entrance from facade to stairwell.
+      // No partition or second door: old +/-0.91m partitions restricted the
+      // room to a corridor despite 4.36m of interior building width.
+      const foyerHalfWidth=2.08,depth=face-3.35;
+      box(foyerHalfWidth*2,.12,depth,mats.foundation,x,.64,floorMid);
+      // The structural stairwell side walls already occupy X +/-2.18.
+      // Reuse them instead of constructing a second set of partitions.
+      for(const sign of [-1,1]){
+        const px=x+sign*2.092;
+        box(.018,1.20,depth-.24,mats.foyerLower,px,1.36,floorMid);
+        box(.018,1.04,depth-.24,mats.foyerPaint,px,2.46,floorMid);
+        box(.039,.065,depth-.24,mats.frameWhite,px,2.01,floorMid);
+        box(.045,.095,depth-.24,mats.frameWhite,px,.795,floorMid);
       }
       // 4.5.4.4: landing remains at the far/opposite end, where there
       // used to be a blank wall. All four flat doors open from that REAL
@@ -276,7 +274,9 @@ export function buildApartmentHouse(THREE,config={}){
       const facadeInnerZ=C.width/2-wallDepth,frontZ=facadeInnerZ-.12;
       const entranceStartZ=3.35,entranceRun=entranceStartZ-rearLandingEndZ;
       const run=halfLandingZ-rearLandingEndZ,runStep=run/stepsPerFlight;
-      const firstX=x-1.40,secondX=x+1.40,stairHalfWidth=2.18;
+      const firstX=x-1.31,secondX=x+1.31,stairHalfWidth=2.18;
+      const flightWidth=1.58,innerGuardOffset=.79;
+      const entryFlightX=secondX,entryFlightWidth=flightWidth;
       const wallBase=foyerFloor;
       const stairHeight=C.plinth+C.floors*C.floorHeight-wallBase-.08;
       if(baseFloor+(C.floors-1)*storeyRise+2.19>C.plinth+C.floors*C.floorHeight)
@@ -297,27 +297,31 @@ export function buildApartmentHouse(THREE,config={}){
       const railMat=mats.balconyMetal,railing={
         height:.94,postSpacing:run/7,balustersPerFlight:8,
         railsPerFlight:3,continuous:true,wallSideRails:0,
-        innerGuardLinks:4,flightWidth:1.27};
+        innerGuardLinks:4,frontGuardLinks:4,flightWidth};
       const stairway=[];
       // FIRST staircase: 12 treads rising from the .70m foyer to +2.09m.
       const entranceTread=entranceRun/stepsPerFlight;
       for(let i=0;i<stepsPerFlight;i++){
         const tz=entranceStartZ-(i+.5)*entranceTread;
         const ty=foyerFloor+(i+1)*entryRise/stepsPerFlight;
-        box(1.26,.12,entranceTread-.014,mats.foyerTileAlt,x,ty-.06,tz);
-        box(1.26,.06,entranceTread-.014,mats.foyerTile,x,ty-.03,tz);
+        box(entryFlightWidth,.12,entranceTread-.014,mats.foyerTileAlt,
+          entryFlightX,ty-.06,tz);
+        box(entryFlightWidth,.06,entranceTread-.014,mats.foyerTile,
+          entryFlightX,ty-.03,tz);
       }
-      // A guard along each side of the incoming centre flight.
-      for(const sign of [-1,1]){
-        const rx=x+sign*.735,railLength=Math.hypot(entranceRun,entryRise);
-        box(.075,.075,railLength,railMat,
-          rx,foyerFloor+entryRise/2+.94,(entranceStartZ+rearLandingEndZ)/2,
+      // Only the INNER edge of the entrance stairs is exposed; the right
+      // edge runs beside a real side wall. No wall-side duplicate railing.
+      const entryGuardX=entryFlightX-entryFlightWidth/2+.035;
+      const entryGuardLen=Math.hypot(entranceRun,entryRise);
+      for(const elevation of [.25,.56,.94])
+        box(.075,.075,entryGuardLen,railMat,
+          entryGuardX,foyerFloor+entryRise/2+elevation,
+          (entranceStartZ+rearLandingEndZ)/2,
           Math.atan2(entryRise,entranceRun));
-        for(let i=0;i<=9;i++){
-          const t=i/9;
-          box(.065,.94,.065,railMat,rx,
-            foyerFloor+entryRise*t+.47,entranceStartZ-t*entranceRun);
-        }
+      for(let i=0;i<=9;i++){
+        const t=i/9;
+        box(.065,.94,.065,railMat,entryGuardX,
+          foyerFloor+entryRise*t+.47,entranceStartZ-t*entranceRun);
       }
       function slantedRail(cx,cy,cz,len,angle,height,mat=railMat){
         box(.075,.075,len,mat,cx,cy+height,cz,angle);
@@ -346,8 +350,8 @@ export function buildApartmentHouse(THREE,config={}){
           const yL=level+(i+1)*rise/stepsPerFlight;
           const yR=level+rise+(i+1)*rise/stepsPerFlight;
           for(const [cx,cz,y] of [[firstX,zL,yL],[secondX,zR,yR]]){
-            box(1.27,.120,runStep-.012,mats.foyerTileAlt,cx,y-.060,cz);
-            box(1.27,.060,runStep-.012,mats.foyerTile,cx,y-.030,cz);
+            box(flightWidth,.120,runStep-.012,mats.foyerTileAlt,cx,y-.060,cz);
+            box(flightWidth,.060,runStep-.012,mats.foyerTile,cx,y-.030,cz);
           }
         }
         // Continuous sloped handrails, flat return rails and properly
@@ -358,7 +362,7 @@ export function buildApartmentHouse(THREE,config={}){
           [-1,firstX,-Math.atan2(rise,run),level],
           [1,secondX,Math.atan2(rise,run),level+rise]
         ]){
-          for(const railX of [cx-side*.635]){
+          for(const railX of [cx-side*innerGuardOffset]){
             const centreY=bottom+rise/2;
             for(const elevation of [.25,.56,.94])
               slantedRail(railX,centreY,(rearLandingEndZ+halfLandingZ)/2,
@@ -372,23 +376,36 @@ export function buildApartmentHouse(THREE,config={}){
             }
           }
         }
-        // Across the rear edge of the central shaft: one linked guard.
-        // On floor 1 leave the gap open for the NEW ascending flight.
+        // Physically connect the left/right inner rails at EVERY front
+        // window-facing turn, across the open central stairwell edge.
+        const frontGuardWidth=2*(firstX+innerGuardOffset-x)*-1;
+        const frontGuardZ=halfLandingZ-.045;
+        for(const h of [.25,.56,.94])
+          box(frontGuardWidth,.075,.075,railMat,
+            x,level+rise+h,frontGuardZ);
+        for(const off of [-frontGuardWidth/2,0,frontGuardWidth/2])
+          box(.065,.94,.065,railMat,x+off,
+            level+rise+.47,frontGuardZ);
+        // At each rear FULL-FLOOR landing, keep a guard facing the shaft.
+        // Floor 1 is left accessible to the incoming right-hand stairs.
         if(floor>0){
-          box(1.51,.08,.075,railMat,x,level+.94,rearLandingEndZ+.02);
-          for(const off of [-.72,0,.72])
-            box(.065,.94,.065,railMat,x+off,level+.47,rearLandingEndZ+.02);
+          box(frontGuardWidth,.08,.075,railMat,
+            x,level+.94,rearLandingEndZ+.02);
+          for(const off of [-frontGuardWidth/2,0,frontGuardWidth/2])
+            box(.065,.94,.065,railMat,x+off,
+              level+.47,rearLandingEndZ+.02);
         }
         stairway.push({fromFloor:floor+1,toFloor:floor+2,
           bottom:level,mid:level+rise,top:level+storeyRise,
           steps:stepsPerFlight*2,returnEndZ:turnEndZ});
       }
       // Also protect the fifth-storey central shaft edge.
-      box(1.51,.08,.075,railMat,x,
+      box(2*(firstX+innerGuardOffset-x)*-1,.08,.075,railMat,x,
         baseFloor+4*storeyRise+.94,rearLandingEndZ+.02);
-      for(const off of [-.72,0,.72])
+      for(const off of [-1,0,1])
         box(.065,.94,.065,railMat,
-          x+off,baseFloor+4*storeyRise+.47,rearLandingEndZ+.02);
+          x+off*(secondX-innerGuardOffset-x),
+          baseFloor+4*storeyRise+.47,rearLandingEndZ+.02);
       // Four doors in the OPPOSITE rear landing: two at centre rear
       // wall, and one each on the two SIDE walls. No extra room.
       const apartments=[],doorWidth=.77,sideDoorWidth=.82;
@@ -474,7 +491,7 @@ export function buildApartmentHouse(THREE,config={}){
         secondFloorHeight:baseFloor+2*rise,stairFlights:2,
         entryFlight:{bottom:foyerFloor,top:baseFloor,
           steps:stepsPerFlight,minZ:rearLandingEndZ,maxZ:entranceStartZ,
-          width:1.26}
+          width:entryFlightWidth,centreX:entryFlightX,guardX:entryGuardX}
       };
       audit.completeStaircase={
         floors:C.floors,flights:(C.floors-1)*2+1,
@@ -496,9 +513,9 @@ export function buildApartmentHouse(THREE,config={}){
       // Individual stone slabs with tiny grouted gaps, batched by only
       // two materials to preserve mobile draw-call and memory budgets.
       let tiles=0;
-      for(let i=0;i<4;i++){
+      for(let i=0;i<10;i++){
         for(let j=0;j<8;j++){
-          const floorX=x+(i-1.5)*.405;
+          const floorX=x+(i-4.5)*.405;
           const floorZ=3.56+j*.365;
           box(.395,.014,.355,
             (i+j)%2?mats.foyerTile:mats.foyerTileAlt,
@@ -511,66 +528,31 @@ export function buildApartmentHouse(THREE,config={}){
       for(let i=-3;i<=3;i++)
         box(.015,.018,.44,mats.ventDark,
           x+i*.16,.737,5.69);
-      // Real inner doorway. Solid jambs and lintel leave a 1.42 m-wide
-      // void below the lintel; the pivot leaf swings into the landing.
-      for(const side of [-1,1]){
-        box(.135,2.30,.14,mats.frameWhite,
-          x+side*.777,1.86,innerZ);
-      }
-      box(1.69,.48,.14,mats.frameWhite,x,3.10,innerZ);
-      const inner=new THREE.Group();
-      inner.name="entrance-1-inner-hinged-door";
-      const innerWidth=1.39,innerHeight=2.13;
-      inner.position.set(x-innerWidth/2,.73,innerZ);
-      function doorPart(w,h,d,mat,px,py,pz){
-        const mesh=new THREE.Mesh(cube,mat);
-        mesh.scale.set(w,h,d);mesh.position.set(px,py,pz);
-        mesh.castShadow=true;mesh.receiveShadow=true;
-        inner.add(mesh);
-      }
-      // REAL open window, not tinted paint drawn on a solid metal slab.
-      // The metal leaf is assembled around an actual rectangular void.
-      const stile=.175,glassBottom=.91,glassTop=1.97;
-      doorPart(innerWidth,glassBottom,.067,mats.foyerDoor,
-        innerWidth/2,glassBottom/2,0);
-      doorPart(stile,glassTop-glassBottom,.067,mats.foyerDoor,
-        stile/2,(glassBottom+glassTop)/2,0);
-      doorPart(stile,glassTop-glassBottom,.067,mats.foyerDoor,
-        innerWidth-stile/2,(glassBottom+glassTop)/2,0);
-      doorPart(innerWidth,innerHeight-glassTop,.067,mats.foyerDoor,
-        innerWidth/2,(innerHeight+glassTop)/2,0);
-      // Transparent glazing at the opening (depthWrite off): player can
-      // see the REAL first stair flight through the CLOSED inner door.
-      doorPart(innerWidth-2*stile,glassTop-glassBottom,.024,
-        mats.foyerWindowGlass,innerWidth/2,(glassBottom+glassTop)/2,.010);
-      doorPart(innerWidth-2*stile,.043,.10,mats.frameGrey,
-        innerWidth/2,glassBottom-.014,.052);
-      doorPart(.045,.16,.10,mats.vent,
-        innerWidth-.22,innerHeight*.44,.081);
-      root.add(inner);foyerDoor=inner;
-      // Twenty individual postal boxes: 5 columns x 4 rows (future
-      // flats 1–20), fixed to the landing-side right wall, not hovering
-      // in the character's walking corridor.
+      // No second door, door frame, pivot, or opaque wall here.
+      // The player sees and walks straight into the enlarged foyer.
+      // The 20 existing mailboxes now sit on the RIGHT masonry wall of
+      // the FRONT half-landing between apartment floors 1 and 2 (Y=3.30).
+      // No boxes are left in the ground-floor vestibule.
+      const mailboxLevel=baseFloor+rise,mailboxWallX=x+stairHalfWidth;
       let mailboxes=0;
       for(let row=0;row<4;row++)for(let col=0;col<5;col++){
-        const bz=3.60+col*.172,by=1.21+row*.205;
-        box(.075,.177,.162,mats.foyerMailbox,x+.781,by,bz);
-        box(.011,.028,.10,mats.ventDark,x+.734,by+.04,bz);
-        box(.013,.018,.028,mats.ventDark,x+.733,by-.042,bz+.045);
+        const bz=3.62+col*.172,by=mailboxLevel+.56+row*.205;
+        box(.075,.177,.162,mats.foyerMailbox,mailboxWallX-.105,by,bz);
+        box(.011,.028,.10,mats.ventDark,mailboxWallX-.157,by+.04,bz);
+        box(.013,.018,.028,mats.ventDark,mailboxWallX-.158,by-.042,bz+.045);
         mailboxes++;
       }
       // A small notice board and illuminated overhead fixture: no heavy
       // shadows or duplicate indoor scene are required.
-      box(.028,.46,.45,mats.ventDark,x-.798,1.89,3.99);
+      box(.028,.46,.45,mats.ventDark,x-2.078,1.89,4.18);
       for(const offset of [-.12,.03,.16])
-        box(.032,.055,.32,mats.foyerPaint,x-.777,1.89+offset,3.99);
+        box(.032,.055,.32,mats.foyerPaint,x-2.056,1.89+offset,4.18);
       box(.39,.055,.39,mats.frameWhite,x,3.325,5.14);
       box(.30,.037,.30,mats.litGlass,x,3.290,5.14);
       audit.foyer={
-        x,outerZ:face-.19,innerDoorZ:innerZ,backZ:3.35,
-        floorLevel:.70,tiles,mailboxes,doorCount:2,
-        secondDoorWindow:{width:innerWidth-2*stile,
-          bottom:glassBottom,top:glassTop,transparent:true},
+        x,outerZ:face-.19,backZ:3.35,halfWidth:foyerHalfWidth,
+        floorLevel:.70,tiles,mailboxes,mailboxLevel,mailboxWallX,
+        doorCount:1,secondDoorRemoved:true,
         upperPaint:0xd0c9b1,lowerPaint:0x76978d
       };
       // Pivot at the LEFT jamb. The door opens inward around its real

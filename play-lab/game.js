@@ -33,8 +33,8 @@ sun.shadow.camera.left=-65;sun.shadow.camera.right=65;
 sun.shadow.camera.top=48;sun.shadow.camera.bottom=-48;
 sun.shadow.camera.near=1;sun.shadow.camera.far=115;sun.shadow.normalBias=.035;
 scene.add(sun);
-const {root:house,config,doorPivot,innerDoorPivot}=buildApartmentHouse(THREE);
-if(!doorPivot||!innerDoorPivot)throw Error("Both real hinged doors required");
+const {root:house,config,doorPivot}=buildApartmentHouse(THREE);
+if(!doorPivot)throw Error("Real first entrance door required");
 applyFacadeFinishes(THREE,house);
 scene.add(house);
 // Stage 4.2.1: the approved building is NOT duplicated. Replace temporary
@@ -208,8 +208,7 @@ function updateEntryAction(){
  const near=controller.nearestDoor();
  entryAction.hidden=!near;
  if(!near)return;
- entryAction.textContent="🚪 "+(near.open?"Закрыть ":"Открыть ")+
-   (near.id==="inner"?"внутреннюю":"входную");
+ entryAction.textContent="🚪 "+(near.open?"Закрыть входную":"Открыть входную");
  entryAction.setAttribute("aria-pressed",String(near.open));
  entryAction.title=near.label+" · E";
 }
@@ -217,9 +216,7 @@ function toggleEntryDoor(){
  if(studio.mode==="lab")return;
  const near=controller.nearestDoor();
  if(!near)return;
- const ok=near.id==="inner"?
-   controller.setInnerDoorOpen(!controller.innerDoorOpen):
-   controller.setEntryDoorOpen(!controller.entryDoorOpen);
+ const ok=controller.setEntryDoorOpen(!controller.entryDoorOpen);
  if(ok){updateEntryAction();studio.refreshCollisions();}
  else $("actor-status").textContent="Отойди от дверного проёма, чтобы закрыть дверь";
 }
@@ -235,7 +232,6 @@ $("run").addEventListener("click",()=>{
 function resetActor(){
  controller.reset();
  doorPivot.rotation.y=0;
- innerDoorPivot.rotation.y=0;
  updateEntryAction();
  studio.refreshCollisions();
  releaseControls();
@@ -329,8 +325,6 @@ function animate(){
  // and first-floor vestibule smoothly; no teleport or world replacement.
  const openAngle=controller.entryDoorOpen?Math.PI*.47:0;
  doorPivot.rotation.y+=(openAngle-doorPivot.rotation.y)*(1-Math.exp(-12*dt));
- const innerAngle=controller.innerDoorOpen?1.30:0;
- innerDoorPivot.rotation.y+=(innerAngle-innerDoorPivot.rotation.y)*(1-Math.exp(-12*dt));
  actorPivot.position.set(state.x,state.y,state.z);
  updateEntryAction();
  actorPivot.rotation.y=state.heading;

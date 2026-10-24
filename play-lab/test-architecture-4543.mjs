@@ -77,11 +77,11 @@ assert.ok(!house.root.children.filter(m=>m instanceof InstancedMesh)
 const pads=[-26.3625,-8.7875,8.7875,26.3625]
   .map(px=>({x:px,width:5.5,depth:3.15,centreZ:7.875}));
 const entry=planPlayableEntrance(BUILDING,pads);
-assert.equal(entry.buildingObstacles.length,18);
+assert.equal(entry.buildingObstacles.length,19);
 assert.equal(entry.stair.firstFrontZ,opposite.firstTurnEndZ);
 assert.equal(entry.stair.frontZ,opposite.upperTurnEndZ);
-assert.ok(collidesAt(x+1.25,5.25,entry.buildingObstacles,PLAYER_RADIUS,.70),
-  "ground foyer remains narrower than upper staircase");
+assert.ok(!collidesAt(x+1.25,5.25,entry.buildingObstacles,PLAYER_RADIUS,.70),
+  "lower foyer is widened into original stairwell, no partition at +/-0.81");
 assert.ok(!collidesAt(x+1.25,5.25,entry.buildingObstacles,PLAYER_RADIUS,4.87),
   "upper landing is not blocked by ground foyer wall");
 assert.ok(collidesAt(x,6.26,entry.buildingObstacles,PLAYER_RADIUS,4.87),
