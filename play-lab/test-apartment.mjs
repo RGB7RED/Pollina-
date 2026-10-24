@@ -132,6 +132,17 @@ walk(0,-1,50);walk(0,1,97);walk(1,0,45);
 assert.ok(player.position.x>apartment.doorway.x);
 assert.ok(player.setApartmentDoorOpen(false));
 assert.ok(player.obstacles.includes(apartment.doorBlocker));
+// Descend from the ACTUAL room exit through all four double flights,
+// original entry staircase and back out to the original urban street.
+walk(1,0,40);
+for(let floor=4;floor>=1;floor--){
+ walk(0,-1,109);walk(-1,0,90);walk(0,1,108);
+ assert.equal(player.position.y,entry.floorHeight(floor-1));
+ if(floor>1)walk(1,0,70);
+}
+walk(1,0,43);walk(0,-1,135);walk(-1,0,18);walk(0,-1,160);
+assert.ok(player.position.z>10);
+assert.equal(player.position.y,0);
 assert.equal(teleports,0);
 assert.ok(maxLift<.19);
 player.reset();
