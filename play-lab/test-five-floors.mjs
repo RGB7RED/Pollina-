@@ -12,7 +12,7 @@ const pads=[-26.3625,-8.7875,8.7875,26.3625].map(x=>({
  x,width:5.5,depth:3.15,centreZ:7.875
 }));
 const entry=planPlayableEntrance(BUILDING,pads),x=entry.x;
-assert.equal(entry.buildingObstacles.length,16);
+assert.equal(entry.buildingObstacles.length,18);
 assert.equal(entry.totalFloors,5);
 assert.equal(entry.stair.steps,12);
 assert.equal(entry.stair.turnZ,2.05);
@@ -28,13 +28,13 @@ assert.ok(!collidesAt(x+1.5,-2.4,entry.buildingObstacles,PLAYER_RADIUS));
 assert.ok(collidesAt(x+2.5,-2.4,entry.buildingObstacles,PLAYER_RADIUS));
 assert.ok(collidesAt(pads[1].x,5.1,entry.buildingObstacles,PLAYER_RADIUS));
 for(let f=0;f<5;f++){
- const y=.70+f*BUILDING.floorHeight;
+ const y=entry.stair.firstFloor+f*entry.stair.storeyHeight;
  assert.equal(entry.floorHeight(f),y);
  assert.equal(entry.groundHeight(x,-2.4,y),y);
  assert.equal(entry.zone(x,-2.4,y),
   "площадка "+(f+1)+"-го этажа · квартиры "+(f*4+1)+"–"+(f*4+4));
 }
-assert.equal(entry.groundHeight(x,-2.4,19),.70+4*BUILDING.floorHeight);
+assert.equal(entry.groundHeight(x,-2.4,19),entry.stair.firstFloor+4*entry.stair.storeyHeight);
 const player=new PlayerController({building:BUILDING,pads,entry,
  spawn:{x,z:10.85}});
 assert.ok(player.setEntryDoorOpen(true)&&player.setInnerDoorOpen(true));
@@ -49,16 +49,16 @@ function go(a,z,n){
 function at(y,name){assert.ok(Math.abs(player.position.y-y)<.000001,
  name+" got "+player.position.y+" expected "+y);}
 go(0,1,210);
-at(.70,"rear landing 1");
+at(entry.stair.firstFloor,"raised rear landing 1");
 assert.ok(player.position.z<-2.5);
 for(let floor=1;floor<5;floor++){
  go(-1,0,70);assert.ok(player.position.x<x-1.1);
  go(0,-1,150);
- at(.70+(floor-.5)*BUILDING.floorHeight,"front half landing "+floor);
+ at(entry.stair.firstFloor+(floor-.5)*entry.stair.storeyHeight,"front half landing "+floor);
  assert.ok(player.position.z>(floor===1?entry.stair.firstFrontZ:entry.stair.frontZ)-.55);
  go(1,0,90);assert.ok(player.position.x>x+1.1);
  go(0,1,150);
- at(.70+floor*BUILDING.floorHeight,"rear floor "+(floor+1));
+ at(entry.stair.firstFloor+floor*entry.stair.storeyHeight,"rear floor "+(floor+1));
  assert.ok(player.position.z<entry.stair.backZ+.5);
  assert.equal(entry.zone(player.position.x,player.position.z,player.position.y),
   "площадка "+(floor+1)+"-го этажа · квартиры "+(floor*4+1)+"–"+(floor*4+4));
@@ -66,10 +66,10 @@ for(let floor=1;floor<5;floor++){
 assert.equal(player.nearestDoor(),null);
 for(let floor=4;floor>=1;floor--){
  go(0,-1,150);
- at(.70+(floor-.5)*BUILDING.floorHeight,"descending right "+floor);
+ at(entry.stair.firstFloor+(floor-.5)*entry.stair.storeyHeight,"descending right "+floor);
  go(-1,0,90);
  go(0,1,150);
- at(.70+(floor-1)*BUILDING.floorHeight,"descending left "+floor);
+ at(entry.stair.firstFloor+(floor-1)*entry.stair.storeyHeight,"descending left "+floor);
  if(floor>1)go(1,0,70);
 }
 go(1,0,23); // centre aisle, not a stair flight
@@ -106,8 +106,8 @@ assert.equal(house.stats.entrances,4);
 assert.equal(house.stats.doorHoles,4);
 assert.equal(audit.foyer.mailboxes,20);
 assert.equal(audit.completeStaircase.floors,5);
-assert.equal(audit.completeStaircase.flights,8);
-assert.equal(audit.completeStaircase.treads,96);
+assert.equal(audit.completeStaircase.flights,9);
+assert.equal(audit.completeStaircase.treads,108);
 assert.equal(audit.completeStaircase.liftCount,0);
 assert.equal(audit.completeStaircase.corridor,undefined);
 const landing=audit.completeStaircase.landing;
@@ -118,6 +118,8 @@ const rail=audit.completeStaircase.railing;
 assert.equal(rail.height,.94);
 assert.equal(rail.balustersPerFlight,8);
 assert.equal(rail.railsPerFlight,3);
+assert.equal(rail.wallSideRails,0);
+assert.equal(rail.innerGuardLinks,4);
 assert.equal(rail.continuous,true);
 const doors=audit.completeStaircase.apartmentDoors;
 assert.equal(doors.length,20);
