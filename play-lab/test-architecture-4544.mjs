@@ -36,14 +36,14 @@ assert.equal(stair.treads,108);
 assert.equal(first.entryFlight.steps,12);
 assert.equal(first.entryFlight.bottom,.70);
 assert.equal(first.entryFlight.top,2.09);
-assert.ok(Math.abs(first.entryFlight.centreX-(entry.x+1.31))<1e-8);
+assert.ok(Math.abs(first.entryFlight.centreX-(entry.x+.97))<1e-8);
 assert.ok(first.entryFlight.centreX>x);
-assert.ok(first.entryFlight.centreX+first.entryFlight.width/2<=x+2.18);
+assert.ok(first.entryFlight.centreX+first.entryFlight.width/2<=x+1.84);
 assert.equal(audit.foyer.doorCount,1);
 assert.equal(audit.foyer.mailboxLevel,3.30);
 assert.equal(first.entryFlight.minZ,entry.stair.bottomZ);
 assert.equal(first.entryFlight.maxZ,entry.stair.entryStartZ);
-assert.equal(first.stairwellWidth,4.36);
+assert.equal(first.stairwellWidth,3.68);
 assert.equal(stair.railing.flightWidth,1.58);
 assert.equal(stair.railing.frontGuardLinks,4);
 assert.equal(stair.railing.wallSideRails,0);
@@ -78,7 +78,7 @@ const treads=instances.filter(t=>Math.abs(t.scale.x-1.58)<eps&&
   Math.abs(t.scale.z-entranceTreadLength)<eps);
 assert.equal(treads.length,24,"12 genuine two-layer entrance steps");
 assert.equal(new Set(treads.map(t=>t.position.y.toFixed(4))).size,24);
-const transverse=instances.filter(t=>Math.abs(t.scale.x-1.04)<eps&&
+const transverse=instances.filter(t=>Math.abs(t.scale.x-.36)<eps&&
   Math.abs(t.scale.y-.08)<eps&&Math.abs(t.scale.z-.075)<eps&&
   Math.abs(t.position.x-x)<eps);
 assert.equal(transverse.length,4,"four connectors between inner flight guards");
@@ -103,7 +103,7 @@ for(let i=0;i<4;i++){
     p.u0<w.centreX&&p.u1>w.centreX&&p.y0<mid&&p.y1>mid),
     "no opaque brick behind the transparent glazing");
 }
-assert.equal(entry.buildingObstacles.length,19);
+assert.equal(entry.buildingObstacles.length,20);
 assert.equal(entry.groundHeight(x,5.25,.70),.70,"foyer remains at grade");
 assert.equal(entry.groundHeight(x,0,stair.firstFloor+stair.storeyRise),null,
   "upper central shaft cannot be walked on as an invisible floor");
