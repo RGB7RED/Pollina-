@@ -27,8 +27,9 @@ export function facadeObstacles(building,pads=[]){
   }
   return obstacles;
 }
-export function collidesAt(x,z,obstacles,radius=PLAYER_RADIUS){
+export function collidesAt(x,z,obstacles,radius=PLAYER_RADIUS,y=0){
   return obstacles.some(b=>
+    y>=(b.minY??-Infinity)&&y<(b.maxY??Infinity)&&
     x>b.minX-radius&&x<b.maxX+radius&&
     z>b.minZ-radius&&z<b.maxZ+radius);
 }
@@ -38,10 +39,10 @@ export function resolveStep(position,dx,dz,obstacles,{radius=PLAYER_RADIUS,bound
   let x=position.x,z=position.z,hit=false;
   for(let i=0;i<count;i++){
     const toX=clamp(x+dx/count,-bounds.x+radius,bounds.x-radius);
-    if(!collidesAt(toX,z,obstacles,radius))x=toX;
+    if(!collidesAt(toX,z,obstacles,radius,position.y??0))x=toX;
     else hit=true;
     const toZ=clamp(z+dz/count,-bounds.z+radius,bounds.z-radius);
-    if(!collidesAt(x,toZ,obstacles,radius))z=toZ;
+    if(!collidesAt(x,toZ,obstacles,radius,position.y??0))z=toZ;
     else hit=true;
   }
   return {x,z,hit,distance:Math.hypot(x-position.x,z-position.z)};
@@ -55,6 +56,9 @@ export function cameraObstacleDistance(start,end,obstacles,safety=.25){
   if(max<1e-6)return max;
   let fraction=1;
   for(const b of obstacles){
+    // The ground-floor vestibule walls are not on upper storeys.
+    if((start.y??0)<(b.minY??-Infinity)||(start.y??0)>=(b.maxY??Infinity))
+      continue;
     let near=0,far=1,valid=true;
     for(const [origin,d,min,maxv] of [
       [start.x,dx,b.minX-safety,b.maxX+safety],
@@ -155,7 +159,7 @@ export class PlayerController{
       this.setInnerDoorOpen(!this.innerDoorOpen);
   }
   isInsideEntrance(){
-    return !!this.entry&&this.entry.isInside(this.position.x,this.position.z);
+    return !!this.entry&&this.entry.isInside(this.position.x,this.position.z,this.position.y);
   }
   setStick(x,z){this.axis.x=clamp(x,-1,1);this.axis.z=clamp(z,-1,1);}
   look(dx,dy,sensitivity=.0032){
