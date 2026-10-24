@@ -204,7 +204,7 @@ export class PlayerController{
       const dx=(side*Math.cos(this.lookYaw)+ahead*Math.sin(this.lookYaw))*this.speed*dt;
       const dz=(side*Math.sin(this.lookYaw)-ahead*Math.cos(this.lookYaw))*this.speed*dt;
       const step=resolveStep(this.position,dx,dz,this.obstacles);
-      const ground=this.entry?.groundHeight(step.x,step.z)||0;
+      const ground=this.entry?.groundHeight(step.x,step.z,this.position.y)||0;
       // One genuine stair riser is ~11.6 cm. Reject abrupt height changes:
       // prevents walking sideways from floor 1 directly onto flight 2
       // and keeps the actor attached to the physical stair surfaces.
@@ -228,7 +228,7 @@ export class PlayerController{
     return {state:this.state,view:this.view,collided:this.collided,
       x:this.position.x,z:this.position.z,y:this.position.y,
       inside:this.isInsideEntrance(),
-      entranceZone:this.entry?.zone(this.position.x,this.position.z)||"street",
+      entranceZone:this.entry?.zone(this.position.x,this.position.z,this.position.y)||"street",
       speed:dt>0?distance/dt:0,
       heading:this.heading};
   }
