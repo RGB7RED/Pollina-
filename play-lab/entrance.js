@@ -15,10 +15,10 @@ export function planPlayableEntrance(building,pads){
   // The little street vestibule is 1.62m wide; the stairwell widens to
   // 2.88m to permit TWO fully walkable flights and an actual 180° turn.
   const house=[
-    rect("entry-front-left",-halfX,x-corridorHalf,stair.bottomZ,halfZ),
-    rect("entry-front-right",x+corridorHalf,halfX,stair.bottomZ,halfZ),
-    rect("stair-left",-halfX,x-stairHalf,-halfZ,stair.bottomZ),
-    rect("stair-right",x+stairHalf,halfX,-halfZ,stair.bottomZ),
+    rect("entry-front-left",-halfX,x-corridorHalf,insideEnd,halfZ),
+    rect("entry-front-right",x+corridorHalf,halfX,insideEnd,halfZ),
+    rect("stair-left",-halfX,x-stairHalf,-halfZ,insideEnd),
+    rect("stair-right",x+stairHalf,halfX,-halfZ,insideEnd),
     rect("stairwell-back",x-stairHalf,x+stairHalf,-halfZ,stair.backZ),
     rect("stair-center-divider",x-.02,x+.02,stair.turnZ+.12,
       stair.bottomZ-.36)
@@ -50,7 +50,7 @@ export function planPlayableEntrance(building,pads){
     // Same continuous world coordinate from sidewalk through the first
     // porch and threshold into the indoor vestibule; no teleport/scene swap.
     groundHeight(px,z){
-      if(Math.abs(px-x)>(z<stair.bottomZ?stairHalf:corridorHalf)-.03)return 0;
+      if(Math.abs(px-x)>(z<insideEnd?stairHalf:corridorHalf)-.03)return 0;
       if(z>=10.65)return 0;
       if(z>=9.42)return (10.65-z)/(10.65-9.42)*.50;
       if(z>=7.10)return .50;
@@ -70,7 +70,7 @@ export function planPlayableEntrance(building,pads){
       return 0;
     },
     isInside(px,z){
-      const width=z<stair.bottomZ?stairHalf:corridorHalf;
+      const width=z<insideEnd?stairHalf:corridorHalf;
       return Math.abs(px-x)<width&&z>=stair.backZ&&z<facade-.07;
     },
     canInteract(px,z){
