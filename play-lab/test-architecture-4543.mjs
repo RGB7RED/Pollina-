@@ -29,7 +29,7 @@ const house=buildApartmentHouse(THREE),a=house.root.userData.geometryAudit;
 const x=planFacade().find(w=>w.entrance).x;
 const opposite=a.completeStaircase.opposite;
 assert.equal(a.completeStaircase.floors,5);
-assert.equal(a.completeStaircase.flights,8);
+assert.equal(a.completeStaircase.flights,9);
 assert.equal(a.completeStaircase.apartmentDoors.length,20);
 assert.deepEqual(a.completeStaircase.apartmentDoors.map(d=>d.number),
   Array.from({length:20},(_,i)=>i+1));
@@ -38,16 +38,17 @@ assert.ok(opposite.upperTurnEndZ>5.8);
 assert.ok(opposite.upperTurnEndZ<opposite.facadeInnerZ);
 assert.ok(opposite.facadeInnerZ<opposite.facadeOuterZ);
 assert.deepEqual(a.completeStaircase.levels.map(l=>l.returnEndZ),
-  [opposite.firstTurnEndZ,...Array(3).fill(opposite.upperTurnEndZ)]);
-assert.deepEqual(opposite.openCentreFloors,[2,3,4,5]);
-assert.equal(opposite.originalFirstTurnPreservedForFoyerClearance,true);
+  Array(4).fill(opposite.upperTurnEndZ));
+assert.deepEqual(opposite.openCentreFloors,[1,2,3,4,5]);
+assert.equal(opposite.firstTurnClearsFoyer,true);
+assert.equal(a.completeStaircase.firstFloor,2.09);
 assert.equal(a.completeStaircase.landing.minZ,-3.38);
 assert.equal(a.completeStaircase.landing.maxZ,-1.58);
 assert.equal(a.completeStaircase.landing.doorsPerFloor,4);
-// Glazing is physically in FOUR apertures of the existing +Z masonry:
-// 1 transom above the accepted first door, 3 normal windows above.
+// Glazing is physically in FOUR relocated apertures of the original +Z
+// masonry, one per intermediate landing, with no half-window occlusion.
 assert.equal(a.stairwellWindows.length,4);
-assert.deepEqual(a.stairwellWindows.map(w=>w.floor),[0,1,2,3]);
+assert.deepEqual(a.stairwellWindows.map(w=>w.floor),[1,2,3,4]);
 assert.ok(a.stairwellWindows.every(w=>w.transparent&&w.through&&
   Math.abs(w.centreX-x)<.001));
 assert.ok(a.stairwellWindows.every(w=>w.top>w.bottom&&
@@ -62,12 +63,11 @@ for(const w of a.stairwellWindows){
 const glass=house.root.children.filter(m=>m instanceof InstancedMesh&&m.material.transparent);
 assert.ok(glass.some(m=>m.material.opacity<.35&&m.material.depthWrite===false&&m.count>=4),
   "the four clear panes share one GPU-instanced transparent Three.js material");
-// The former 1.28m wide approach slabs do not repeat across floors 2..5.
+// The former flat 1.28m approach was replaced by the twelve entry treads.
 const centerSlabs=house.root.children.filter(m=>m instanceof InstancedMesh)
   .flatMap(m=>m.matrices.map(t=>({x:t.scale.x,y:t.position.y,z:t.scale.z})))
   .filter(t=>Math.abs(t.x-1.28)<.001&&t.z>4);
-assert.equal(centerSlabs.length,1,"only first-floor central walkway survives");
-assert.ok(centerSlabs[0].y<1,"first-floor access retained");
+assert.equal(centerSlabs.length,0,"no centre walkway spanning entrance staircase");
 // Removed suspended foyer ceiling at y=3.41.
 assert.ok(!house.root.children.filter(m=>m instanceof InstancedMesh)
   .flatMap(m=>m.matrices)
@@ -77,7 +77,7 @@ assert.ok(!house.root.children.filter(m=>m instanceof InstancedMesh)
 const pads=[-26.3625,-8.7875,8.7875,26.3625]
   .map(px=>({x:px,width:5.5,depth:3.15,centreZ:7.875}));
 const entry=planPlayableEntrance(BUILDING,pads);
-assert.equal(entry.buildingObstacles.length,16);
+assert.equal(entry.buildingObstacles.length,18);
 assert.equal(entry.stair.firstFrontZ,opposite.firstTurnEndZ);
 assert.equal(entry.stair.frontZ,opposite.upperTurnEndZ);
 assert.ok(collidesAt(x+1.25,5.25,entry.buildingObstacles,PLAYER_RADIUS,.70),
@@ -88,7 +88,6 @@ assert.ok(collidesAt(x,6.26,entry.buildingObstacles,PLAYER_RADIUS,4.87),
   "player cannot walk out through clear upper window");
 assert.ok(!collidesAt(x,5.0,entry.buildingObstacles,PLAYER_RADIUS,.70),
   "entrance front remains accessible at ground level");
-assert.equal(entry.groundHeight(x+1.25,5.25,4.87),.70+
-  BUILDING.floorHeight+BUILDING.floorHeight/2);
+assert.equal(entry.groundHeight(x+1.25,5.25,3.30),3.30);
 assert.equal(entry.groundHeight(x,5.25,.70),.70);
-console.log("MINI CITY 4.5.4.3: four real openings with clear glass, upper return to facade, no four central slabs, elevation-aware collisions PASS");
+console.log("MINI CITY 4.5.4.3/4 regression: four clear facade apertures, raised landings, empty middle shaft, height-aware obstacles PASS");
