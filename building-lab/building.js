@@ -405,34 +405,66 @@ export function buildApartmentHouse(THREE,config={}){
           bottom:level,mid:level+rise,top:level+storeyRise,
           steps:stepsPerFlight*2,returnEndZ:turnEndZ});
       }
-      // Two-tone Soviet stairwell paint CONTINUES along the flight walls.
-      // A sloping green band follows the step incline, while the warm
-      // ivory finish already covers the complete wall behind the stripe.
-      // One shared instanced batch per paint material (mobile friendly).
-      const paintDepth=run+.05,paintSlope=Math.atan2(rise,run);
-      const slopedLength=Math.hypot(run,rise);
+      // Stage 4.5.4.8: a rotated BOX is not a true sloping wall
+      // paint band. The diagonally rotated cuboid leaves triangular
+      // unpainted holes between the stairs, flat return and next level.
+      // Use exact world-space wall polygons whose TOP and BOTTOM each
+      // follow the flight line. Combine every flight into just ONE green
+      // geometry and ONE white-trim geometry (2 small draw calls).
+      const slopeGreen=[],slopeTrim=[];
+      function wallQuad(target,wallX,z0,z1,height0,height1,low,height){
+        const y0=height0+low,y1=height1+low;
+        // Two triangles with a continuous sloping boundary (not a tilted box).
+        target.push(
+          wallX,y0,z0,wallX,y0+height,z0,wallX,y1+height,z1,
+          wallX,y0,z0,wallX,y1+height,z1,wallX,y1,z1
+        );
+      }
       for(let f=0;f<C.floors-1;f++){
         const y=baseFloor+f*storeyRise;
-        for(const [side,cx,cy,angle] of [
-          [-1,firstX,y+rise/2,-paintSlope],
-          [1,secondX,y+rise+rise/2,paintSlope]
+        for(const [side,y0,y1] of [
+          [-1,y,y+rise],
+          [ 1,y+2*rise,y+rise]
         ]){
-          const wallX=x+side*(stairHalfWidth-.10);
-          box(.025,1.14,slopedLength,mats.foyerLower,
-            wallX,cy+.57,(rearLandingEndZ+halfLandingZ)/2,angle);
-          // Continuous waist-height separator matching apartment landings.
-          box(.032,.040,slopedLength,mats.frameWhite,
-            wallX,cy+1.15,(rearLandingEndZ+halfLandingZ)/2,angle);
+          const wx=x+side*(stairHalfWidth-.114);
+          wallQuad(slopeGreen,wx,rearLandingEndZ,halfLandingZ,
+            y0,y1,-.15,1.33);
+          wallQuad(slopeTrim,wx-side*.005,rearLandingEndZ,halfLandingZ,
+            y0,y1,1.15,.045);
         }
-        // Opposite return: retain the same colour along the side walls.
+        // Horizontal front turn is exactly flush with the end of the
+        // sloping polygon. No 4cm unpainted termination at the joint.
         for(const side of [-1,1]){
-          const wx=x+side*(stairHalfWidth-.10);
-          const length=frontZ-halfLandingZ-.08;
+          const wx=x+side*(stairHalfWidth-.114);
+          const length=frontZ-halfLandingZ;
           const z=(frontZ+halfLandingZ)/2;
-          box(.025,1.14,length,mats.foyerLower,wx,y+rise+.57,z);
-          box(.032,.040,length,mats.frameWhite,wx,y+rise+1.15,z);
+          box(.025,1.18,length,mats.foyerLower,wx,y+rise+.59,z);
+          box(.032,.045,length,mats.frameWhite,wx,y+rise+1.1725,z);
         }
       }
+      function flushWallFaces(vertices,material){
+        if(vertices.length===0)return;
+        const geo=new THREE.BufferGeometry();
+        geo.setAttribute("position",new THREE.Float32BufferAttribute(vertices,3));
+        geo.computeVertexNormals();
+        const panel=new THREE.Mesh(geo,material);
+        panel.receiveShadow=true;
+        root.add(panel);
+      }
+      // Existing green and white materials serve both instanced boxes
+      // and these joined planar triangles; no new shader/material batch.
+      mats.foyerLower.side=THREE.DoubleSide;
+      mats.frameWhite.side=THREE.DoubleSide;
+      flushWallFaces(slopeGreen,mats.foyerLower);
+      flushWallFaces(slopeTrim,mats.frameWhite);
+      audit.slopedWallFinish={
+        bands:(C.floors-1)*2,triangles:slopeGreen.length/9,
+        trimTriangles:slopeTrim.length/9,
+        noTiltedBoxes:true,joinedToFlatLandings:true,
+        firstFlight:{z0:rearLandingEndZ,z1:halfLandingZ,
+          startY:baseFloor,endY:baseFloor+rise},
+        sharedMaterial:true
+      };
       // On the FIFTH floor continue the end-of-shaft handrail all the
       // way to the left solid wall. Keep the RIGHT flight's landing
       // unobstructed for the person arriving from the fourth floor.
@@ -492,7 +524,7 @@ export function buildApartmentHouse(THREE,config={}){
         // Side paint continues for the FULL depth of the extended landing.
         for(const sign of [-1,1]){
           const wallX=x+sign*(stairHalfWidth-.09);
-          const paintDepth=rearLandingEndZ-rearWallZ-.12;
+          const paintDepth=rearLandingEndZ-rearWallZ;
           const midZ=(rearWallZ+rearLandingEndZ)/2;
           box(.025,1.20,paintDepth,mats.foyerLower,
             wallX,level+.60,midZ);
@@ -830,10 +862,19 @@ export function buildApartmentHouse(THREE,config={}){
   // Preserve the ORIGINAL operable entrance opening as well.
   const entryDoorVoid={bottom:C.plinth+.04,top:C.plinth+.04+2.28,
     halfWidth:1.71/2};
+  // Paint the GREEN DADO up to the SAME 1.18m height as both side
+  // walls. The green zone surrounds only the BOTTOM of each window,
+  // leaving its upper sash against cream plaster. In 4.5.4.7 a band
+  // restarted near the window top because it followed an apartment
+  // floor modulo and restarted halfway through each window, producing
+  // an inverted green strip across the top of the real glass.
+  const greenBands=Array.from({length:C.floors-1},(_,i)=>{
+    const landingY=firstMid+i*2.42;
+    return {bottom:landingY-.12,top:landingY+1.18};
+  });
   const cuts=[.70,shellTop,entryDoorVoid.top,
     ...windowIntervals.flatMap(w=>[w.bottom,w.top]),
-    ...Array.from({length:C.floors},(_,i)=>.70+1.39+i*2.42),
-    ...Array.from({length:C.floors},(_,i)=>.70+1.39+i*2.42+1.16)];
+    ...greenBands.flatMap(w=>[w.bottom,w.top])];
   const sorted=[...new Set(cuts.filter(v=>v>=.70&&v<=shellTop)
     .map(v=>Number(v.toFixed(5))))].sort((a,b)=>a-b);
   let plasterPanels=0;
@@ -841,9 +882,10 @@ export function buildApartmentHouse(THREE,config={}){
     const y0=sorted[j],y1=sorted[j+1];
     if(y1-y0<.005)continue;
     const midY=(y0+y1)/2;
-    const rel=midY-(.70+1.39);
-    const lower=rel<0?midY<1.90:
-      rel-Math.floor(rel/2.42)*2.42<1.16;
+    // Never restart green near the TOP of an opening. The lower green
+    // dado is aligned across the side/front wall corner at +1.18m.
+    const lower=midY<1.90||
+      greenBands.some(b=>midY>=b.bottom&&midY<b.top);
     const mat=lower?mats.foyerLower:mats.foyerPaint;
     const windowOpen=windowIntervals.some(w=>midY>w.bottom&&midY<w.top);
     const doorwayOpen=midY>entryDoorVoid.bottom&&midY<entryDoorVoid.top;
@@ -856,10 +898,28 @@ export function buildApartmentHouse(THREE,config={}){
       plasterPanels++;
     }
   }
+  // The inside-facing PAINTED WALL ends at the original masonry hole,
+  // but the four perpendicular hole REVEALS were still exposed brick.
+  // Cover only the real jamb, sill and lintel faces, preserving a
+  // 1.29m clear opening and transparent glazing (no central infill).
+  const revealDepth=.165;
+  const revealMidZ=innerWindowZ+revealDepth/2;
+  let finishedWindowReveals=0;
+  for(const hole of windowIntervals){
+    const mid=(hole.bottom+hole.top)/2;
+    for(const side of [-1,1])
+      box(.052,hole.top-hole.bottom,revealDepth,mats.foyerPaint,
+        wx+side*(.70-.025),mid,revealMidZ);
+    for(const edge of [-1,1])
+      box(1.35,.052,revealDepth,mats.foyerPaint,
+        wx,edge<0?hole.bottom+.025:hole.top-.025,revealMidZ);
+    finishedWindowReveals++;
+  }
   audit.stairwellInterior={plasterPanels,wallZ:innerWindowZ,
     windowApertures:windowIntervals,entranceAperture:entryDoorVoid,
-    painted:true,
-    noBrickFacing:true,transparentWindowsUnobstructed:true};
+    greenBands,finishedWindowReveals,
+    painted:true,noBrickFacing:true,
+    transparentWindowsUnobstructed:true};
   // Two side windows per storey. The end walls are perforated too.
   for(const side of [-1,1]){
     for(let floor=0;floor<C.floors;floor++){
