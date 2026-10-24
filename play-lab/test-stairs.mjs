@@ -47,8 +47,9 @@ assert.equal(p.position.y,.70);
 go(-1,0,70);
 assert.ok(p.position.x<x-1);
 go(0,-1,230);
-assert.ok(p.position.z>5.60,"front half landing extends to TRUE street facade");
+assert.ok(p.position.z>5.60,"front wing reaches real exterior glass");
 assert.equal(p.position.y,.70+BUILDING.floorHeight/2);
+go(0,1,48); // return to full-width half landing before turning
 go(1,0,90);
 assert.ok(p.position.x>x+1,"turn across the front");
 go(0,1,230);
