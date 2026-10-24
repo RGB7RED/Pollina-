@@ -12,12 +12,12 @@ const pads=[-26.3625,-8.7875,8.7875,26.3625].map(x=>({
  x,width:5.5,depth:3.15,centreZ:7.875
 }));
 const entry=planPlayableEntrance(BUILDING,pads),x=entry.x;
-assert.equal(entry.buildingObstacles.length,20);
+assert.equal(entry.buildingObstacles.length,30);
 assert.equal(entry.totalFloors,5);
 assert.equal(entry.stair.steps,12);
 assert.equal(entry.stair.turnZ,2.05);
 assert.equal(entry.stair.bottomZ,-1.58);
-assert.equal(entry.stair.backZ,-3.38);
+assert.equal(entry.stair.backZ,-4.85);
 assert.equal(entry.corridor,undefined);
 assert.ok(entry.stair.bottomZ-entry.stair.backZ>=1.75);
 assert.ok(entry.stair.frontZ-entry.stair.turnZ>=1.20);
@@ -53,27 +53,27 @@ go(0,1,90); // enter the now spacious single-door vestibule
 assert.equal(player.position.y,.70);
 go(1,0,18); // align with stair that runs beside the RIGHT wall
 assert.ok(player.position.x>entry.stair.entryX-.20);
-go(0,1,155);
+go(0,1,100); // stop on usable floor, not against the new electric cabinet
 at(entry.stair.firstFloor,"raised rear landing 1");
 assert.ok(player.position.z<-2.5);
 for(let floor=1;floor<5;floor++){
  go(-1,0,floor===1?40:70);assert.ok(player.position.x<x-1.0);
- go(0,-1,150);
+ go(0,-1,108);
  at(entry.stair.firstFloor+(floor-.5)*entry.stair.storeyHeight,"front half landing "+floor);
- assert.ok(player.position.z>(floor===1?entry.stair.firstFrontZ:entry.stair.frontZ)-.55);
+ assert.ok(player.position.z>4.6&&player.position.z<5.35);
  go(1,0,90);assert.ok(player.position.x>x+1.1);
- go(0,1,150);
+ go(0,1,109);
  at(entry.stair.firstFloor+floor*entry.stair.storeyHeight,"rear floor "+(floor+1));
- assert.ok(player.position.z<entry.stair.backZ+.5);
+ assert.ok(player.position.z< -2.70);
  assert.equal(entry.zone(player.position.x,player.position.z,player.position.y),
   "площадка "+(floor+1)+"-го этажа · квартиры "+(floor*4+1)+"–"+(floor*4+4));
 }
 assert.equal(player.nearestDoor(),null);
 for(let floor=4;floor>=1;floor--){
- go(0,-1,150);
+ go(0,-1,109);
  at(entry.stair.firstFloor+(floor-.5)*entry.stair.storeyHeight,"descending right "+floor);
  go(-1,0,90);
- go(0,1,150);
+ go(0,1,108);
  at(entry.stair.firstFloor+(floor-1)*entry.stair.storeyHeight,"descending left "+floor);
  if(floor>1)go(1,0,70);
 }
@@ -137,13 +137,13 @@ assert.ok(doors.every(d=>d.entrance===1&&!d.accessible));
 for(let f=1;f<=5;f++){
  const four=doors.filter(d=>d.floor===f);
  assert.equal(four.length,4);
- assert.deepEqual(four.map(d=>d.orientation),["front","front","left","right"]);
+ assert.deepEqual(four.map(d=>d.orientation),["left","left","right","right"]);
  assert.ok(four.every(d=>d.zone==="rear-stair-landing"));
  assert.ok(four.every(d=>d.x>=landing.minX&&d.x<=landing.maxX));
  assert.ok(four.every(d=>d.z>=landing.minZ&&d.z<=landing.maxZ));
- assert.ok(four[0].x<x&&four[1].x>x);
- assert.ok(Math.abs(four[0].x+four[1].x-2*x)<1e-5);
- assert.ok(four[2].x<x-1.65&&four[3].x>x+1.65);
+ assert.ok(four[0].x<x&&four[1].x<x);
+ assert.ok(Math.abs(four[0].x-four[1].x)<1e-5);
+ assert.ok(four[2].x>x+1.65&&four[3].x>x+1.65);
 }
 assert.equal(house.innerDoorPivot,null,"the deleted partition door has no 3D pivot");
 assert.equal(audit.foyer.doorCount,1,"only the original facade door remains");
@@ -151,4 +151,4 @@ assert.equal(audit.foyer.tiles,80,"wider entrance has actual floor tiles");
 assert.equal(audit.foyer.mailboxLevel,3.30,"mailboxes now live between floors 1–2");
 const instanced=house.root.children.filter(o=>o instanceof InstancedMesh);
 assert.ok(instanced.length<=33,"one dedicated batch for real transparent stairwell glass");
-console.log("MINI CITY 4.5.4.5 PASS: right-hand entry steps, 4 U climbs/descents, exit through one door, 20 relocated mailboxes");
+console.log("MINI CITY 4.5.4.7 PASS: deep cabinet end wall, 20 side doors, 4 U climbs/descents and no radiator collisions");
