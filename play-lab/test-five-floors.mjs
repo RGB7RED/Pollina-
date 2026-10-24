@@ -95,9 +95,8 @@ for(let floor=1;floor<5;floor++){
  }
 }
 assert.ok(player.position.y>11.8,"fifth floor genuinely reached");
-go(-1,0,100); // back from the fifth-floor flats
-go(1,0,27); // align with RIGHT descending flight, not nonexistent sixth
-assert.ok(player.position.x-x>.70);
+go(-1,0,70); // back from the fifth-floor flats to RIGHT down-flight
+assert.ok(player.position.x-x>.70&&player.position.x-x<1.10);
 for(let floor=4;floor>=1;floor--){
  go(0,1,160);
  at(.70+(floor-.5)*BUILDING.floorHeight,"descent midway "+floor);
