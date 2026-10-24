@@ -96,11 +96,14 @@ export class PlayerController{
     this.apartment=entry?.apartment||null;
     this.apartmentDoorOpen=false;
     this.apartmentDoorBlocker=this.apartment?.doorBlocker||null;
+    this.firstFloorPlan=entry?.firstFloorPlan||null;
+    this.firstFloorDoorOpen=new Set();
     // Older controllers keep the original whole-house collider. The game
     // opts into the exact first-entry corridor without changing other doors.
     this.obstacles=[...(entry?entry.buildingObstacles:facadeObstacles(building,pads)),
       ...(entry?[entry.door]:[]),
       ...(this.apartment?[this.apartmentDoorBlocker]:[]),
+      ...(this.firstFloorPlan?this.firstFloorPlan.doorBlockers:[]),
       ...extras.map(o=>({...o}))];
     if(collidesAt(spawn.x,spawn.z,this.obstacles))
       throw Error("Spawn must not intersect house or entrance slabs");
@@ -134,12 +137,42 @@ export class PlayerController{
     if(!open&&i<0)this.obstacles.push(this.apartmentDoorBlocker);
     return true;
   }
+  setFirstFloorDoorOpen(number,open){
+    const d=this.firstFloorPlan?.doors.find(d=>d.number===number);
+    if(!d)return false;
+    open=Boolean(open);
+    const had=this.firstFloorDoorOpen.has(number);
+    if(open===had)return true;
+    if(!open&&Math.abs(this.position.y-d.y)<.24&&
+      Math.hypot(this.position.x-d.x,this.position.z-d.z)<PLAYER_RADIUS+.55)
+      return false;
+    const blocker=this.firstFloorPlan.doorBlockers.find(b=>b.name==="flat-"+number+"-closed");
+    if(!blocker)throw Error("Missing flat door collider");
+    const index=this.obstacles.indexOf(blocker);
+    if(open){this.firstFloorDoorOpen.add(number);
+      if(index>=0)this.obstacles.splice(index,1);
+    }else{this.firstFloorDoorOpen.delete(number);
+      if(index<0)this.obstacles.push(blocker);}
+    return true;
+  }
   canUseEntryDoor(){
     return !!this.entry&&this.position.y<1.35&&
       this.entry.canInteract(this.position.x,this.position.z);
   }
   nearestDoor(){
     const {x,z,y}=this.position;
+    if(this.firstFloorPlan&&Math.abs(y-this.firstFloorPlan.y)<.24){
+      const doors=this.firstFloorPlan.doors.filter(d=>
+        Math.hypot(x-d.x,z-d.z)<1.28);
+      if(doors.length){
+        doors.sort((a,b)=>Math.hypot(x-a.x,z-a.z)-Math.hypot(x-b.x,z-b.z));
+        const d=doors[0];
+        return {id:"first-floor-"+d.number,number:d.number,
+          label:"Квартира №"+d.number,
+          open:this.firstFloorDoorOpen.has(d.number),
+          distance:Math.hypot(x-d.x,z-d.z)};
+      }
+    }
     if(this.apartment?.canInteract(x,z,y))
       return {id:"apartment-17",label:"Квартира №17",
         open:this.apartmentDoorOpen,
@@ -151,9 +184,11 @@ export class PlayerController{
   toggleNearestDoor(){
     const near=this.nearestDoor();
     if(!near)return false;
-    return near.id==="apartment-17"?
-      this.setApartmentDoorOpen(!this.apartmentDoorOpen):
-      this.setEntryDoorOpen(!this.entryDoorOpen);
+    return near.number?
+      this.setFirstFloorDoorOpen(near.number,!near.open):
+      near.id==="apartment-17"?
+        this.setApartmentDoorOpen(!this.apartmentDoorOpen):
+        this.setEntryDoorOpen(!this.entryDoorOpen);
   }
   isInsideEntrance(){
     return !!this.entry&&this.entry.isInside(this.position.x,this.position.z,this.position.y);
@@ -181,6 +216,14 @@ export class PlayerController{
     if(this.entryDoorOpen){
       this.entryDoorOpen=false;
       if(!this.obstacles.includes(this.doorBlocker))this.obstacles.push(this.doorBlocker);
+    }
+    if(this.firstFloorPlan){
+      for(const d of this.firstFloorPlan.doors){
+        const blocker=this.firstFloorPlan.doorBlockers.find(b=>
+          b.name==="flat-"+d.number+"-closed");
+        if(!this.obstacles.includes(blocker))this.obstacles.push(blocker);
+      }
+      this.firstFloorDoorOpen.clear();
     }
     if(this.apartmentDoorOpen){
       this.apartmentDoorOpen=false;

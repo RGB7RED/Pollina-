@@ -58,8 +58,8 @@ assert.ok(stair.landing.depth>1.75);
 assert.equal(BUILDING.floors,5);
 assert.equal(BUILDING.entrances,4);
 assert.equal(house.stats.doorHoles,4);
-assert.equal(house.stats.windows,296);
-assert.equal(house.stats.windowHoles,296);
+assert.equal(house.stats.windows,286);
+assert.equal(house.stats.windowHoles,286);
 const shellTop=BUILDING.plinth+BUILDING.floorHeight*BUILDING.floors;
 assert.ok(stair.firstFloor+4*stair.storeyRise+2.19<shellTop,
   "fifth floor + full apartment door must stay inside the ORIGINAL house");

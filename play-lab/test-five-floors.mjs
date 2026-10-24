@@ -134,7 +134,7 @@ const doors=audit.completeStaircase.apartmentDoors;
 assert.equal(doors.length,20);
 assert.deepEqual(doors.map(d=>d.number),Array.from({length:20},(_,i)=>i+1));
 assert.ok(doors.every(d=>d.entrance===1));
-assert.deepEqual(doors.filter(d=>d.accessible).map(d=>d.number),[17],
+assert.deepEqual(doors.filter(d=>d.accessible).map(d=>d.number),[1,2,3,4,17],
  "only one fifth-floor apartment is constructed; all others remain closed");
 for(let f=1;f<=5;f++){
  const four=doors.filter(d=>d.floor===f);
