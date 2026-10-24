@@ -34,6 +34,7 @@ on:
       - fix/mini-city-v033-stage4546-narrow-stairwell-wider-doors-top-rails-mailboxes
       - fix/mini-city-v033-stage4547-deep-side-doors-heating-painted-stairwell
       - fix/mini-city-v033-stage4548-continuous-stair-paint-window-reveals
+      - fix/mini-city-v033-stage4549-ceiling-mounted-stairwell-lights
     paths:
       - 'building-lab/**'
       - 'bus-stop-lab/**'
@@ -107,6 +108,8 @@ jobs:
         run: node play-lab/test-five-floors.mjs
       - name: Test stage 4.5.4.3 facade windows, real openings and upper landing headroom
         run: node play-lab/test-architecture-4543.mjs
+      - name: Test stage 4.5.4.9 actual ceiling-mounted stairwell luminaires
+        run: node play-lab/test-architecture-4549.mjs
       - name: Test stage 4.5.4.8 seamless sloped paint, correct green dado and plastered clear window jambs
         run: node play-lab/test-architecture-4548.mjs
       - name: Test stage 4.5.4.7 deep landing, 2+2 side doors, radiators, electric cabinets and clear painted window apertures
