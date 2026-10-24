@@ -405,34 +405,66 @@ export function buildApartmentHouse(THREE,config={}){
           bottom:level,mid:level+rise,top:level+storeyRise,
           steps:stepsPerFlight*2,returnEndZ:turnEndZ});
       }
-      // Two-tone Soviet stairwell paint CONTINUES along the flight walls.
-      // A sloping green band follows the step incline, while the warm
-      // ivory finish already covers the complete wall behind the stripe.
-      // One shared instanced batch per paint material (mobile friendly).
-      const paintDepth=run+.05,paintSlope=Math.atan2(rise,run);
-      const slopedLength=Math.hypot(run,rise);
+      // Stage 4.5.4.8: a rotated BOX is not a true sloping wall
+      // paint band. The diagonally rotated cuboid leaves triangular
+      // unpainted holes between the stairs, flat return and next level.
+      // Use exact world-space wall polygons whose TOP and BOTTOM each
+      // follow the flight line. Combine every flight into just ONE green
+      // geometry and ONE white-trim geometry (2 small draw calls).
+      const slopeGreen=[],slopeTrim=[];
+      function wallQuad(target,wallX,z0,z1,height0,height1,low,height){
+        const y0=height0+low,y1=height1+low;
+        // Two triangles with a continuous sloping boundary (not a tilted box).
+        target.push(
+          wallX,y0,z0,wallX,y0+height,z0,wallX,y1+height,z1,
+          wallX,y0,z0,wallX,y1+height,z1,wallX,y1,z1
+        );
+      }
       for(let f=0;f<C.floors-1;f++){
         const y=baseFloor+f*storeyRise;
-        for(const [side,cx,cy,angle] of [
-          [-1,firstX,y+rise/2,-paintSlope],
-          [1,secondX,y+rise+rise/2,paintSlope]
+        for(const [side,y0,y1] of [
+          [-1,y,y+rise],
+          [ 1,y+2*rise,y+rise]
         ]){
-          const wallX=x+side*(stairHalfWidth-.10);
-          box(.025,1.14,slopedLength,mats.foyerLower,
-            wallX,cy+.57,(rearLandingEndZ+halfLandingZ)/2,angle);
-          // Continuous waist-height separator matching apartment landings.
-          box(.032,.040,slopedLength,mats.frameWhite,
-            wallX,cy+1.15,(rearLandingEndZ+halfLandingZ)/2,angle);
+          const wx=x+side*(stairHalfWidth-.114);
+          wallQuad(slopeGreen,wx,rearLandingEndZ,halfLandingZ,
+            y0,y1,-.15,1.33);
+          wallQuad(slopeTrim,wx-side*.005,rearLandingEndZ,halfLandingZ,
+            y0,y1,1.15,.045);
         }
-        // Opposite return: retain the same colour along the side walls.
+        // Horizontal front turn is exactly flush with the end of the
+        // sloping polygon. No 4cm unpainted termination at the joint.
         for(const side of [-1,1]){
-          const wx=x+side*(stairHalfWidth-.10);
-          const length=frontZ-halfLandingZ-.08;
+          const wx=x+side*(stairHalfWidth-.114);
+          const length=frontZ-halfLandingZ;
           const z=(frontZ+halfLandingZ)/2;
-          box(.025,1.14,length,mats.foyerLower,wx,y+rise+.57,z);
-          box(.032,.040,length,mats.frameWhite,wx,y+rise+1.15,z);
+          box(.025,1.18,length,mats.foyerLower,wx,y+rise+.59,z);
+          box(.032,.045,length,mats.frameWhite,wx,y+rise+1.1725,z);
         }
       }
+      function flushWallFaces(vertices,material){
+        if(vertices.length===0)return;
+        const geo=new THREE.BufferGeometry();
+        geo.setAttribute("position",new THREE.Float32BufferAttribute(vertices,3));
+        geo.computeVertexNormals();
+        const panel=new THREE.Mesh(geo,material);
+        panel.receiveShadow=true;
+        root.add(panel);
+      }
+      // Existing green and white materials serve both instanced boxes
+      // and these joined planar triangles; no new shader/material batch.
+      mats.foyerLower.side=THREE.DoubleSide;
+      mats.frameWhite.side=THREE.DoubleSide;
+      flushWallFaces(slopeGreen,mats.foyerLower);
+      flushWallFaces(slopeTrim,mats.frameWhite);
+      audit.slopedWallFinish={
+        bands:(C.floors-1)*2,triangles:slopeGreen.length/9,
+        trimTriangles:slopeTrim.length/9,
+        noTiltedBoxes:true,joinedToFlatLandings:true,
+        firstFlight:{z0:rearLandingEndZ,z1:halfLandingZ,
+          startY:baseFloor,endY:baseFloor+rise},
+        sharedMaterial:true
+      };
       // On the FIFTH floor continue the end-of-shaft handrail all the
       // way to the left solid wall. Keep the RIGHT flight's landing
       // unobstructed for the person arriving from the fourth floor.
@@ -492,7 +524,7 @@ export function buildApartmentHouse(THREE,config={}){
         // Side paint continues for the FULL depth of the extended landing.
         for(const sign of [-1,1]){
           const wallX=x+sign*(stairHalfWidth-.09);
-          const paintDepth=rearLandingEndZ-rearWallZ-.12;
+          const paintDepth=rearLandingEndZ-rearWallZ;
           const midZ=(rearWallZ+rearLandingEndZ)/2;
           box(.025,1.20,paintDepth,mats.foyerLower,
             wallX,level+.60,midZ);
