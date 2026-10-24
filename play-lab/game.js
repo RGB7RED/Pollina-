@@ -347,7 +347,11 @@ function animate(){
   apartmentDoorPivot.rotation.y+=(aptAngle-apartmentDoorPivot.rotation.y)*
     (1-Math.exp(-12*dt));
   for(const [number,pivot] of firstFloorDoorPivots){
-    const angle=controller.firstFloorDoorOpen.has(number)?-Math.PI*.48:0;
+    const door=firstFloor.doors.find(d=>d.number===number);
+    // Left and right apartment leaves swing into their OWN rooms,
+    // never across the narrow communal landing.
+    const angle=controller.firstFloorDoorOpen.has(number)?
+      door.side*Math.PI*.48:0;
     pivot.rotation.y+=(angle-pivot.rotation.y)*(1-Math.exp(-12*dt));
   }
  actorPivot.position.set(state.x,state.y,state.z);
