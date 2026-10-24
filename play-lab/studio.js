@@ -99,7 +99,7 @@ export class DeveloperStudio{
     document.body.classList.toggle("game-mode",!lab);
     document.body.classList.toggle("lab-mode",lab);
     n.panel.hidden=!lab;
-    n.title.textContent=lab?"MINI CITY · Лаборатория игры":"MINI CITY";
+    n.title.textContent=lab?"MINI CITY · Лаборатория сцены":"MINI CITY";
     n.toggle.textContent=lab?"🎮 Перейти в игру":"🧪 Режим разработчика";
     n.toggle.setAttribute("aria-label",lab?
       "Перейти в игру без панели разработчика":
