@@ -292,6 +292,10 @@ for(const [id,direction] of [["free-up","up"],["free-down","down"]]){
   button.addEventListener(ev,()=>holdElevation[direction]=false);
 }
 $("free-reset").addEventListener("click",()=>freeCamera.reset());
+$("free-first-floor").addEventListener("click",()=>{
+ freeCamera.position={x:entry.x-4.60,y:firstFloor.y+1.60,z:2.45};
+ freeCamera.yaw=0;freeCamera.pitch=-.18;
+});
 $("free-landing").addEventListener("click",()=>{
   // Fifth-floor landing: inspect first real apartment 17.
   freeCamera.position={x:entry.x,y:entry.floorHeight(4)+1.55,z:-2.42};
