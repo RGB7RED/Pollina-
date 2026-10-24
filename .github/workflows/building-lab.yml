@@ -25,6 +25,7 @@ on:
       - feat/mini-city-v033-stage451-seamless-entry-door
       - feat/mini-city-v033-stage452-first-floor-foyer
       - feat/mini-city-v033-stage453-real-stairs-glazed-door
+      - feat/mini-city-v033-stage454-five-floors-apartment-doors
     paths:
       - 'building-lab/**'
       - 'bus-stop-lab/**'
@@ -93,6 +94,8 @@ jobs:
         run: node play-lab/test-foyer.mjs
       - name: Test stage 4.5.3 physical U stairs and transparent second-door window
         run: node play-lab/test-stairs.mjs
+      - name: Test stage 4.5.4 five actual levels, 20 doors, round-trip movement
+        run: node play-lab/test-five-floors.mjs
       - name: Test stage 4.1 first/third-person movement and house collisions
         run: node play-lab/test-controller.mjs
       - name: Check stage 4.1.1 model orientation and non-reversed swipe
