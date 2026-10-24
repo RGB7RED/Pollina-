@@ -9,12 +9,14 @@ export function planPlayableEntrance(building,pads){
   // The first floor and every complete-floor landing are at the BACK,
   // opposite the former door wall. Ascend forward on LEFT, then return
   // toward the BACK along RIGHT to the following complete-floor landing.
-  const stair={bottomZ:-1.58,turnZ:2.05,backZ:-3.38,frontZ:3.28,
+  const stair={bottomZ:-1.58,turnZ:2.05,backZ:-3.38,
+    firstFrontZ:3.28,frontZ:facade-.44,
     halfRise:building.floorHeight/2,steps:12};
   const stairHalf=2.08,aisleHalf=.64;
   if(p.width<2||insideEnd>=facade||corridorHalf>=p.width/2)
     throw Error("Entrance dimensions invalid");
-  const rect=(name,minX,maxX,minZ,maxZ)=>({name,minX,maxX,minZ,maxZ});
+  const rect=(name,minX,maxX,minZ,maxZ,minY=-Infinity,maxY=Infinity)=>
+    ({name,minX,maxX,minZ,maxZ,minY,maxY});
   const totalFloors=building.floors,storeyHeight=building.floorHeight;
   const firstFloor=.70,clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
   const nearestFloor=currentY=>clamp(
@@ -23,8 +25,10 @@ export function planPlayableEntrance(building,pads){
   // Full-width staircase with a real centre aisle (floor landing ->
   // front half-landing) and side flights. No phantom rooms through walls.
   const house=[
-    rect("entry-front-left",-halfX,x-corridorHalf,insideEnd,halfZ),
-    rect("entry-front-right",x+corridorHalf,halfX,insideEnd,halfZ),
+    rect("entry-front-left",-halfX,x-corridorHalf,insideEnd,halfZ,
+      -Infinity,firstFloor+storeyHeight),
+    rect("entry-front-right",x+corridorHalf,halfX,insideEnd,halfZ,
+      -Infinity,firstFloor+storeyHeight),
     rect("stair-left",-halfX,x-stairHalf,-halfZ,insideEnd),
     rect("stair-right",x+stairHalf,halfX,-halfZ,insideEnd),
     rect("stairwell-back",x-stairHalf,x+stairHalf,-halfZ,stair.backZ),
@@ -33,7 +37,19 @@ export function planPlayableEntrance(building,pads){
     rect("first-flight-rail-base",x-aisleHalf-.10,x-aisleHalf-.065,
       stair.bottomZ+.44,stair.turnZ-.38),
     rect("second-flight-rail-base",x+aisleHalf+.065,x+aisleHalf+.10,
-      stair.bottomZ+.44,stair.turnZ-.38)
+      stair.bottomZ+.44,stair.turnZ-.38),
+    // A ground-floor foyer and the wider U-stair occupy DIFFERENT
+    // height bands: never block upper landings with 2D vestibule walls.
+    rect("upper-front-left",-halfX,x-stairHalf,insideEnd,halfZ,
+      firstFloor+storeyHeight),
+    rect("upper-front-right",x+stairHalf,halfX,insideEnd,halfZ,
+      firstFloor+storeyHeight),
+    rect("existing-exterior-window-wall",x-stairHalf,x+stairHalf,
+      facade-.32,facade,firstFloor+storeyHeight),
+    // First half turn stops behind the foyer to preserve real headroom.
+    rect("first-turn-guard",x-stairHalf,x+stairHalf,
+      stair.firstFrontZ-.035,stair.firstFrontZ+.035,
+      firstFloor+stair.halfRise-.10,firstFloor+storeyHeight)
   ];
   // Preserve blocking porch geometry for entrances 2–4. The first porch
   // is walkable only through the central doorway approach.
@@ -66,13 +82,24 @@ export function planPlayableEntrance(building,pads){
     // world-space Y. The same X/Z staircase repeats at four distinct
     // storeys: a naive 2D height map would wrongly teleport to floor 1.
     groundHeight(px,z,currentY=0){
-      const width=z<insideEnd?stairHalf:corridorHalf;
+      const upper=currentY>=firstFloor+storeyHeight-.01;
+      const width=z<insideEnd||upper?stairHalf:corridorHalf;
       if(Math.abs(px-x)>width-.03)return 0;
       if(z>=10.65)return 0;
       if(z>=9.42)return (10.65-z)/(10.65-9.42)*.50;
       if(z>=7.10)return .50;
       if(z>=6.23)return .50+(7.10-z)/(7.10-6.23)*.20;
-      if(z>=insideEnd)return firstFloor;
+      if(z>=insideEnd){
+        if(!upper)return firstFloor;
+        // Higher return slabs are at half-storey levels, not at
+        // apartment-floor height or at the ground-floor foyer height.
+        const heights=[];
+        if(z<=stair.frontZ)for(let floor=1;floor<totalFloors-1;floor++)
+          heights.push(floorHeight(floor)+stair.halfRise);
+        if(!heights.length)return firstFloor;
+        return heights.reduce((best,y)=>
+          Math.abs(y-currentY)<Math.abs(best-currentY)?y:best);
+      }
       const candidates=[];
       for(let floor=0;floor<totalFloors;floor++){
         const base=floorHeight(floor);
@@ -82,7 +109,7 @@ export function planPlayableEntrance(building,pads){
           candidates.push(base);
         if(z<=stair.bottomZ)candidates.push(base);
         if(floor>=totalFloors-1)continue;
-        if(z>=stair.turnZ&&z<=stair.frontZ){
+        if(z>=stair.turnZ&&z<=(floor===0?stair.firstFrontZ:stair.frontZ)){
           // Genuine 180-degree turnaround at half the storey height.
           candidates.push(base+stair.halfRise);
         }else if(z>stair.bottomZ&&z<stair.turnZ){
@@ -103,8 +130,8 @@ export function planPlayableEntrance(building,pads){
       return candidates.reduce((best,y)=>
         Math.abs(y-currentY)<Math.abs(best-currentY)?y:best);
     },
-    isInside(px,z){
-      const width=z<insideEnd?stairHalf:corridorHalf;
+    isInside(px,z,y=0){
+      const width=z<insideEnd||y>=firstFloor+storeyHeight?stairHalf:corridorHalf;
       return Math.abs(px-x)<width&&z>=stair.backZ&&z<facade-.07;
     },
     canInteract(px,z){
@@ -114,9 +141,11 @@ export function planPlayableEntrance(building,pads){
       return Math.abs(px-x)<.95&&Math.abs(z-innerDoorZ)<1.15;
     },
     zone(px,z,y=0){
-      if(!this.isInside(px,z))return "street";
-      if(z>innerDoorZ)return "тамбур";
-      if(z>=insideEnd)return "площадка 1-го этажа";
+      if(!this.isInside(px,z,y))return "street";
+      if(z>innerDoorZ)return y>=firstFloor+storeyHeight?
+        "межэтажный разворот":"тамбур";
+      if(z>=insideEnd)return y>=firstFloor+storeyHeight?
+        "межэтажный разворот":"площадка 1-го этажа";
       const f=nearestFloor(y)+1;
       if(z<=stair.bottomZ)
         return "площадка "+f+"-го этажа · квартиры "+
