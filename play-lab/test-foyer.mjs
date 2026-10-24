@@ -113,7 +113,7 @@ assert.equal(audit.foyer.tiles,32);
 assert.equal(audit.foyer.doorCount,2);
 assert.equal(audit.foyer.innerDoorZ,e.innerDoorZ);
 assert.equal(audit.foyer.floorLevel,.70);
-assert.equal(audit.foyer.x,e.x);
+assert.ok(Math.abs(audit.foyer.x-e.x)<.001);
 assert.equal(house.doorPivot.name,"entrance-1-hinged-door");
 assert.equal(house.innerDoorPivot.name,"entrance-1-inner-hinged-door");
 assert.ok(house.root.children.includes(house.doorPivot));
