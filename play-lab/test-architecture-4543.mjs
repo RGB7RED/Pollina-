@@ -77,7 +77,7 @@ assert.ok(!house.root.children.filter(m=>m instanceof InstancedMesh)
 const pads=[-26.3625,-8.7875,8.7875,26.3625]
   .map(px=>({x:px,width:5.5,depth:3.15,centreZ:7.875}));
 const entry=planPlayableEntrance(BUILDING,pads);
-assert.equal(entry.buildingObstacles.length,18);
+assert.equal(entry.buildingObstacles.length,19);
 assert.equal(entry.stair.firstFrontZ,opposite.firstTurnEndZ);
 assert.equal(entry.stair.frontZ,opposite.upperTurnEndZ);
 assert.ok(!collidesAt(x+1.25,5.25,entry.buildingObstacles,PLAYER_RADIUS,.70),
