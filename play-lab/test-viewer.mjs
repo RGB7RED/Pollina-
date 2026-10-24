@@ -39,6 +39,11 @@ assert.match(js,/setEntryDoorOpen/);
 assert.match(js,/actorPivot.position.set\(state.x,state.y,state.z\)/);
 assert.match(js,/doorPivot.rotation.y/);
 assert.match(js,/function updateEntryAction/);
+assert.match(js,/innerDoorPivot.rotation.y/);
+assert.match(js,/controller.nearestDoor/);
+assert.match(js,/setInnerDoorOpen/);
+assert.match(js,/new THREE.PointLight/);
+assert.match(html,/внутренн/);
 assert.match(js,/studio.refreshCollisions/);
 assert.match(html,/id="hud-toggle"/);
 for(const id of ["mode-toggle","play-title","devtools","devtools-toggle",

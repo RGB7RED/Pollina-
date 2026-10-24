@@ -86,11 +86,18 @@ export function buildApartmentHouse(THREE,config={}){
     foundation:new THREE.MeshStandardMaterial({color:0x87847c,roughness:.98}),
     entryPad:new THREE.MeshStandardMaterial({color:0x898780,roughness:.98}),
     entryRamp:new THREE.MeshStandardMaterial({color:0x91918a,roughness:.96}),
+    foyerPaint:new THREE.MeshStandardMaterial({color:0xd0c9b1,roughness:.99}),
+    foyerLower:new THREE.MeshStandardMaterial({color:0x76978d,roughness:.98}),
+    foyerTile:new THREE.MeshStandardMaterial({color:0x9b9b94,roughness:.96}),
+    foyerTileAlt:new THREE.MeshStandardMaterial({color:0xaaa9a0,roughness:.96}),
+    foyerRubber:new THREE.MeshStandardMaterial({color:0x4a5050,roughness:1}),
+    foyerMailbox:new THREE.MeshStandardMaterial({color:0x7b8584,roughness:.72,metalness:.22}),
+    foyerDoor:new THREE.MeshStandardMaterial({color:0x777e79,roughness:.74}),
     vent:new THREE.MeshStandardMaterial({color:0x9ca3a1,roughness:.83}),
     ventDark:new THREE.MeshStandardMaterial({color:0x4b5656,roughness:.88})
   };
   const cube=new THREE.BoxGeometry(1,1,1), dummy=new THREE.Object3D();
-  let playableDoor=null;
+  let playableDoor=null,foyerDoor=null;
   const batches=new Map();
   const stats={windows:0,litWindows:0,balconies:0,entrances:0,chimneys:0,
     instancedElements:0,windowHoles:0,doorHoles:0,downpipes:0,airConditioners:0,
@@ -226,13 +233,94 @@ export function buildApartmentHouse(THREE,config={}){
         Math.atan2(.20,.87));
       const floorMid=(3.35+face)/2;
       box(1.70,.12,face-3.35,mats.foundation,x,.64,floorMid);
-      // Narrow whitewashed foyer walls, solid stop before stairwell
-      // construction in 4.5.3. They keep the character inside the facade.
-      for(const off of [-.91,.91])
-        box(.14,2.59,face-3.35,mats.reveal,x+off,2.045,floorMid);
+      // Stage 4.5.2: real, authored Khrushchev entrance in this SAME
+      // building volume. Split into a street-side vestibule and a small
+      // first-floor landing, joined by a second genuinely hinged door.
+      const innerZ=4.82;
+      const depth=face-3.35;
+      for(const off of [-.91,.91]){
+        box(.14,2.59,depth,mats.reveal,x+off,2.045,floorMid);
+        // Thin paint strips on the INSIDE of the structural wall:
+        // mint-green lower half, warm limewash upper half.
+        const inX=x+Math.sign(off)*.829;
+        box(.018,1.20,depth-.24,mats.foyerLower,inX,1.36,floorMid);
+        box(.018,1.22,depth-.24,mats.foyerPaint,inX,2.57,floorMid);
+        box(.039,.065,depth-.24,mats.frameWhite,inX,2.01,floorMid);
+        box(.045,.095,depth-.24,mats.frameWhite,inX,.795,floorMid);
+      }
+      // A solid terminal wall marks the future stairwell interface. A
+      // stair flight and landings will REPLACE it on stage 4.5.3.
       box(1.96,2.59,.16,mats.reveal,x,2.045,3.35);
-      box(1.96,.13,face-3.35,mats.foundation,x,3.41,floorMid);
-      box(.36,.035,.25,mats.litGlass,x,3.32,4.69);
+      box(1.70,1.20,.025,mats.foyerLower,x,1.36,3.447);
+      box(1.70,1.20,.025,mats.foyerPaint,x,2.57,3.447);
+      box(1.96,.13,depth,mats.foundation,x,3.41,floorMid);
+      // Individual stone slabs with tiny grouted gaps, batched by only
+      // two materials to preserve mobile draw-call and memory budgets.
+      let tiles=0;
+      for(let i=0;i<4;i++){
+        for(let j=0;j<8;j++){
+          const floorX=x+(i-1.5)*.405;
+          const floorZ=3.56+j*.365;
+          box(.395,.014,.355,
+            (i+j)%2?mats.foyerTile:mats.foyerTileAlt,
+            floorX,.710,floorZ);
+          tiles++;
+        }
+      }
+      // Anti-slip mat immediately behind the street door.
+      box(1.18,.016,.50,mats.foyerRubber,x,.72,5.69);
+      for(let i=-3;i<=3;i++)
+        box(.015,.018,.44,mats.ventDark,
+          x+i*.16,.737,5.69);
+      // Real inner doorway. Solid jambs and lintel leave a 1.42 m-wide
+      // void below the lintel; the pivot leaf swings into the landing.
+      for(const side of [-1,1]){
+        box(.135,2.30,.14,mats.frameWhite,
+          x+side*.777,1.86,innerZ);
+      }
+      box(1.69,.48,.14,mats.frameWhite,x,3.10,innerZ);
+      const inner=new THREE.Group();
+      inner.name="entrance-1-inner-hinged-door";
+      const innerWidth=1.39,innerHeight=2.13;
+      inner.position.set(x-innerWidth/2,.73,innerZ);
+      function doorPart(w,h,d,mat,px,py,pz){
+        const mesh=new THREE.Mesh(cube,mat);
+        mesh.scale.set(w,h,d);mesh.position.set(px,py,pz);
+        mesh.castShadow=true;mesh.receiveShadow=true;
+        inner.add(mesh);
+      }
+      doorPart(innerWidth,innerHeight,.067,mats.foyerDoor,
+        innerWidth/2,innerHeight/2,0);
+      doorPart(.77,.82,.079,mats.glass,
+        innerWidth*.51,innerHeight*.70,.045);
+      doorPart(.90,.045,.10,mats.frameGrey,
+        innerWidth*.51,innerHeight*.92,.053);
+      doorPart(.045,.16,.10,mats.vent,
+        innerWidth-.17,innerHeight*.44,.081);
+      root.add(inner);foyerDoor=inner;
+      // Twenty individual postal boxes: 5 columns x 4 rows (future
+      // flats 1–20), fixed to the landing-side right wall, not hovering
+      // in the character's walking corridor.
+      let mailboxes=0;
+      for(let row=0;row<4;row++)for(let col=0;col<5;col++){
+        const bz=3.60+col*.172,by=1.21+row*.205;
+        box(.075,.177,.162,mats.foyerMailbox,x+.781,by,bz);
+        box(.011,.028,.10,mats.ventDark,x+.734,by+.04,bz);
+        box(.013,.018,.028,mats.ventDark,x+.733,by-.042,bz+.045);
+        mailboxes++;
+      }
+      // A small notice board and illuminated overhead fixture: no heavy
+      // shadows or duplicate indoor scene are required.
+      box(.028,.46,.45,mats.ventDark,x-.798,1.89,3.99);
+      for(const offset of [-.12,.03,.16])
+        box(.032,.055,.32,mats.foyerPaint,x-.777,1.89+offset,3.99);
+      box(.39,.055,.39,mats.frameWhite,x,3.325,5.14);
+      box(.30,.037,.30,mats.litGlass,x,3.290,5.14);
+      audit.foyer={
+        x,outerZ:face-.19,innerDoorZ:innerZ,backZ:3.35,
+        floorLevel:.70,tiles,mailboxes,doorCount:2,
+        upperPaint:0xd0c9b1,lowerPaint:0x76978d
+      };
       // Pivot at the LEFT jamb. The door opens inward around its real
       // hinge, rotating into -Z; leaf and handle share the same pivot.
       const hinge=new THREE.Group();
@@ -448,5 +536,6 @@ export function buildApartmentHouse(THREE,config={}){
     stage:"3.2",config:C,counters:stats,roofTop,windowPlan:plan,
     geometryAudit:audit,provisionalMaterials:true,facadeTextureReady:false
   };
-  return {root,config:C,stats,roofTop,doorPivot:playableDoor};
+  return {root,config:C,stats,roofTop,doorPivot:playableDoor,
+    innerDoorPivot:foyerDoor};
 }

@@ -25,10 +25,17 @@ export function planPlayableEntrance(building,pads){
     }else porch.push(rect("entry-"+(i+1),l,r,front,back));
   });
   const door=rect("entrance-1-closed-door",x-.72,x+.72,facade-.28,facade+.14);
+  // Second door separates the cold street-side vestibule from the warm
+  // first-floor landing. Its geometry and Z coordinate are IDENTICAL to
+  // the actual pivot created in building-lab/building.js.
+  const innerDoorZ=4.82;
+  const innerDoor=rect("entrance-1-inner-closed-door",x-.695,x+.695,
+    innerDoorZ-.13,innerDoorZ+.13);
   const inside={minX:x-corridorHalf,maxX:x+corridorHalf,
     minZ:insideEnd,maxZ:facade};
   const entry={
-    index:0,x,facade,insideEnd,corridorHalf,door,inside,
+    index:0,x,facade,insideEnd,corridorHalf,door,innerDoor,
+    innerDoorZ,inside,
     buildingObstacles:[...house,...porch],
     // Same continuous world coordinate from sidewalk through the first
     // porch and threshold into the indoor vestibule; no teleport/scene swap.
@@ -46,6 +53,13 @@ export function planPlayableEntrance(building,pads){
     },
     canInteract(px,z){
       return Math.hypot(px-x,z-(facade-.12))<2.35;
+    },
+    canInteractInner(px,z){
+      return Math.abs(px-x)<.95&&Math.abs(z-innerDoorZ)<1.15;
+    },
+    zone(px,z){
+      if(!this.isInside(px,z))return "street";
+      return z>innerDoorZ?"тамбур":"площадка 1-го этажа";
     }
   };
   return entry;

@@ -23,6 +23,7 @@ on:
       - feat/mini-city-v033-stage44-five-tree-variants
       - fix/mini-city-v033-stage441-hidden-tree-branches
       - feat/mini-city-v033-stage451-seamless-entry-door
+      - feat/mini-city-v033-stage452-first-floor-foyer
     paths:
       - 'building-lab/**'
       - 'bus-stop-lab/**'
@@ -87,6 +88,8 @@ jobs:
           node object-viewer/test-free-flight.mjs
       - name: Test stage 4.5.1 physical first entrance, swinging door and continuous movement
         run: node play-lab/test-entrance.mjs
+      - name: Test stage 4.5.2 two swing doors, mailboxes, ground-floor landing and continuous movement
+        run: node play-lab/test-foyer.mjs
       - name: Test stage 4.1 first/third-person movement and house collisions
         run: node play-lab/test-controller.mjs
       - name: Check stage 4.1.1 model orientation and non-reversed swipe

@@ -129,7 +129,7 @@ assert.equal(out.stats.roofs,1);
 assert.equal(out.root.children.length,sourceNodes);
 assert.equal(out.root.children.filter(m=>m.name==="masonry_world_baked").length,2);
 assert.equal(out.root.children.filter(m=>m.isInstancedMesh).length,
- sourceNodes-4,"brick replaced, roof and the real hinged-door group preserved");
+ sourceNodes-5,"brick replaced, roof and both hinged-door groups preserved");
 for(const m of out.root.children.filter(m=>m.name==="masonry_world_baked")){
  const uv=m.geometry.getAttribute("uv");
  const pos=m.geometry.getAttribute("position");
