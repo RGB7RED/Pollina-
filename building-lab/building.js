@@ -250,12 +250,12 @@ export function buildApartmentHouse(THREE,config={}){
       const innerZ=4.82;
       const depth=face-3.35;
       for(const off of [-.91,.91]){
-        box(.14,2.59,depth,mats.reveal,x+off,2.045,floorMid);
+        box(.14,2.39,depth,mats.reveal,x+off,1.945,floorMid);
         // Thin paint strips on the INSIDE of the structural wall:
         // mint-green lower half, warm limewash upper half.
         const inX=x+Math.sign(off)*.829;
         box(.018,1.20,depth-.24,mats.foyerLower,inX,1.36,floorMid);
-        box(.018,1.22,depth-.24,mats.foyerPaint,inX,2.57,floorMid);
+        box(.018,1.18,depth-.24,mats.foyerPaint,inX,2.54,floorMid);
         box(.039,.065,depth-.24,mats.frameWhite,inX,2.01,floorMid);
         box(.045,.095,depth-.24,mats.frameWhite,inX,.795,floorMid);
       }
@@ -332,9 +332,9 @@ export function buildApartmentHouse(THREE,config={}){
         box(.37,.056,.35,mats.frameWhite,x,level+2.47,rearWallZ+.70);
         box(.28,.035,.24,mats.litGlass,x,level+2.44,rearWallZ+.70);
         if(floor===C.floors-1)continue;
-        // Lower turnaround cannot overhang the active foyer at y=2.09:
-        // 0.70 m floor + 1.82 m person must retain headroom. Higher
-        // returns extend to the true exterior masonry's INNER face.
+        // With the first apartment floor moved to 2.09m, its half-turn
+        // is at 3.30m: clearance above the .70m foyer is now 2.44m.
+        // All returns may reach the existing facade without obstruction.
         const turnEndZ=frontZ;
         box(stairHalfWidth*2-.18,.16,turnEndZ-halfLandingZ,
           mats.foyerTileAlt,x,level+rise-.08,
@@ -379,7 +379,7 @@ export function buildApartmentHouse(THREE,config={}){
             box(.065,.94,.065,railMat,x+off,level+.47,rearLandingEndZ+.02);
         }
         stairway.push({fromFloor:floor+1,toFloor:floor+2,
-          bottom:level,mid:level+rise,top:level+C.floorHeight,
+          bottom:level,mid:level+rise,top:level+storeyRise,
           steps:stepsPerFlight*2,returnEndZ:turnEndZ});
       }
       // Also protect the fifth-storey central shaft edge.
