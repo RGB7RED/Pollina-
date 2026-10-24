@@ -65,7 +65,6 @@ assert.ok(collidesAt(pads[1].x,5,c.obstacles),
   "other three entrances are unchanged");
 
 // The real house facade and the furnished first-floor foyer share a root.
- and the furnished first-floor foyer share a root.
 class Vector{
  constructor(){this.x=0;this.y=0;this.z=0;}
  set(x,y,z){Object.assign(this,{x,y,z});}
