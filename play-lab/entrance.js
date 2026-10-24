@@ -28,7 +28,7 @@ export function planPlayableEntrance(building,pads){
     rect("apartment-corridor-end",corridor.endX,halfX,corridor.minZ,insideEnd),
     rect("stairwell-back",x-stairHalf,x+stairHalf,-halfZ,stair.backZ),
     rect("stair-center-divider",x-.02,x+.02,stair.turnZ+.12,
-      stair.bottomZ-.36)
+      stair.bottomZ-.65)
   ];
   // Preserve blocking porch geometry for entrances 2–4. The first porch
   // is walkable only through the central doorway approach.
