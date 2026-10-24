@@ -72,14 +72,15 @@ const api=new Function("document","window","fetch","console","URL",
  validateCatalog,filterCatalog,catalogCounts,catalogFolders,folderObjects,modelLabel);
 await new Promise(resolve=>setTimeout(resolve,0));
 assert.equal(requestCount,1);
-assert.equal(nodes["metric-total"].textContent,13);
-assert.equal(nodes["folder-list"].children.length,5);
+assert.equal(nodes["metric-total"].textContent,28);
+assert.equal(nodes["folder-list"].children.length,10);
 assert.equal(nodes["folder-section"].hidden,false);
 assert.equal(nodes["object-section"].hidden,true,
  "catalog first displays folders, not flat model cards");
 assert.equal(nodes["catalog-list"].children.length,0);
 const categories=nodes["folder-list"].children.map(c=>c.dataset.category);
-assert.deepEqual(categories,["building","character","environment","nature","street_furniture"]);
+assert.deepEqual(categories,["building","character","environment","nature","street_furniture",
+ "door","window","heating","lighting","utility"]);
 const characters=nodes["folder-list"].children.find(c=>c.dataset.category==="character");
 assert.match(characters.children[1].children[1].textContent,/2 модели/);
 characters.fire("click");
@@ -157,6 +158,6 @@ assert.match(nodes["catalog-error-text"].textContent,/503/);
 httpError=false;
 await nodes["catalog-retry"].fire("click");
 assert.equal(nodes["catalog-error"].hidden,true);
-assert.equal(nodes["folder-list"].children.length,5);
+assert.equal(nodes["folder-list"].children.length,10);
 assert.equal(nodes["object-section"].hidden,true);
 console.log("MINI CITY 4.2.4 folder DOM PASS: 5 folders, 13 numbered models, search, back, deep links, distinct designs and retry");
