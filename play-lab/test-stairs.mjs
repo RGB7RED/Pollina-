@@ -13,13 +13,14 @@ const pads=[-26.3625,-8.7875,8.7875,26.3625].map(x=>({
  x,width:5.5,depth:3.15,centreZ:7.875
 }));
 const e=planPlayableEntrance(BUILDING,pads),x=e.x;
-assert.equal(e.buildingObstacles.length,12);
+assert.equal(e.buildingObstacles.length,16);
 assert.equal(e.stair.steps,12);
 assert.equal(e.stair.halfRise,BUILDING.floorHeight/2);
 assert.equal(e.stair.bottomZ,-1.58);
 assert.equal(e.stair.turnZ,2.05);
 assert.equal(e.stair.backZ,-3.38);
-assert.equal(e.stair.frontZ,3.28);
+assert.equal(e.stair.firstFrontZ,3.28);
+assert.equal(e.stair.frontZ,BUILDING.width/2-.44);
 assert.ok(e.stair.bottomZ-e.stair.backZ>=1.75,
  "opposite end landing is physically deeper");
 assert.ok(e.stair.frontZ-e.stair.turnZ>=1.20,

@@ -89,7 +89,7 @@ assert.ok(root.userData.provisionalMaterials);
 assert.equal(root.userData.facadeTextureReady,false);
 const meshes=root.children.filter(c=>c instanceof Mesh);
 const instances=meshes.filter(c=>c instanceof InstancedMesh);
-assert.ok(instances.length>=17 && instances.length<=32,"mobile batch budget");
+assert.ok(instances.length>=17 && instances.length<=33,"mobile batch budget (one transparent window batch)");
 assert.ok(instances.every(m=>m.sphereDone&&m.count===m.matrices.length));
 const landingMeshes=instances.filter(m=>m.material.color===0x898780);
 assert.equal(landingMeshes.length,1,"landing uses a single instanced material batch");

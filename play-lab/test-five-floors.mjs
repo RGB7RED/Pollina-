@@ -12,7 +12,7 @@ const pads=[-26.3625,-8.7875,8.7875,26.3625].map(x=>({
  x,width:5.5,depth:3.15,centreZ:7.875
 }));
 const entry=planPlayableEntrance(BUILDING,pads),x=entry.x;
-assert.equal(entry.buildingObstacles.length,12);
+assert.equal(entry.buildingObstacles.length,16);
 assert.equal(entry.totalFloors,5);
 assert.equal(entry.stair.steps,12);
 assert.equal(entry.stair.turnZ,2.05);
@@ -55,7 +55,7 @@ for(let floor=1;floor<5;floor++){
  go(-1,0,70);assert.ok(player.position.x<x-1.1);
  go(0,-1,150);
  at(.70+(floor-.5)*BUILDING.floorHeight,"front half landing "+floor);
- assert.ok(player.position.z>entry.stair.frontZ-.45);
+ assert.ok(player.position.z>(floor===1?entry.stair.firstFrontZ:entry.stair.frontZ)-.55);
  go(1,0,90);assert.ok(player.position.x>x+1.1);
  go(0,1,150);
  at(.70+floor*BUILDING.floorHeight,"rear floor "+(floor+1));
@@ -137,5 +137,5 @@ for(let f=1;f<=5;f++){
 const glass=house.innerDoorPivot.children.filter(m=>m.material.transparent);
 assert.equal(glass.length,1,"accepted transparent interior door intact");
 const instanced=house.root.children.filter(o=>o instanceof InstancedMesh);
-assert.ok(instanced.length<=32,"mobile batching maintained");
+assert.ok(instanced.length<=33,"one dedicated batch for real transparent stairwell glass");
 console.log("MINI CITY 4.5.4.2 PASS: 4 reversed U climbs & descents, 20 opposite-end doors, deep landing, 3-level rails and posts");

@@ -107,7 +107,7 @@ export function buildApartmentHouse(THREE,config={}){
     instancedElements:0,windowHoles:0,doorHoles:0,downpipes:0,airConditioners:0,
     balconyKinds:{A:0,B:0,C:0,D:0}};
   const audit={holes:[],wallPieces:[],windowGlazing:[],windowTypes:new Set(),doorPositions:[],
-    entryPads:[],downpipePositions:[],balconyPositions:[],originalFootprint:{length:C.length,width:C.width}};
+    entryPads:[],downpipePositions:[],balconyPositions:[],stairwellWindows:[],originalFootprint:{length:C.length,width:C.width}};
   function box(w,h,d,material,x,y,z,rx=0,ry=0,rz=0){
     if(w<=0||h<=0||d<=0)throw Error("Invalid architectural box dimensions");
     let transforms=batches.get(material);
@@ -139,7 +139,29 @@ export function buildApartmentHouse(THREE,config={}){
     wallStrip(axis,side,u0,left,y0,y1,material);
     wallStrip(axis,side,right,u1,y0,y1,material);
     wallStrip(axis,side,left,right,y0,bottom,material);
-    wallStrip(axis,side,left,right,top,y1,material);
+    // Real transom: remove brick from the FIRST doorway's lintel.
+    const firstX=-C.length/2+1.85+(ENTRANCE_BAYS[0]+.5)*
+      ((C.length-3.7)/C.windowBays);
+    const firstDoor=kind==="door"&&axis==="long"&&side===1&&
+      Math.abs(centre-firstX)<.001;
+    if(firstDoor){
+      const low=top+.075,high=y1-.075,tw=1.18;
+      const from=centre-tw/2,to=centre+tw/2,py=(low+high)/2;
+      wallStrip(axis,side,left,right,top,low,material);
+      wallStrip(axis,side,left,from,low,high,material);
+      wallStrip(axis,side,to,right,low,high,material);
+      wallStrip(axis,side,left,right,high,y1,material);
+      const face=C.width/2;
+      wallBox(axis,tw-.085,high-low-.045,.024,
+        mats.foyerWindowGlass,centre,py,face-.235);
+      for(const u of [from+.027,to-.027])
+        wallBox(axis,.054,high-low,.12,mats.frameWhite,u,py,face-.17);
+      for(const v of [low+.023,high-.023])
+        wallBox(axis,tw,.045,.12,mats.frameWhite,centre,v,face-.17);
+      audit.stairwellWindows.push({floor:0,centreX:centre,bottom:low,top:high,
+        width:tw,wallZ:face-.16,through:true,transparent:true,
+        type:"entrance-transom"});
+    }else wallStrip(axis,side,left,right,top,y1,material);
     audit.holes.push({axis,side,centre,width:openingWidth,bottom,top,kind});
     if(kind==="door")stats.doorHoles++;else stats.windowHoles++;
     // Thin inner reveal lining follows the solid jamb, lintel and sill,
@@ -152,11 +174,12 @@ export function buildApartmentHouse(THREE,config={}){
     wallBox(axis,openingWidth,lining,.17,mats.reveal,centre,bottom+lining/2,recess);
     return {axis,side,centre,width:openingWidth,bottom,top,height,kind};
   }
-  function windowDetail(hole,variation,isBalcony=false){
+  function windowDetail(hole,variation,isBalcony=false,isStairWindow=false){
     const {axis,side,centre,width,bottom,top,height}=hole;
     const facadeExtent=(axis==="long"?C.width:C.length)/2;
     const frameMat=[mats.frame,mats.frameWhite,mats.frameGrey][variation%3];
-    const glassMat=(variation%5===0||variation%7===3)?mats.litGlass:mats.glass;
+    const glassMat=isStairWindow?mats.foyerWindowGlass:
+      (variation%5===0||variation%7===3)?mats.litGlass:mats.glass;
     const depth=side*(facadeExtent-.17);
     const innerW=width-.16,innerH=height-.17,centreY=(bottom+top)/2;
     // A single opaque glazed surface is INSIDE the perforated wall, not on it.
@@ -187,6 +210,11 @@ export function buildApartmentHouse(THREE,config={}){
     if(glassMat===mats.litGlass)stats.litWindows++;
     audit.windowGlazing.push({axis,side,opening:hole,frontDepth:facadeExtent-.17,
       glassDepth:facadeExtent-.235});
+    if(isStairWindow)audit.stairwellWindows.push({
+      floor:Math.round((bottom-C.plinth-.695)/C.floorHeight),
+      centreX:centre,bottom,top,width,wallZ:side*(facadeExtent-.16),
+      through:true,transparent:glassMat.transparent===true,type:"facade-bay"
+    });
   }
   function entranceDetail(hole,index){
     const x=hole.centre,side=1,face=C.width/2;
@@ -207,7 +235,8 @@ export function buildApartmentHouse(THREE,config={}){
     }
     box(.17,.33,.095,mats.ventDark,x+hole.width/2+.20,1.58,face+.08);
     box(.095,.04,.10,mats.vent,x+hole.width/2+.20,1.60,face+.13);
-    box(.43,.24,.08,mats.frameWhite,x,hole.top+.16,face+.055); // entrance number
+    box(.43,.24,.08,mats.frameWhite,
+      x+(index===0?1.0:0),hole.top+.16,face+.055); // entrance number
     // Replace all three stair boxes with ONE level, car-sized forecourt.
     // A ~4.7 x 1.9 m car fits parallel to the front wall on this 5.5 x 3.15 m pad.
     // Its top is 20 cm below the entrance threshold; the monolithic slab
@@ -260,7 +289,8 @@ export function buildApartmentHouse(THREE,config={}){
       // forward along LEFT flight to front intermediate landing; turn
       // RIGHT; climb back along RIGHT flight to next full-floor rear landing.
       const rearWallZ=-3.38,rearLandingEndZ=-1.58;
-      const halfLandingZ=2.05,frontZ=3.28;
+      const halfLandingZ=2.05,firstFrontZ=3.28;
+      const facadeInnerZ=C.width/2-wallDepth,frontZ=facadeInnerZ-.12;
       const rise=C.floorHeight/2,stepsPerFlight=12;
       const run=halfLandingZ-rearLandingEndZ,runStep=run/stepsPerFlight;
       const firstX=x-1.34,secondX=x+1.34,baseFloor=.70;
@@ -270,11 +300,11 @@ export function buildApartmentHouse(THREE,config={}){
       // between flights to reach the rear floor-1 apartment doors.
       for(const side of [-1,1]){
         const wX=x+side*stairHalfWidth;
-        box(.14,stairHeight,frontZ-rearWallZ,mats.reveal,
-          wX,baseFloor+stairHeight/2,(frontZ+rearWallZ)/2);
-        box(.019,stairHeight-.20,frontZ-rearWallZ-.12,mats.foyerPaint,
+        box(.14,stairHeight,facadeInnerZ-rearWallZ,mats.reveal,
+          wX,baseFloor+stairHeight/2,(facadeInnerZ+rearWallZ)/2);
+        box(.019,stairHeight-.20,facadeInnerZ-rearWallZ-.12,mats.foyerPaint,
           wX-side*.084,baseFloor+(stairHeight-.20)/2,
-          (frontZ+rearWallZ)/2);
+          (facadeInnerZ+rearWallZ)/2);
       }
       box(stairHalfWidth*2+.14,stairHeight,.14,mats.reveal,x,
         baseFloor+stairHeight/2,rearWallZ);
@@ -292,17 +322,20 @@ export function buildApartmentHouse(THREE,config={}){
         box(stairHalfWidth*2-.18,.16,
           rearLandingEndZ-rearWallZ-.10,mats.foyerTileAlt,
           x,level-.08,(rearLandingEndZ+rearWallZ)/2);
-        // Permanent central approach under every flight; 1.28 m wide.
-        box(1.28,.16,frontZ-rearLandingEndZ,mats.foyerTileAlt,
-          x,level-.08,(frontZ+rearLandingEndZ)/2);
+        // Only the first floor needs a centre approach from the foyer.
+        // Four copies at floors 2–5 formed incorrect floating slabs.
+        if(floor===0)box(1.28,.16,firstFrontZ-rearLandingEndZ,
+          mats.foyerTileAlt,x,level-.08,(firstFrontZ+rearLandingEndZ)/2);
         box(.37,.056,.35,mats.frameWhite,x,level+2.47,rearWallZ+.70);
         box(.28,.035,.24,mats.litGlass,x,level+2.44,rearWallZ+.70);
         if(floor===C.floors-1)continue;
-        // The half-storey turnaround is now at FRONT and not the
-        // apartment-door end. Headroom of the vestibule is unchanged.
-        box(stairHalfWidth*2-.18,.16,frontZ-halfLandingZ,
+        // Lower turnaround cannot overhang the active foyer at y=2.09:
+        // 0.70 m floor + 1.82 m person must retain headroom. Higher
+        // returns extend to the true exterior masonry's INNER face.
+        const turnEndZ=floor===0?firstFrontZ:frontZ;
+        box(stairHalfWidth*2-.18,.16,turnEndZ-halfLandingZ,
           mats.foyerTileAlt,x,level+rise-.08,
-          (frontZ+halfLandingZ)/2);
+          (turnEndZ+halfLandingZ)/2);
         for(let i=0;i<stepsPerFlight;i++){
           const zL=rearLandingEndZ+(i+.5)*runStep;
           const zR=halfLandingZ-(i+.5)*runStep;
@@ -340,16 +373,27 @@ export function buildApartmentHouse(THREE,config={}){
         for(const sign of [-1,1]){
           const rx=x+sign*(stairHalfWidth-.16);
           for(const h of [.47,.94])
-            box(.085,.075,frontZ-halfLandingZ-.10,railMat,
-              rx,level+rise+h,(frontZ+halfLandingZ)/2);
+            box(.085,.075,turnEndZ-halfLandingZ-.10,railMat,
+              rx,level+rise+h,(turnEndZ+halfLandingZ)/2);
           for(let k=0;k<=3;k++){
-            const postZ=halfLandingZ+.14+k*(frontZ-halfLandingZ-.28)/3;
+            const postZ=halfLandingZ+.14+k*(turnEndZ-halfLandingZ-.28)/3;
             box(.072,.94,.072,railMat,rx,level+rise+.47,postZ);
           }
         }
+        // The first return stops before the ground-floor foyer. Put a
+        // VISIBLE guard along its exposed edge to match the 3D collision.
+        if(floor===0){
+          const guardZ=firstFrontZ-.055;
+          box(stairHalfWidth*2-.20,.075,.075,railMat,
+            x,level+rise+.94,guardZ);
+          for(let k=0;k<=6;k++)
+            box(.070,.94,.070,railMat,
+              x-stairHalfWidth+.12+k*(2*stairHalfWidth-.24)/6,
+              level+rise+.47,guardZ);
+        }
         stairway.push({fromFloor:floor+1,toFloor:floor+2,
           bottom:level,mid:level+rise,top:level+C.floorHeight,
-          steps:stepsPerFlight*2});
+          steps:stepsPerFlight*2,returnEndZ:turnEndZ});
       }
       // Four doors in the OPPOSITE rear landing: two at centre rear
       // wall, and one each on the two SIDE walls. No extra room.
@@ -442,10 +486,15 @@ export function buildApartmentHouse(THREE,config={}){
         landing:{centreX:x,minX:x-stairHalfWidth,maxX:x+stairHalfWidth,
           minZ:rearWallZ,maxZ:rearLandingEndZ,doorsPerFloor:4,
           depth:rearLandingEndZ-rearWallZ},
+        opposite:{firstTurnEndZ:firstFrontZ,upperTurnEndZ:frontZ,
+          facadeInnerZ,facadeOuterZ:C.width/2,
+          upperTurnDepth:frontZ-halfLandingZ,openCentreFloors:[2,3,4,5],
+          originalFirstTurnPreservedForFoyerClearance:true},
         railing,
         liftCount:0
       };
-      box(1.96,.13,depth,mats.foundation,x,3.41,floorMid);
+      // Removed former full-width y=3.41 foyer ceiling slab: it occluded
+      // the vertical stair void / first transom and was not load-bearing.
       // Individual stone slabs with tiny grouted gaps, batched by only
       // two materials to preserve mobile draw-call and memory budgets.
       let tiles=0;
@@ -652,7 +701,8 @@ export function buildApartmentHouse(THREE,config={}){
       centre,openingWidth,low,height,mats.brick,isDoor?"door":"window");
     if(isDoor)entranceDetail(hole,ENTRANCE_BAYS.indexOf(w.bay));
     else {
-      windowDetail(hole,w.variation,balcony);
+      windowDetail(hole,w.variation,balcony,
+        side===1&&w.bay===ENTRANCE_BAYS[0]&&w.floor>=1&&w.floor<=3);
       if(balcony)balconyDetail(w);
     }
   }
