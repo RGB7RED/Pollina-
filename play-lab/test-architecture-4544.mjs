@@ -81,7 +81,7 @@ assert.equal(new Set(treads.map(t=>t.position.y.toFixed(4))).size,24);
 const transverse=instances.filter(t=>Math.abs(t.scale.x-.36)<eps&&
   Math.abs(t.scale.y-.08)<eps&&Math.abs(t.scale.z-.075)<eps&&
   Math.abs(t.position.x-x)<eps);
-assert.equal(transverse.length,4,"four connectors between inner flight guards");
+assert.equal(transverse.length,3,"three full-floor inner shaft connectors; fifth has longer wall rail");
 assert.equal(instances.filter(t=>Math.abs(t.scale.x-1.28)<eps&&t.scale.z>4).length,0,
   "no phantom central elevated slab");
 const railPieces=instances.filter(t=>t.color===0x646f72&&
