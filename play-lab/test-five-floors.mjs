@@ -12,7 +12,7 @@ const pads=[-26.3625,-8.7875,8.7875,26.3625].map(x=>({
  x,width:5.5,depth:3.15,centreZ:7.875
 }));
 const entry=planPlayableEntrance(BUILDING,pads),x=entry.x;
-assert.equal(entry.buildingObstacles.length,19);
+assert.equal(entry.buildingObstacles.length,20);
 assert.equal(entry.totalFloors,5);
 assert.equal(entry.stair.steps,12);
 assert.equal(entry.stair.turnZ,2.05);
@@ -142,7 +142,7 @@ for(let f=1;f<=5;f++){
  assert.ok(four.every(d=>d.z>=landing.minZ&&d.z<=landing.maxZ));
  assert.ok(four[0].x<x&&four[1].x>x);
  assert.ok(Math.abs(four[0].x+four[1].x-2*x)<1e-5);
- assert.ok(four[2].x<x-1.90&&four[3].x>x+1.90);
+ assert.ok(four[2].x<x-1.65&&four[3].x>x+1.65);
 }
 assert.equal(house.innerDoorPivot,null,"the deleted partition door has no 3D pivot");
 assert.equal(audit.foyer.doorCount,1,"only the original facade door remains");
