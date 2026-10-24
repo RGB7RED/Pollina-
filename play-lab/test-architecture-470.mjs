@@ -82,6 +82,7 @@ assert.ok(p.position.x>plan.doors[2].x+.52,
 assert.equal(p.position.y,plan.y);
 assert.ok(entry.isInside(p.position.x,p.position.z,p.position.y));
 assert.ok(p.firstFloorDoorOpen.has(3));
+go(0,-1,18); // move away from the swing arc before closing
 assert.equal(p.setFirstFloorDoorOpen(3,false),true,
  "door can close safely once avatar clears the opening");
 p.reset();
