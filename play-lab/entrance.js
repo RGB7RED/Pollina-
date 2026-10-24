@@ -4,7 +4,7 @@ export function planPlayableEntrance(building,pads){
   if(!building||!pads?.length)throw Error("Entrance requires real building and porch");
   const p=pads[0],x=p.x,facade=building.width/2;
   const halfX=building.length/2,halfZ=facade;
-  const doorHalf=.81,insideEnd=3.35,foyerHalf=2.08;
+  const doorHalf=.81,insideEnd=3.35,foyerHalf=1.74;
   // U-stair follows the true stair mesh in building-lab/building.js.
   // The first floor and every complete-floor landing are at the BACK,
   // opposite the former door wall. Ascend forward on LEFT, then return
@@ -14,9 +14,9 @@ export function planPlayableEntrance(building,pads){
     frontZ:facade-.44,firstFrontZ:facade-.44,
     entryStartZ:3.35,entryRise:1.39,halfRise:storeyHeight/2,
     steps:12,entrySteps:12,firstFloor,foyerFloor,storeyHeight,
-    firstX:x-1.31,secondX:x+1.31,entryX:x+1.31,
+    firstX:x-.97,secondX:x+.97,entryX:x+.97,
     entryWidth:1.58,flightWidth:1.58};
-  const stairHalf=2.18,aisleHalf=.50,upperTurnY=firstFloor+stair.halfRise;
+  const stairHalf=1.84,aisleHalf=.16,upperTurnY=firstFloor+stair.halfRise;
   if(p.width<2||insideEnd>=facade||foyerHalf>=p.width/2)
     throw Error("Entrance dimensions invalid");
   const rect=(name,minX,maxX,minZ,maxZ,minY=-Infinity,maxY=Infinity)=>
@@ -25,7 +25,8 @@ export function planPlayableEntrance(building,pads){
   const nearestFloor=currentY=>clamp(
     Math.round((currentY-firstFloor)/storeyHeight),0,totalFloors-1);
   const floorHeight=i=>firstFloor+i*storeyHeight;
-  // Lower entrance is now one 4.16m-wide room. Exterior facade
+  // The lower room is 3.48m wide inside the same unmodified facade.
+  // Side walls now hide the neighbouring apartment-bay windows. Exterior facade
   // remains perforated by only the EXISTING original 1.71m doorway.
   // Never leave a walk-through hole in the neighbouring facade brick.
   const house=[
@@ -37,25 +38,31 @@ export function planPlayableEntrance(building,pads){
     rect("facade-right-jamb",x+doorHalf,x+stairHalf,facade-.30,facade+.02,
       -Infinity,upperTurnY-.10),
     // Flight guards are on the open INNER sides only, never on walls.
-    rect("left-inner-flight-guard",x-.55,x-.49,
+    rect("left-inner-flight-guard",x-.22,x-.14,
       stair.bottomZ+.10,stair.turnZ-.10,firstFloor),
-    rect("right-inner-flight-guard",x+.49,x+.55,
+    rect("right-inner-flight-guard",x+.14,x+.22,
       stair.bottomZ+.10,stair.turnZ-.10,firstFloor),
-    rect("entry-flight-inner-guard",x+.51,x+.58,
+    rect("entry-flight-inner-guard",x+.14,x+.22,
       stair.bottomZ+.10,stair.entryStartZ-.10,
       foyerFloor,firstFloor+.15),
     rect("exterior-window-wall",x-stairHalf,x+stairHalf,
       facade-.32,facade,upperTurnY-.10),
-    rect("upper-shaft-rear-guard",x-.52,x+.52,
+    rect("upper-shaft-rear-guard",x-.22,x+.22,
       stair.bottomZ-.035,stair.bottomZ+.035,
       firstFloor+storeyHeight-.12),
     // Each front turnaround has a connected cross-rail above the void.
     ...Array.from({length:totalFloors-1},(_,floor)=>{
       const landingY=firstFloor+floor*storeyHeight+stair.halfRise;
       return rect("window-side-guard-"+(floor+1),
-        x-.53,x+.53,stair.turnZ-.09,stair.turnZ+.03,
+        x-.22,x+.22,stair.turnZ-.09,stair.turnZ+.03,
         landingY-.10,landingY+1.02);
-    })
+    }),
+    // Last apartment landing: railing extends from the LEFT wall to
+    // the right-hand inner rail, but keeps the arrival on RIGHT open.
+    rect("fifth-floor-wall-connected-rail",
+      x-stairHalf+.12,x+.18,
+      stair.bottomZ-.035,stair.bottomZ+.055,
+      firstFloor+4*storeyHeight-.10,firstFloor+4*storeyHeight+1.02)
   ];
   // Preserve blocking porch geometry for entrances 2–4. The first porch
   // is walkable only through the central doorway approach.
