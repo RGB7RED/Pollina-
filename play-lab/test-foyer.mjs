@@ -45,7 +45,8 @@ assert.equal(c.position.y,.70);
 assert.ok(c.isInsideEntrance());
 assert.equal(e.zone(c.position.x,c.position.z),"просторный тамбур");
 walk(1,0,18);
-assert.ok(Math.abs(c.position.x-e.stair.entryX)<.2);
+assert.ok(Math.abs(c.position.x-e.stair.entryX)<e.stair.entryWidth/2-.05,
+  "avatar stands on the widened right entrance flight");
 walk(0,1,155);
 assert.equal(c.position.y,e.stair.firstFloor,
   "first apartment floor is reached by a genuine RIGHT-hand stair");
