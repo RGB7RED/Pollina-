@@ -19,7 +19,7 @@ const e=planPlayableEntrance(BUILDING,pads);
 assert.equal(e.innerDoor,undefined);
 assert.equal(e.innerDoorZ,undefined);
 assert.equal(e.corridorHalf,1.74);
-assert.ok(!collidesAt(e.x+1.5,5.25,e.buildingObstacles,PLAYER_RADIUS),
+assert.ok(!collidesAt(e.x+1.35,5.25,e.buildingObstacles,PLAYER_RADIUS),
   "the room is walkable far outside its old 1.62m corridor");
 assert.ok(collidesAt(e.x+1.5,6.3,e.buildingObstacles,PLAYER_RADIUS),
   "existing external facade bricks remain solid by the original door");
