@@ -93,10 +93,14 @@ export class PlayerController{
     this.spawn={...this.position};
     this.entryDoorOpen=false;
     this.doorBlocker=entry?.door||null;
+    this.apartment=entry?.apartment||null;
+    this.apartmentDoorOpen=false;
+    this.apartmentDoorBlocker=this.apartment?.doorBlocker||null;
     // Older controllers keep the original whole-house collider. The game
     // opts into the exact first-entry corridor without changing other doors.
     this.obstacles=[...(entry?entry.buildingObstacles:facadeObstacles(building,pads)),
       ...(entry?[entry.door]:[]),
+      ...(this.apartment?[this.apartmentDoorBlocker]:[]),
       ...extras.map(o=>({...o}))];
     if(collidesAt(spawn.x,spawn.z,this.obstacles))
       throw Error("Spawn must not intersect house or entrance slabs");
@@ -117,19 +121,39 @@ export class PlayerController{
     if(!open&&index<0)this.obstacles.push(this.doorBlocker);
     return true;
   }
+  setApartmentDoorOpen(open){
+    if(!this.apartment)return false;
+    open=Boolean(open);
+    if(open===this.apartmentDoorOpen)return true;
+    if(!open&&Math.hypot(this.position.x-this.apartment.doorway.x,
+      this.position.z-this.apartment.doorway.z)<PLAYER_RADIUS+.55&&
+      Math.abs(this.position.y-this.apartment.floorY)<.22)return false;
+    this.apartmentDoorOpen=open;
+    const i=this.obstacles.indexOf(this.apartmentDoorBlocker);
+    if(open&&i>=0)this.obstacles.splice(i,1);
+    if(!open&&i<0)this.obstacles.push(this.apartmentDoorBlocker);
+    return true;
+  }
   canUseEntryDoor(){
     return !!this.entry&&this.position.y<1.35&&
       this.entry.canInteract(this.position.x,this.position.z);
   }
   nearestDoor(){
+    const {x,z,y}=this.position;
+    if(this.apartment?.canInteract(x,z,y))
+      return {id:"apartment-17",label:"Квартира №17",
+        open:this.apartmentDoorOpen,
+        distance:Math.hypot(x-this.apartment.doorway.x,z-this.apartment.doorway.z)};
     if(!this.canUseEntryDoor())return null;
-    const {x,z}=this.position;
     return {id:"outer",label:"Входная дверь",open:this.entryDoorOpen,
       distance:Math.hypot(x-this.entry.x,z-(this.entry.facade-.12))};
   }
   toggleNearestDoor(){
-    if(!this.nearestDoor())return false;
-    return this.setEntryDoorOpen(!this.entryDoorOpen);
+    const near=this.nearestDoor();
+    if(!near)return false;
+    return near.id==="apartment-17"?
+      this.setApartmentDoorOpen(!this.apartmentDoorOpen):
+      this.setEntryDoorOpen(!this.entryDoorOpen);
   }
   isInsideEntrance(){
     return !!this.entry&&this.entry.isInside(this.position.x,this.position.z,this.position.y);
@@ -157,6 +181,11 @@ export class PlayerController{
     if(this.entryDoorOpen){
       this.entryDoorOpen=false;
       if(!this.obstacles.includes(this.doorBlocker))this.obstacles.push(this.doorBlocker);
+    }
+    if(this.apartmentDoorOpen){
+      this.apartmentDoorOpen=false;
+      if(!this.obstacles.includes(this.apartmentDoorBlocker))
+        this.obstacles.push(this.apartmentDoorBlocker);
     }
     this.lookYaw=0;this.lookPitch=.18;this.heading=modelYawForCamera(0);
     this.run=false;this.speed=0;this.collided=false;this.state="idle";
