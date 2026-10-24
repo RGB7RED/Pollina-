@@ -10,6 +10,8 @@ assert.equal((game.match(/new THREE\.Scene\(/g)||[]).length,1,
 assert.match(game,/actorPivot\.position\.set\(state.x,state.y,state.z\)/);
 assert.match(game,/buildApartmentHouse\(THREE\)/);
 assert.doesNotMatch(game,/window\.location.*(stairs|apartment|floor)/);
+assert.match(html,/4.5.4/);
+assert.match(html,/20 пронумерованных квартирных дверей/);
 assert.equal(BUILDING.floors,5);
 assert.equal(BUILDING.entrances,4);
 const pads=[-26.3625,-8.7875,8.7875,26.3625].map(x=>({
@@ -95,6 +97,7 @@ for(let floor=1;floor<5;floor++){
  }
 }
 assert.ok(player.position.y>11.8,"fifth floor genuinely reached");
+assert.equal(player.nearestDoor(),null,"no ground-floor door UI on top floor");
 go(-1,0,70); // back from the fifth-floor flats to RIGHT down-flight
 assert.ok(player.position.x-x>.70&&player.position.x-x<1.10);
 for(let floor=4;floor>=1;floor--){
