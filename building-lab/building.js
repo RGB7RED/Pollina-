@@ -189,7 +189,7 @@ export function buildApartmentHouse(THREE,config={}){
     audit.windowGlazing.push({axis,side,opening:hole,frontDepth:facadeExtent-.17,
       glassDepth:facadeExtent-.235});
     if(isStairWindow)audit.stairwellWindows.push({
-      floor:Math.round((bottom-(.70+1.39+2.42/2+.46))/2.42)+1,
+      floor:Math.round((bottom-(.70+1.39+2.42/2+.80))/2.42)+1,
       centreX:centre,bottom,top,width,wallZ:side*(facadeExtent-.16),
       through:true,transparent:glassMat.transparent===true,type:"facade-bay"
     });
@@ -405,6 +405,34 @@ export function buildApartmentHouse(THREE,config={}){
           bottom:level,mid:level+rise,top:level+storeyRise,
           steps:stepsPerFlight*2,returnEndZ:turnEndZ});
       }
+      // Two-tone Soviet stairwell paint CONTINUES along the flight walls.
+      // A sloping green band follows the step incline, while the warm
+      // ivory finish already covers the complete wall behind the stripe.
+      // One shared instanced batch per paint material (mobile friendly).
+      const paintDepth=run+.05,paintSlope=Math.atan2(rise,run);
+      const slopedLength=Math.hypot(run,rise);
+      for(let f=0;f<C.floors-1;f++){
+        const y=baseFloor+f*storeyRise;
+        for(const [side,cx,cy,angle] of [
+          [-1,firstX,y+rise/2,-paintSlope],
+          [1,secondX,y+rise+rise/2,paintSlope]
+        ]){
+          const wallX=x+side*(stairHalfWidth-.10);
+          box(.025,1.14,slopedLength,mats.foyerLower,
+            wallX,cy+.57,(rearLandingEndZ+halfLandingZ)/2,angle);
+          // Continuous waist-height separator matching apartment landings.
+          box(.032,.040,slopedLength,mats.frameWhite,
+            wallX,cy+1.15,(rearLandingEndZ+halfLandingZ)/2,angle);
+        }
+        // Opposite return: retain the same colour along the side walls.
+        for(const side of [-1,1]){
+          const wx=x+side*(stairHalfWidth-.10);
+          const length=frontZ-halfLandingZ-.08;
+          const z=(frontZ+halfLandingZ)/2;
+          box(.025,1.14,length,mats.foyerLower,wx,y+rise+.57,z);
+          box(.032,.040,length,mats.frameWhite,wx,y+rise+1.15,z);
+        }
+      }
       // On the FIFTH floor continue the end-of-shaft handrail all the
       // way to the left solid wall. Keep the RIGHT flight's landing
       // unobstructed for the person arriving from the fourth floor.
@@ -461,13 +489,6 @@ export function buildApartmentHouse(THREE,config={}){
           x,level+1.82,rearWallZ+.088);
         box(stairHalfWidth*2-.30,.052,.036,mats.frameWhite,
           x,level+1.18,rearWallZ+.10);
-        for(const sign of [-1,1]){
-          const wallX=x+sign*(stairHalfWidth-.09);
-          box(.025,1.20,1.68,mats.foyerLower,
-            wallX,level+.60,(rearWallZ+rearLandingEndZ)/2);
-          box(.025,1.30,1.68,mats.foyerPaint,
-            wallX,level+1.85,(rearWallZ+rearLandingEndZ)/2);
-        }
         // Side paint continues for the FULL depth of the extended landing.
         for(const sign of [-1,1]){
           const wallX=x+sign*(stairHalfWidth-.09);
@@ -746,7 +767,7 @@ export function buildApartmentHouse(THREE,config={}){
   let priorTop=columnStart;
   for(let i=0;i<C.floors-1;i++){
     const midY=.70+1.39+(i+.5)*2.42;
-    const bottom=midY+.46,height=1.42,top=bottom+height;
+    const bottom=midY+.80,height=1.42,top=bottom+height;
     if(bottom<priorTop||top>=shellTop)
       throw Error("Stairwell opening overlaps previous window/roof");
     wallStrip("long",1,windowLeft,windowRight,priorTop,bottom,mats.brick);
@@ -757,6 +778,43 @@ export function buildApartmentHouse(THREE,config={}){
     priorTop=top;
   }
   wallStrip("long",1,windowLeft,windowRight,priorTop,shellTop,mats.brick);
+  // Inside the EXISTING brick wall, add a continuous cream/green
+  // plaster lining. All four window-shaped apertures are subtracted
+  // from the interior paint too — NEVER cover the real transparent
+  // glazing with a coloured rectangle. Existing outside brick remains.
+  const innerWindowZ=C.width/2-wallDepth-.018;
+  const innerHalfWidth=1.84;
+  const firstMid=.70+1.39+2.42/2;
+  const windowIntervals=Array.from({length:C.floors-1},(_,i)=>{
+    const lo=firstMid+i*2.42+.80;
+    return {bottom:lo,top:lo+1.42};
+  });
+  const cuts=[.70,shellTop,...windowIntervals.flatMap(w=>[w.bottom,w.top]),
+    ...Array.from({length:C.floors},(_,i)=>.70+1.39+i*2.42),
+    ...Array.from({length:C.floors},(_,i)=>.70+1.39+i*2.42+1.16)];
+  const sorted=[...new Set(cuts.filter(v=>v>=.70&&v<=shellTop)
+    .map(v=>Number(v.toFixed(5))))].sort((a,b)=>a-b);
+  let plasterPanels=0;
+  for(let j=0;j<sorted.length-1;j++){
+    const y0=sorted[j],y1=sorted[j+1];
+    if(y1-y0<.005)continue;
+    const midY=(y0+y1)/2;
+    const rel=midY-(.70+1.39);
+    const lower=rel<0?midY<1.90:
+      rel-Math.floor(rel/2.42)*2.42<1.16;
+    const mat=lower?mats.foyerLower:mats.foyerPaint;
+    const interrupted=windowIntervals.some(w=>midY>w.bottom&&midY<w.top);
+    const ranges=interrupted?
+      [[-innerHalfWidth,-.70],[.70,innerHalfWidth]]:
+      [[-innerHalfWidth,innerHalfWidth]];
+    for(const [l,r] of ranges){
+      box(r-l,y1-y0,.025,mat,wx+(l+r)/2,midY,innerWindowZ);
+      plasterPanels++;
+    }
+  }
+  audit.stairwellInterior={plasterPanels,wallZ:innerWindowZ,
+    windowApertures:windowIntervals,painted:true,
+    noBrickFacing:true,transparentWindowsUnobstructed:true};
   // Two side windows per storey. The end walls are perforated too.
   for(const side of [-1,1]){
     for(let floor=0;floor<C.floors;floor++){
