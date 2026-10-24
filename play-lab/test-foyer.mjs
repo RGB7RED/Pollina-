@@ -54,8 +54,8 @@ for(let i=0;i<110;i++){
  if(state.entranceZone==="площадка 1-го этажа")crossed=true;
 }
 assert.ok(crossed,"player reaches the true first-floor landing");
-assert.ok(c.position.z>e.insideEnd+PLAYER_RADIUS-.03,
- "solid back wall remains for later stairs");
+assert.ok(c.position.z>e.stair.bottomZ-.5,
+ "stair requires choosing one of two flights");
 assert.equal(c.toggleNearestDoor(),true,"door can close once threshold clear");
 assert.equal(c.innerDoorOpen,false);
 assert.ok(c.obstacles.includes(e.innerDoor));
@@ -118,7 +118,7 @@ assert.equal(house.doorPivot.name,"entrance-1-hinged-door");
 assert.equal(house.innerDoorPivot.name,"entrance-1-inner-hinged-door");
 assert.ok(house.root.children.includes(house.doorPivot));
 assert.ok(house.root.children.includes(house.innerDoorPivot));
-assert.equal(house.innerDoorPivot.children.length,4);
+assert.equal(house.innerDoorPivot.children.length,7);
 assert.ok(Math.abs(house.innerDoorPivot.position.z-e.innerDoorZ)<1e-6);
 assert.ok(Math.abs(house.innerDoorPivot.position.x-(e.x-1.39/2))<1e-6);
 assert.equal(house.innerDoorPivot.position.y,.73);
