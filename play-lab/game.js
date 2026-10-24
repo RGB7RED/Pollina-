@@ -60,7 +60,7 @@ $("hud-toggle").addEventListener("click",()=>{
   $("hud-toggle").setAttribute("aria-expanded",String(!collapsed));
   $("hud-toggle").textContent=collapsed?"▾ Показать описание":"▴ Свернуть описание";
 });
-$("world-info").textContent="Подъезд №1: тамбур, внутренняя дверь и площадка · улица 108 м · "+streetPlan.info.trees+
+$("world-info").textContent="4.5.3: прозрачное окно второй двери · два лестничных марша на 2-й этаж · "+streetPlan.info.trees+
   " деревьев · "+streetPlan.info.lamps+" фонарей · "+
   streetPlan.info.benches+" скамейки";
 actorPivot.position.set(controller.position.x,0,controller.position.z);
@@ -305,7 +305,7 @@ function animate(){
   studio.update({fps:measuredFps,state});
   if(ready){
    $("actor-status").textContent=state.inside?
-      "Подъезд №1 · "+state.entranceZone+" · лестница на следующем этапе":
+      "Подъезд №1 · "+state.entranceZone+" · отметка "+state.y.toFixed(2)+" м":
       state.collided?"Стена: проход закрыт":
      animator.warning||"Скорость: "+state.speed.toFixed(1)+" м/с";
   }

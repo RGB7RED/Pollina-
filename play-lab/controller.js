@@ -204,10 +204,19 @@ export class PlayerController{
       const dx=(side*Math.cos(this.lookYaw)+ahead*Math.sin(this.lookYaw))*this.speed*dt;
       const dz=(side*Math.sin(this.lookYaw)-ahead*Math.cos(this.lookYaw))*this.speed*dt;
       const step=resolveStep(this.position,dx,dz,this.obstacles);
+      const ground=this.entry?.groundHeight(step.x,step.z)||0;
+      // One genuine stair riser is ~11.6 cm. Reject abrupt height changes:
+      // prevents walking sideways from floor 1 directly onto flight 2
+      // and keeps the actor attached to the physical stair surfaces.
+      const forbiddenLift=this.entry&&Math.abs(ground-this.position.y)>.19;
+      if(forbiddenLift){
+        step.x=this.position.x;step.z=this.position.z;
+        step.distance=0;step.hit=true;
+      }
       const movedX=step.x-this.position.x,movedZ=step.z-this.position.z;
       distance=step.distance;this.collided=step.hit;
       this.position.x=step.x;this.position.z=step.z;
-      this.position.y=this.entry?.groundHeight(step.x,step.z)||0;
+      this.position.y=forbiddenLift?this.position.y:ground;
       if(distance>1e-5&&this.view==="third"){
         // Wall collisions may remove one component: face the actual travel.
         this.heading=modelYawForTravel(movedX,movedZ);

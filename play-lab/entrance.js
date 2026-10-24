@@ -5,13 +5,23 @@ export function planPlayableEntrance(building,pads){
   const p=pads[0],x=p.x,facade=building.width/2;
   const halfX=building.length/2,halfZ=facade;
   const corridorHalf=.81,insideEnd=3.35;
+  // U-stair follows the true stair mesh in building-lab/building.js.
+  const stair={bottomZ:3.00,turnZ:-.74,backZ:-1.63,
+    halfRise:building.floorHeight/2,steps:12};
   if(p.width<2||insideEnd>=facade||corridorHalf>=p.width/2)
     throw Error("Entrance dimensions invalid");
   const rect=(name,minX,maxX,minZ,maxZ)=>({name,minX,maxX,minZ,maxZ});
+  const stairHalf=1.44;
+  // The little street vestibule is 1.62m wide; the stairwell widens to
+  // 2.88m to permit TWO fully walkable flights and an actual 180° turn.
   const house=[
-    rect("house-left",-halfX,x-corridorHalf,-halfZ,halfZ),
-    rect("house-right",x+corridorHalf,halfX,-halfZ,halfZ),
-    rect("vestibule-rear",x-corridorHalf,x+corridorHalf,-halfZ,insideEnd)
+    rect("entry-front-left",-halfX,x-corridorHalf,insideEnd,halfZ),
+    rect("entry-front-right",x+corridorHalf,halfX,insideEnd,halfZ),
+    rect("stair-left",-halfX,x-stairHalf,-halfZ,insideEnd),
+    rect("stair-right",x+stairHalf,halfX,-halfZ,insideEnd),
+    rect("stairwell-back",x-stairHalf,x+stairHalf,-halfZ,stair.backZ),
+    rect("stair-center-divider",x-.02,x+.02,stair.turnZ+.12,
+      stair.bottomZ-.36)
   ];
   // Preserve blocking porch geometry for entrances 2–4. The first porch
   // is walkable only through the central doorway approach.
@@ -35,21 +45,33 @@ export function planPlayableEntrance(building,pads){
     minZ:insideEnd,maxZ:facade};
   const entry={
     index:0,x,facade,insideEnd,corridorHalf,door,innerDoor,
-    innerDoorZ,inside,
+    innerDoorZ,inside,stair,stairHalf,
     buildingObstacles:[...house,...porch],
     // Same continuous world coordinate from sidewalk through the first
     // porch and threshold into the indoor vestibule; no teleport/scene swap.
     groundHeight(px,z){
-      if(Math.abs(px-x)>corridorHalf-.03)return 0;
+      if(Math.abs(px-x)>(z<insideEnd?stairHalf:corridorHalf)-.03)return 0;
       if(z>=10.65)return 0;
       if(z>=9.42)return (10.65-z)/(10.65-9.42)*.50;
       if(z>=7.10)return .50;
       if(z>=6.23)return .50+(7.10-z)/(7.10-6.23)*.20;
-      if(z>=insideEnd)return .70;
+      if(z>=stair.bottomZ)return .70;
+      if(z>=stair.backZ){
+        // The turnaround is half a storey above the vestibule floor.
+        if(z<=stair.turnZ)return .70+stair.halfRise;
+        const ratio=Math.max(0,Math.min(1,
+          (stair.bottomZ-z)/(stair.bottomZ-stair.turnZ)));
+        const index=Math.min(stair.steps,Math.floor(ratio*stair.steps)+1);
+        const stepsUp=index/stair.steps*stair.halfRise;
+        const downSteps=Math.min(stair.steps,Math.floor(ratio*stair.steps));
+        return px<x ? .70+stepsUp :
+          .70+2*stair.halfRise-downSteps/stair.steps*stair.halfRise;
+      }
       return 0;
     },
     isInside(px,z){
-      return Math.abs(px-x)<corridorHalf&&z>=insideEnd&&z<facade-.07;
+      const width=z<insideEnd?stairHalf:corridorHalf;
+      return Math.abs(px-x)<width&&z>=stair.backZ&&z<facade-.07;
     },
     canInteract(px,z){
       return Math.hypot(px-x,z-(facade-.12))<2.35;
@@ -59,7 +81,10 @@ export function planPlayableEntrance(building,pads){
     },
     zone(px,z){
       if(!this.isInside(px,z))return "street";
-      return z>innerDoorZ?"тамбур":"площадка 1-го этажа";
+      if(z>innerDoorZ)return "тамбур";
+      if(z>=insideEnd)return "площадка 1-го этажа";
+      if(z<=stair.turnZ)return "промежуточная площадка";
+      return px<x?"марш на второй этаж":"второй марш";
     }
   };
   return entry;
