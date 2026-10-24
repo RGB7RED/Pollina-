@@ -49,8 +49,13 @@ export function planFirstFloor(building,entrance){
     alongZ("front-living-"+side,1.68,left,right,frontDoorX,1.00);
     alongX("front-kitchen-bath-"+side,side<0?right-2.36:left+2.36,
       -.65,1.68,.48,.90);
-    if(side===1)
-      alongX("three-room-right",left+(right-left)*.5,1.68,front,3.62,1.0);
+    if(side===1){
+      const splitX=left+(right-left)*.49;
+      // THREE independent residential rooms (not one big 3K label):
+      // left room + two smaller rooms on right, linked by doorways.
+      alongX("three-room-right",splitX,1.68,front,2.50,1.0);
+      alongZ("third-room-right",3.65,splitX,right,right-1.55,.99);
+    }
     const frontNo=side<0?1:3,rearNo=side<0?2:4;
     rooms.push({flat:rearNo,name:"Прихожая",section:"rear"},
       {flat:rearNo,name:"Кухня",section:"rear"},
