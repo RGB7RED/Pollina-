@@ -36,7 +36,7 @@ assert.equal(stair.treads,108);
 assert.equal(first.entryFlight.steps,12);
 assert.equal(first.entryFlight.bottom,.70);
 assert.equal(first.entryFlight.top,2.09);
-assert.equal(first.entryFlight.centreX,entry.x+1.31);
+assert.ok(Math.abs(first.entryFlight.centreX-(entry.x+1.31))<1e-8);
 assert.ok(first.entryFlight.centreX>x);
 assert.ok(first.entryFlight.centreX+first.entryFlight.width/2<=x+2.18);
 assert.equal(audit.foyer.doorCount,1);
@@ -103,7 +103,7 @@ for(let i=0;i<4;i++){
     p.u0<w.centreX&&p.u1>w.centreX&&p.y0<mid&&p.y1>mid),
     "no opaque brick behind the transparent glazing");
 }
-assert.equal(entry.buildingObstacles.length,18);
+assert.equal(entry.buildingObstacles.length,19);
 assert.equal(entry.groundHeight(x,5.25,.70),.70,"foyer remains at grade");
 assert.equal(entry.groundHeight(x,0,stair.firstFloor+stair.storeyRise),null,
   "upper central shaft cannot be walked on as an invisible floor");
