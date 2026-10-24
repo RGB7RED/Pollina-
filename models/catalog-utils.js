@@ -3,7 +3,9 @@
 // asset and an entry never implies binary export or licensing clearance.
 export const CATEGORIES=Object.freeze({
   building:"Здания",character:"Персонажи",environment:"Улицы и окружение",
-  nature:"Растительность",street_furniture:"Городские предметы"
+  nature:"Растительность",street_furniture:"Городские предметы",
+  door:"Двери",window:"Окна",heating:"Отопление",
+  lighting:"Освещение",utility:"Подъездное оборудование"
 });
 export const STATUS=Object.freeze({
   development:"В разработке",testing:"На испытаниях",approved:"Принят для лаборатории"
@@ -14,7 +16,8 @@ export const KIND=Object.freeze({
 });
 export const CATEGORY_ICON=Object.freeze({
   building:"🏠",character:"🚶",environment:"🛣️",
-  nature:"🌳",street_furniture:"🪑"
+  nature:"🌳",street_furniture:"🪑",
+  door:"🚪",window:"🪟",heating:"♨️",lighting:"💡",utility:"🔌"
 });
 function safePath(path,allowQuery=false){
   if(typeof path!=="string"||!path||path.startsWith("/")||path.includes("\\")||
