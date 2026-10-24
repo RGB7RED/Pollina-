@@ -72,7 +72,8 @@ assert.deepEqual(stair.apartmentDoors.map(d=>d.number),
   Array.from({length:20},(_,i)=>i+1));
 const doorFrames=instances.filter(t=>Math.abs(t.scale.x-1.04)<eps&&
   Math.abs(t.scale.y-2.15)<eps&&Math.abs(t.scale.z-.09)<eps);
-assert.equal(doorFrames.length,20,"all 20 apartment door frames widened");
+assert.equal(doorFrames.length,19,
+ "nineteen static widened apartment doors; No.17 has a separately hinged leaf");
 const leftDoorX=x-.92-1.04/2,rightDoorX=x+.92+1.04/2;
 assert.ok(leftDoorX>x-entry.stairHalf);
 assert.ok(rightDoorX<x+entry.stairHalf);
