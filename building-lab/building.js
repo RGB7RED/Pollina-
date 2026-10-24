@@ -189,8 +189,8 @@ export function buildApartmentHouse(THREE,config={}){
       side*(facadeExtent+.095));
     stats.windows++;
     if(glassMat===mats.litGlass)stats.litWindows++;
-    audit.windowGlazing.push({axis,side,opening:hole,frontDepth:facadeExtent-.17,
-      glassDepth:facadeExtent-.235});
+    audit.windowGlazing.push({axis,side,opening:hole,variant,
+      frontDepth:facadeExtent-.17,glassDepth:facadeExtent-.235});
     if(isStairWindow)audit.stairwellWindows.push({
       floor:Math.round((bottom-(.70+1.39+2.42/2+.80))/2.42)+1,
       centreX:centre,bottom,top,width,wallZ:side*(facadeExtent-.16),
