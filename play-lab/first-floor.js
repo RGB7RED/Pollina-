@@ -69,7 +69,7 @@ export function planFirstFloor(building,entrance){
   return {floor:1,y,ceilingY,x,wall,wings,doors,rooms,segments,
     doorBlockers,back,front,unfurnished:true,template:"Khrushchevka-4-flats",
     contains:(px,pz,py)=>Math.abs(py-y)<.24&&wings.some(w=>
-      px>=w.minX&&px<=w.maxX&&pz>=back&&pz<=front),
+      px>=w.minX-.11&&px<=w.maxX+.11&&pz>=back&&pz<=front),
     obstacles:[...segments,...stairWallColliders]};
 }
 export function buildFirstFloor(THREE,plan){
