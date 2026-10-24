@@ -36,10 +36,16 @@ assert.equal(stair.treads,108);
 assert.equal(first.entryFlight.steps,12);
 assert.equal(first.entryFlight.bottom,.70);
 assert.equal(first.entryFlight.top,2.09);
+assert.equal(first.entryFlight.centreX,entry.x+1.31);
+assert.ok(first.entryFlight.centreX>x);
+assert.ok(first.entryFlight.centreX+first.entryFlight.width/2<=x+2.18);
+assert.equal(audit.foyer.doorCount,1);
+assert.equal(audit.foyer.mailboxLevel,3.30);
 assert.equal(first.entryFlight.minZ,entry.stair.bottomZ);
 assert.equal(first.entryFlight.maxZ,entry.stair.entryStartZ);
 assert.equal(first.stairwellWidth,4.36);
-assert.equal(stair.railing.flightWidth,1.27);
+assert.equal(stair.railing.flightWidth,1.58);
+assert.equal(stair.railing.frontGuardLinks,4);
 assert.equal(stair.railing.wallSideRails,0);
 assert.equal(stair.railing.innerGuardLinks,4);
 assert.equal(stair.apartmentDoors.length,20);
@@ -68,11 +74,11 @@ const instances=meshes.flatMap(m=>m.matrices.map(t=>({
   transparent:m.material.transparent===true
 })));
 const entranceTreadLength=(entry.stair.entryStartZ-entry.stair.bottomZ)/12-.014;
-const treads=instances.filter(t=>Math.abs(t.scale.x-1.26)<eps&&
+const treads=instances.filter(t=>Math.abs(t.scale.x-1.58)<eps&&
   Math.abs(t.scale.z-entranceTreadLength)<eps);
 assert.equal(treads.length,24,"12 genuine two-layer entrance steps");
 assert.equal(new Set(treads.map(t=>t.position.y.toFixed(4))).size,24);
-const transverse=instances.filter(t=>Math.abs(t.scale.x-1.51)<eps&&
+const transverse=instances.filter(t=>Math.abs(t.scale.x-1.04)<eps&&
   Math.abs(t.scale.y-.08)<eps&&Math.abs(t.scale.z-.075)<eps&&
   Math.abs(t.position.x-x)<eps);
 assert.equal(transverse.length,4,"four connectors between inner flight guards");
@@ -81,7 +87,7 @@ assert.equal(instances.filter(t=>Math.abs(t.scale.x-1.28)<eps&&t.scale.z>4).leng
 const railPieces=instances.filter(t=>t.color===0x646f72&&
   Math.abs(t.scale.x-.075)<eps&&Math.abs(t.scale.y-.075)<eps&&
   t.scale.z>3&&Math.abs(t.rotation.x)>.08&&Math.abs(t.position.x-x)<3);
-assert.equal(railPieces.length,26,"24 inner flight rails + two entrance rails");
+assert.equal(railPieces.length,27,"24 inner U-flight rails + three entry inner rails");
 assert.ok(railPieces.every(t=>Math.abs(t.position.x-x)<1.0),
   "no exposed handrail mounted against the two outer walls");
 assert.equal(audit.stairwellWindows.length,4);
