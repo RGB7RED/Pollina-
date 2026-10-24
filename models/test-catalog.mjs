@@ -7,7 +7,8 @@ assert.equal(validateCatalog(catalog),catalog);
 assert.equal(catalog.schemaVersion,2);
 assert.deepEqual(catalogFolders(catalog).map(f=>[f.id,f.count]),[
  ["building",1],["character",2],["environment",1],
- ["nature",6],["street_furniture",3]
+ ["nature",6],["street_furniture",3],
+ ["door",5],["window",5],["heating",2],["lighting",1],["utility",2]
 ]);
 assert.deepEqual(folderObjects(catalog,"character").map(e=>e.modelNumber),[1,2]);
 assert.deepEqual(folderObjects(catalog,"street_furniture").map(e=>e.modelNumber),[1,2,3]);
@@ -51,10 +52,11 @@ assert.equal(grass.assetFile,null);
 assert.equal(grass.releaseReady,false);
 const counts=catalogCounts(catalog);
 assert.deepEqual(counts,{
-  total:13,
-  statuses:{development:6,testing:6,approved:1},
-  categories:{building:1,character:2,environment:1,nature:6,street_furniture:3},
-  inGame:7,readyForRelease:0
+  total:28,
+  statuses:{development:6,testing:21,approved:1},
+  categories:{building:1,character:2,environment:1,nature:6,street_furniture:3,
+    door:5,window:5,heating:2,lighting:1,utility:2},
+  inGame:22,readyForRelease:0
 });
 assert.ok(filterCatalog(catalog,{search:"дерево"}).length>=2);
 assert.equal(filterCatalog(catalog,{search:"ПЯТИЭТАЖКА"}).length,1);
@@ -82,7 +84,7 @@ assert.equal(folderObjects(catalog,"street_furniture")[2].assetFile,null);
 assert.equal(filterCatalog(catalog,{category:"street_furniture",status:"development"}).length,1);
 assert.equal(folderObjects(catalog,"character",{search:"№ 002"}).length,1);
 assert.equal(folderObjects(catalog,"character",{status:"testing"}).length,1);
-assert.equal(Object.keys(CATEGORIES).length,5);
+assert.equal(Object.keys(CATEGORIES).length,10);
 assert.equal(Object.keys(STATUS).length,3);
 assert.ok(catalog.entries.every(e=>!e.releaseReady),
   "No assets have been cleared for production release");
