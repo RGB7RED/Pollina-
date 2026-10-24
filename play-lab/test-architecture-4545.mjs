@@ -44,7 +44,7 @@ assert.ok(!collidesAt(x+1.3,5.3,e.buildingObstacles,PLAYER_RADIUS,.70),
  "the old narrow partition no longer has collision");
 assert.ok(collidesAt(x+1.3,6.30,e.buildingObstacles,PLAYER_RADIUS,.70),
  "brick beside the sole real street door still blocks passage");
-assert.equal(e.stair.entryX,x+1.31);
+assert.ok(Math.abs(e.stair.entryX-(x+1.31))<eps);
 assert.ok(e.stair.entryWidth>=1.55);
 assert.ok(e.stair.entryX+e.stair.entryWidth/2<x+e.stairHalf,
  "new entrance steps sit along right masonry without going through it");
