@@ -99,12 +99,35 @@ export function planPlayableEntrance(building,pads){
     door,inside,stair,stairHalf,aisleHalf,totalFloors,
     floorHeight,
     buildingObstacles:[...house,...porch],
+    apartment:null,
+    installApartment(apartment){
+      if(this.apartment)throw Error("Apartment already installed");
+      if(!apartment||apartment.number!==17||Math.abs(apartment.floorY-floorHeight(4))>.0001)
+        throw Error("Only original fifth-floor flat 17 may be activated");
+      // The earlier collision plan treated ALL apartment space as solid
+      // at ALL elevations. Split the LEFT slab vertically, allowing only
+      // this fifth-floor flat. Exterior, other flats and 1–4F stay solid.
+      const old=this.buildingObstacles.findIndex(b=>b.name==="stair-left");
+      if(old<0)throw Error("Cannot find existing stair-left blocker");
+      this.buildingObstacles.splice(old,1,
+        rect("stair-left-below-apartment",-halfX,x-stairHalf,
+          -halfZ,facade,-Infinity,apartment.floorY-.10),
+        rect("stair-left-above-apartment",-halfX,x-stairHalf,
+          -halfZ,facade,apartment.ceilingY+.01,Infinity));
+      this.buildingObstacles.push(...apartment.obstacles);
+      this.apartment=apartment;
+    },
     // Same continuous world coordinate from sidewalk through the first
     // porch and threshold into the indoor vestibule; no teleport/scene swap.
     // Return the walkable surface CLOSEST to the player's current
     // world-space Y. The same X/Z staircase repeats at four distinct
     // storeys: a naive 2D height map would wrongly teleport to floor 1.
     groundHeight(px,z,currentY=0){
+      // Apartment 17 uses exactly the fifth-floor landing elevation.
+      // The height solver must check its space BEFORE rejecting X outside
+      // the stairwell; otherwise the player falls through the room floor.
+      if(this.apartment?.contains(px,z,currentY))
+        return this.apartment.floorY;
       const upper=currentY>=upperTurnY-.13;
       const width=z<insideEnd||upper?stairHalf:foyerHalf;
       if(Math.abs(px-x)>width-.03)return 0;
@@ -147,6 +170,7 @@ export function planPlayableEntrance(building,pads){
         Math.abs(y-currentY)<Math.abs(best-currentY)?y:best);
     },
     isInside(px,z,y=0){
+      if(this.apartment?.contains(px,z,y))return true;
       const width=z<insideEnd||y>=upperTurnY-.13?stairHalf:foyerHalf;
       return Math.abs(px-x)<width&&z>=stair.backZ&&z<facade-.07;
     },
@@ -154,6 +178,8 @@ export function planPlayableEntrance(building,pads){
       return Math.hypot(px-x,z-(facade-.12))<2.35;
     },
     zone(px,z,y=0){
+      if(this.apartment?.contains(px,z,y))
+        return "Квартира №17 · "+this.apartment.zone(px,z);
       if(!this.isInside(px,z,y))return "street";
       if(z>=insideEnd)return y>=upperTurnY-.13?
         "межэтажный разворот":"просторный тамбур";
