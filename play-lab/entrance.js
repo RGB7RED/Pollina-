@@ -79,6 +79,10 @@ export function planPlayableEntrance(building,pads){
       if(z>=insideEnd){
         if(currentY>1.40&&z<=stair.frontZ+.02&&
             Math.abs(px-x)<stairHalf-.03){
+          // Ground entry must keep >2 m of doorway clearance. Its first
+          // half landing has two facade-reaching wings, NOT a centre slab.
+          if(Math.abs(currentY-firstFloor-stair.halfRise)<.20&&
+            Math.abs(px-x)<corridorHalf+.10)return firstFloor;
           const candidates=Array.from({length:totalFloors-1},(_,f)=>
             firstFloor+f*storeyHeight+stair.halfRise);
           return candidates.reduce((best,y)=>
@@ -125,12 +129,17 @@ export function planPlayableEntrance(building,pads){
       // Upper-floor players may use the full-width front landing.
       // The accepted narrow ground foyer collision remains intact.
       if(y<=1.40)return null;
-      return [
+      const obstacles=[
         rect("upper-front-left",-halfX,x-stairHalf,insideEnd,facade),
         rect("upper-front-right",x+stairHalf,halfX,insideEnd,facade),
         rect("upper-front-exterior-wall",x-stairHalf,
           x+stairHalf,stair.frontZ+.05,facade+.30)
       ];
+      if(Math.abs(y-firstFloor-stair.halfRise)<.20)
+        obstacles.push(rect("ground-foyer-headroom-void",
+          x-corridorHalf-.10,x+corridorHalf+.10,
+          insideEnd,stair.frontZ));
+      return obstacles;
     },
     canInteract(px,z){
       return Math.hypot(px-x,z-(facade-.12))<2.35;
