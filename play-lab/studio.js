@@ -120,8 +120,7 @@ export class DeveloperStudio{
     if(this.collisionsShown)this.setCollisions(true);
     this.nodes.route.textContent="Препятствия: "+
       this.controller.obstacles.length+" · подъезд №1 "+
-      (this.controller.entryDoorOpen?"открыт":"закрыт")+
-      " · внутренняя "+(this.controller.innerDoorOpen?"открыта":"закрыта");
+      (this.controller.entryDoorOpen?"открыт":"закрыт");
   }
   setCollisions(show){
     const next=Boolean(show)&&this.mode===MODES.LAB;
