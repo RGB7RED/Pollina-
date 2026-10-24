@@ -56,6 +56,7 @@ for(let floor=1;floor<5;floor++){
  go(0,-1,230);
  at(.70+(floor-.5)*BUILDING.floorHeight,"front half landing "+floor);
  assert.ok(player.position.z>entry.stair.frontZ-.50);
+ if(floor===1)go(0,1,48); // first mezzanine wings: turn BEFORE foyer void
  go(1,0,90);assert.ok(player.position.x>x+1.1);
  go(0,1,230);
  at(.70+floor*BUILDING.floorHeight,"rear floor "+(floor+1));
@@ -67,6 +68,7 @@ assert.equal(player.nearestDoor(),null);
 for(let floor=4;floor>=1;floor--){
  go(0,-1,230);
  at(.70+(floor-.5)*BUILDING.floorHeight,"descending right "+floor);
+ if(floor===1)go(0,1,48); // do not cross above the entry door
  go(-1,0,90);
  go(0,1,230);
  at(.70+(floor-1)*BUILDING.floorHeight,"descending left "+floor);
