@@ -9,58 +9,54 @@ assert.equal((game.match(/new THREE\.Scene\(/g)||[]).length,1);
 assert.match(view,/Лестница на/);
 assert.match(game,/actorPivot\.position\.set\(state.x,state.y,state.z\)/);
 assert.match(game,/setInnerDoorOpen/);
-const pads=[-26.3625,-8.7875,8.7875,26.3625].map(x=>({x,width:5.5,depth:3.15,centreZ:7.875}));
-const e=planPlayableEntrance(BUILDING,pads);
-assert.equal(e.buildingObstacles.length,11);
+const pads=[-26.3625,-8.7875,8.7875,26.3625].map(x=>({
+ x,width:5.5,depth:3.15,centreZ:7.875
+}));
+const e=planPlayableEntrance(BUILDING,pads),x=e.x;
+assert.equal(e.buildingObstacles.length,12);
 assert.equal(e.stair.steps,12);
 assert.equal(e.stair.halfRise,BUILDING.floorHeight/2);
-assert.equal(e.stair.bottomZ,3.00);
-assert.equal(e.stair.backZ,-1.63);
-const x=e.x;
-assert.equal(e.groundHeight(x-.72,-1.15),.70+e.stair.halfRise);
-assert.equal(e.groundHeight(x+.72,-1.15),.70+e.stair.halfRise);
-assert.equal(e.groundHeight(x+.72,2.99,.70+BUILDING.floorHeight),.70+BUILDING.floorHeight);
-assert.ok(Math.abs(e.groundHeight(x-.72,2.99)-.816)<.02);
-assert.ok(collidesAt(x,-2.0,e.buildingObstacles,PLAYER_RADIUS),"stair rear wall");
-assert.ok(collidesAt(x,1.0,e.buildingObstacles,PLAYER_RADIUS),"flight divider");
-assert.ok(!collidesAt(x-.72,1.0,e.buildingObstacles,PLAYER_RADIUS));
-assert.ok(!collidesAt(x+.72,1.0,e.buildingObstacles,PLAYER_RADIUS));
+assert.equal(e.stair.bottomZ,-1.58);
+assert.equal(e.stair.turnZ,2.05);
+assert.equal(e.stair.backZ,-3.38);
+assert.equal(e.stair.frontZ,3.28);
+assert.ok(e.stair.bottomZ-e.stair.backZ>=1.75,
+ "opposite end landing is physically deeper");
+assert.ok(e.stair.frontZ-e.stair.turnZ>=1.20,
+ "front intermediate turnaround is also deepened");
+assert.equal(e.groundHeight(x,-2.4),.70);
+assert.ok(collidesAt(x,-4.1,e.buildingObstacles,PLAYER_RADIUS),
+ "rear wall stops player before exterior facade");
+assert.ok(!collidesAt(x-1.5,1,e.buildingObstacles,PLAYER_RADIUS));
+assert.ok(!collidesAt(x+1.5,1,e.buildingObstacles,PLAYER_RADIUS));
 const p=new PlayerController({building:BUILDING,pads,entry:e,spawn:{x,z:10.85}});
 assert.ok(p.setEntryDoorOpen(true)&&p.setInnerDoorOpen(true));
 const record=[];
 function go(ax,az,n){
  p.setStick(ax,az);
  for(let i=0;i<n;i++){
-  const before={...p.position};
-  const next=p.update(.05);
-  assert.ok(Math.hypot(next.x-before.x,next.z-before.z)<.19,
-    "step cannot teleport horizontally");
-  assert.ok(Math.abs(next.y-before.y)<.19,
-    "cannot jump vertically between flights");
+  const before={...p.position},next=p.update(.05);
+  assert.ok(Math.hypot(next.x-before.x,next.z-before.z)<.19,"horizontal continuity");
+  assert.ok(Math.abs(next.y-before.y)<.19,"vertical continuity");
   record.push({...p.position});
  }
 }
-go(0,1,145);
-assert.ok(p.position.z>=2.65&&p.position.z<=2.85,
- "centre can reach flat landing but cannot ascend without choosing left flight");
+go(0,1,210);
+assert.ok(p.position.z<-2.5&&p.position.z>e.stair.backZ);
 assert.equal(p.position.y,.70);
-go(-1,0,17);
-assert.ok(p.position.x<x-.39);
-go(0,1,160);
-assert.ok(p.position.z<-1.0,"reach half-floor turn");
+go(-1,0,70);
+assert.ok(p.position.x<x-1);
+go(0,-1,150);
+assert.ok(p.position.z>2.75,"first march reaches FRONT half turnaround");
 assert.equal(p.position.y,.70+BUILDING.floorHeight/2);
-go(1,0,40);
-assert.ok(p.position.x>x+.70,"turn across landing in same house");
-go(0,-1,145);
-assert.ok(p.position.z>2.7&&p.position.z<3.05);
-assert.ok(Math.abs(p.position.y-(.70+BUILDING.floorHeight))<1e-8,
- "reach actual second-floor landing (not a scene switch)");
-assert.ok(p.isInsideEntrance());
-const maxHeight=Math.max(...record.map(p=>p.y));
-assert.ok(maxHeight>=3.47);
+go(1,0,90);
+assert.ok(p.position.x>x+1,"turn across the front");
+go(0,1,150);
+assert.ok(p.position.z<-2.5,"SECOND march leads BACK to apartment doors");
+assert.equal(p.position.y,.70+BUILDING.floorHeight);
+assert.equal(e.zone(p.position.x,p.position.z,p.position.y),
+ "площадка 2-го этажа · квартиры 5–8");
 assert.ok(record.some(v=>v.y>2&&v.y<3));
-assert.ok(p.position.y>.70+BUILDING.floorHeight-.01);
-assert.equal(p.entry.zone(p.position.x,p.position.z,p.position.y),"площадка 2-го этажа · квартиры 5–8");
 p.reset();
 assert.equal(p.position.y,0);
 assert.equal(p.innerDoorOpen,false);
@@ -91,7 +87,7 @@ const audit=house.root.userData.geometryAudit;
 const stairs=audit.firstStaircase;
 assert.equal(stairs.stairFlights,2);
 assert.equal(stairs.stepsPerFlight,12);
-assert.equal(stairs.stairwellWidth,2.88);
+assert.equal(stairs.stairwellWidth,4.16);
 assert.equal(stairs.bottomZ,e.stair.bottomZ);
 assert.equal(stairs.turnZ,e.stair.turnZ);
 assert.equal(stairs.backZ,e.stair.backZ);
@@ -125,4 +121,4 @@ assert.ok(house.root.children.includes(house.innerDoorPivot));
 const instanced=house.root.children.filter(m=>m instanceof InstancedMesh);
 assert.ok(instanced.length<=33,"mobile instancing budget for extra stair glass");
 assert.ok(house.stats.instancedElements>1600);
-console.log("MINI CITY 4.5.3 PASS: 24 steps in physical U-stair, genuine second-floor landing, one scene, real transparent inner-door window, prior foyer intact");
+console.log("MINI CITY 4.5.4.2 first-two-floor regression PASS: 24 steps in physical U-stair, genuine second-floor landing, one scene, real transparent inner-door window, prior foyer intact");
