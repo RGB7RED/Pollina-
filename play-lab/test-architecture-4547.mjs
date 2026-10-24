@@ -95,7 +95,7 @@ assert.ok(instances.some(t=>t.materialColor===0x76978d&&
 assert.equal(stair.floors,5);
 assert.equal(stair.flights,9);
 assert.equal(stair.treads,108);
-assert.equal(house.root.children.filter(m=>m instanceof InstancedMesh).length<=33,
+assert.ok(house.root.children.filter(m=>m instanceof InstancedMesh).length<=33,
   "mobile draw-call batch count preserved");
 assert.equal(e.buildingObstacles.length,30);
 assert.ok(collidesAt(x,-4.64,e.buildingObstacles,PLAYER_RADIUS,2.09),
