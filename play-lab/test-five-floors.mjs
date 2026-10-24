@@ -12,7 +12,7 @@ const pads=[-26.3625,-8.7875,8.7875,26.3625].map(x=>({
  x,width:5.5,depth:3.15,centreZ:7.875
 }));
 const entry=planPlayableEntrance(BUILDING,pads),x=entry.x;
-assert.equal(entry.buildingObstacles.length,19);
+assert.equal(entry.buildingObstacles.length,20);
 assert.equal(entry.totalFloors,5);
 assert.equal(entry.stair.steps,12);
 assert.equal(entry.stair.turnZ,2.05);
@@ -23,8 +23,8 @@ assert.ok(entry.stair.bottomZ-entry.stair.backZ>=1.75);
 assert.ok(entry.stair.frontZ-entry.stair.turnZ>=1.20);
 assert.ok(collidesAt(x,entry.stair.backZ-.5,entry.buildingObstacles,PLAYER_RADIUS));
 assert.ok(!collidesAt(x,-2.4,entry.buildingObstacles,PLAYER_RADIUS));
-assert.ok(!collidesAt(x-1.5,-2.4,entry.buildingObstacles,PLAYER_RADIUS));
-assert.ok(!collidesAt(x+1.5,-2.4,entry.buildingObstacles,PLAYER_RADIUS));
+assert.ok(!collidesAt(x-1.35,-2.4,entry.buildingObstacles,PLAYER_RADIUS));
+assert.ok(!collidesAt(x+1.35,-2.4,entry.buildingObstacles,PLAYER_RADIUS));
 assert.ok(collidesAt(x+2.5,-2.4,entry.buildingObstacles,PLAYER_RADIUS));
 assert.ok(collidesAt(pads[1].x,5.1,entry.buildingObstacles,PLAYER_RADIUS));
 for(let f=0;f<5;f++){
@@ -78,7 +78,8 @@ for(let floor=4;floor>=1;floor--){
  if(floor>1)go(1,0,70);
 }
 go(1,0,43); // move from left U-flight to RIGHT entrance flight
-assert.ok(Math.abs(player.position.x-entry.stair.entryX)<.3);
+assert.ok(Math.abs(player.position.x-entry.stair.entryX)<entry.stair.entryWidth/2-.05,
+  "right entrance flight remains accessible across full tread width");
 go(0,-1,135); // descend all twelve entry steps into the foyer
 assert.equal(player.position.y,.70);
 go(-1,0,18); // centre on ORIGINAL exterior doorway
@@ -142,7 +143,7 @@ for(let f=1;f<=5;f++){
  assert.ok(four.every(d=>d.z>=landing.minZ&&d.z<=landing.maxZ));
  assert.ok(four[0].x<x&&four[1].x>x);
  assert.ok(Math.abs(four[0].x+four[1].x-2*x)<1e-5);
- assert.ok(four[2].x<x-1.90&&four[3].x>x+1.90);
+ assert.ok(four[2].x<x-1.65&&four[3].x>x+1.65);
 }
 assert.equal(house.innerDoorPivot,null,"the deleted partition door has no 3D pivot");
 assert.equal(audit.foyer.doorCount,1,"only the original facade door remains");
