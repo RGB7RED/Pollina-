@@ -142,13 +142,19 @@ export function planPlayableEntrance(building,pads){
       // The earlier collision plan treated ALL apartment space as solid
       // at ALL elevations. Split the LEFT slab vertically, allowing only
       // this fifth-floor flat. Exterior, other flats and 1–4F stay solid.
-      const old=this.buildingObstacles.findIndex(b=>b.name==="stair-left");
-      if(old<0)throw Error("Cannot find existing stair-left blocker");
-      this.buildingObstacles.splice(old,1,
+      // The 1F layout may have split the former whole-wing blocker
+      // already. Preserve its lower y-bound when opening 5F; otherwise
+      // the old lower-floor solid masonry would reappear over the new 1F.
+      const targetName=this.firstFloorPlan?"stair-left-above":"stair-left";
+      const old=this.buildingObstacles.findIndex(b=>b.name===targetName);
+      if(old<0)throw Error("Cannot find left wing upper blocker");
+      const blocker=this.buildingObstacles.splice(old,1)[0];
+      this.buildingObstacles.push(
         rect("stair-left-below-apartment",-halfX,x-stairHalf,
-          -halfZ,facade,-Infinity,apartment.floorY-.10),
+          -halfZ,facade,blocker.minY??-Infinity,apartment.floorY-.10),
         rect("stair-left-above-apartment",-halfX,x-stairHalf,
-          -halfZ,facade,apartment.ceilingY+.01,Infinity));
+          -halfZ,facade,apartment.ceilingY+.01,Infinity)
+      );
       this.buildingObstacles.push(...apartment.obstacles);
       this.apartment=apartment;
     },
