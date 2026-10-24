@@ -258,19 +258,19 @@ export function buildApartmentHouse(THREE,config={}){
       const bottomZ=3.35,turnZ=-.74,backZ=-1.63;
       const rise=C.floorHeight/2,stepsPerFlight=12;
       const run=bottomZ-turnZ,runStep=run/stepsPerFlight;
-      const firstX=x-.41,secondX=x+.41;
+      const firstX=x-.72,secondX=x+.72;
       // Enclosing painted stairwell follows the same masonry footprint.
       for(const off of [-.91,.91]){
         box(.14,5.42,bottomZ-backZ,mats.reveal,
-          x+off,3.37,(bottomZ+backZ)/2);
+          x+Math.sign(off)*1.44,3.37,(bottomZ+backZ)/2);
         box(.018,1.40,bottomZ-backZ-.12,mats.foyerLower,
-          x+Math.sign(off)*.828,1.40,(bottomZ+backZ)/2);
+          x+Math.sign(off)*1.355,1.40,(bottomZ+backZ)/2);
         box(.018,1.65,bottomZ-backZ-.12,mats.foyerPaint,
-          x+Math.sign(off)*.828,2.93,(bottomZ+backZ)/2);
+          x+Math.sign(off)*1.355,2.93,(bottomZ+backZ)/2);
       }
-      box(1.96,5.42,.14,mats.reveal,x,3.37,backZ);
+      box(2.99,5.42,.14,mats.reveal,x,3.37,backZ);
       // Half-height return landing (between the two parallel flights).
-      box(1.64,.16,backZ*-1+turnZ,mats.foyerTileAlt,
+      box(2.74,.16,backZ*-1+turnZ,mats.foyerTileAlt,
         x,.70+rise-.08,(turnZ+backZ)/2);
       // Actual risers and treads; no visual-only staircase texture.
       for(let i=0;i<stepsPerFlight;i++){
@@ -279,27 +279,28 @@ export function buildApartmentHouse(THREE,config={}){
         const yA=.70+(i+1)*rise/stepsPerFlight;
         const yB=.70+rise+(i+1)*rise/stepsPerFlight;
         for(const [cx,cz,y] of [[firstX,zA,yA],[secondX,zB,yB]]){
-          box(.725,.115,runStep-.012,mats.foyerTileAlt,cx,y-.057,cz);
-          box(.725,.064,runStep-.012,mats.foyerTile,cx,y-.030,cz);
+          box(1.245,.115,runStep-.012,mats.foyerTileAlt,cx,y-.057,cz);
+          box(1.245,.064,runStep-.012,mats.foyerTile,cx,y-.030,cz);
         }
       }
       // Top landing has room to stop; 4.5.4 will connect four flat doors
       // per floor here. The landing does not extend into the lower ceiling.
-      box(.76,.18,.63,mats.foyerTileAlt,secondX,
+      box(1.24,.18,.63,mats.foyerTileAlt,secondX,
         .70+2*rise-.09,bottomZ-.32);
       // Two continuous handrails + posts; no inaccessible fake corridors.
       const railMat=mats.foyerMailbox;
-      for(const z of [3.02,2.24,1.47,.70,-.04]){
+      for(const z of [2.84,2.24,1.47,.70,-.04]){
         const t=(bottomZ-z)/run;
         const y=.70+rise*t;
-        box(.044,1.01,.046,railMat,x-.075,y+.50,z);
-        box(.044,1.01,.046,railMat,x+.075,.70+2*rise-y+.70+.50,z);
+        box(.044,1.01,.046,railMat,x-.085,y+.50,z);
+        box(.044,1.01,.046,railMat,x+.085,
+          .70+2*rise-(y-.70)+.50,z);
       }
       const stringerLength=Math.hypot(run,rise);
-      box(.053,.057,stringerLength,railMat,x-.075,
+      box(.053,.057,stringerLength,railMat,x-.085,
         .70+rise/2+1.01,(bottomZ+turnZ)/2,
         -Math.atan2(rise,run));
-      box(.053,.057,stringerLength,railMat,x+.075,
+      box(.053,.057,stringerLength,railMat,x+.085,
         .70+rise+rise/2+1.01,(bottomZ+turnZ)/2,
         Math.atan2(rise,run));
       // A little natural light spills onto the intermediate landing.
@@ -307,6 +308,7 @@ export function buildApartmentHouse(THREE,config={}){
       box(.22,.021,.22,mats.litGlass,x,5.41,-.80);
       audit.firstStaircase={
         firstX,secondX,bottomZ,turnZ,backZ,stepsPerFlight,
+        stairwellWidth:2.88,
         storeyHeight:C.floorHeight,halfLandingHeight:.70+rise,
         secondFloorHeight:.70+2*rise,stairFlights:2
       };
