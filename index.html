@@ -1,224 +1,40 @@
 <!doctype html>
 <html lang="ru">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta name="theme-color" content="#131a2b">
-<title>РАЙОН — маленький открытый мир</title>
-<meta name="description" content="Исследуй маленький трёхмерный район: прогулка от третьего лица на телефоне.">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#16272b">
+<meta name="description" content="MINI CITY — бесплатный предпросмотр браузерной 3D-игры.">
+<title>MINI CITY — игра и лаборатория</title>
 <style>
-:root{--ink:#f6f2e9;--muted:#b9c5d0;--gold:#ffe0a1;--glass:rgba(16,25,39,.75);--border:rgba(255,255,255,.16)}
-*{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#8eb9d3;color:var(--ink);font:500 14px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif;touch-action:none;-webkit-user-select:none;user-select:none}
-button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
-#screen,canvas{display:block}#screen{position:fixed;inset:0;z-index:0}#screen canvas{width:100%;height:100%}
-#ui{position:fixed;inset:0;z-index:2;pointer-events:none}
-#ui button,#ui .touch{pointer-events:auto}
-.topbar{position:absolute;left:max(16px,env(safe-area-inset-left));top:max(12px,env(safe-area-inset-top));display:flex;align-items:start;gap:12px}
-.brand{padding:10px 13px;background:var(--glass);border:1px solid var(--border);border-radius:14px;backdrop-filter:blur(12px)}
-.brand b{display:block;letter-spacing:.18em;font-size:15px;font-weight:900;line-height:1.15}.brand small{display:block;letter-spacing:.09em;font-size:9px;color:var(--muted);margin-top:5px}
-#quest{min-width:200px;max-width:min(270px,34vw);padding:10px 13px;background:var(--glass);border:1px solid var(--border);border-radius:14px;backdrop-filter:blur(12px)}
-#quest .kicker{font-size:9px;letter-spacing:.15em;color:var(--gold);font-weight:800}#quest .line{margin-top:4px;font-size:12px}#quest .progress{height:4px;background:rgba(255,255,255,.13);border-radius:5px;margin-top:8px;overflow:hidden}#quest .fill{height:100%;width:0;background:#ffd687;transition:width .4s}
-.rightbar{position:absolute;top:max(12px,env(safe-area-inset-top));right:max(14px,env(safe-area-inset-right));display:flex;flex-direction:column;align-items:end;gap:9px}
-#minimap{height:124px;width:124px;border-radius:18px;border:1px solid var(--border);background:rgba(16,25,39,.72);backdrop-filter:blur(9px);box-shadow:0 6px 24px #0002}
-.pill{border:1px solid var(--border);background:var(--glass);border-radius:30px;padding:9px 13px;backdrop-filter:blur(10px);font-size:11px;font-weight:800;white-space:nowrap;box-shadow:0 3px 16px #0002}
-.pill:active,.action:active{transform:scale(.95)}
-#toast{position:absolute;top:23%;left:50%;transform:translate(-50%,-8px);opacity:0;background:#17253be8;padding:12px 22px;border:1px solid #ffe0a169;border-radius:14px;text-align:center;font-weight:800;box-shadow:0 12px 50px #0005;transition:opacity .25s,transform .25s;min-width:180px;max-width:85vw}
-#toast.show{opacity:1;transform:translate(-50%,0)}
-.bottom-hint{position:absolute;left:50%;transform:translateX(-50%);bottom:max(11px,env(safe-area-inset-bottom));text-align:center;background:rgba(16,25,39,.5);border-radius:30px;padding:7px 13px;color:#f6f2e9bb;font-size:10px;white-space:nowrap}
-#joystick{position:absolute;left:max(32px,calc(env(safe-area-inset-left) + 22px));bottom:max(34px,calc(env(safe-area-inset-bottom) + 25px));width:132px;height:132px;border:2px solid #ffffff64;border-radius:50%;background:rgba(21,30,47,.25);box-shadow:inset 0 0 0 17px #ffffff09,0 4px 30px #0002;touch-action:none}
-#stick{position:absolute;left:50%;top:50%;width:59px;height:59px;transform:translate(-50%,-50%);background:linear-gradient(145deg,#f7f2e9b8,#a6bbc3bd);border:3px solid #fff9;border-radius:50%;box-shadow:0 4px 16px #0005;pointer-events:none}
-.actions{position:absolute;right:max(30px,calc(env(safe-area-inset-right) + 20px));bottom:max(28px,calc(env(safe-area-inset-bottom) + 24px));display:grid;grid-template-columns:repeat(2,63px);gap:12px;justify-items:center;align-items:center}
-.action{width:63px;height:63px;border:1.5px solid #fff8;border-radius:50%;background:rgba(17,29,45,.58);box-shadow:0 4px 18px #0003;backdrop-filter:blur(10px);font-size:24px;font-weight:800;display:grid;place-items:center;touch-action:none}
-.action span{font-size:10px;letter-spacing:.02em;font-weight:800}.action.active{background:#ffdf97bd;color:#111d30}
-#btn-action{grid-column:2;grid-row:1;opacity:.5}#btn-action.available{opacity:1;border-color:#ffdf97}
-#btn-jump{grid-column:1;grid-row:2}#btn-run{grid-column:2;grid-row:2}
-#interact-hint{position:absolute;bottom:max(164px,calc(env(safe-area-inset-bottom) + 146px));right:max(25px,env(safe-area-inset-right));font-size:11px;text-shadow:0 2px 8px #000;text-align:center;max-width:160px}
-#welcome{position:fixed;inset:0;z-index:10;display:grid;place-items:center;background:linear-gradient(140deg,rgba(10,25,41,.84),rgba(7,15,28,.72));padding:24px;overflow:auto}
-.intro{max-width:460px;width:100%;border:1px solid #ffffff2d;background:rgba(20,29,45,.78);border-radius:24px;padding:clamp(24px,6vw,38px);box-shadow:0 16px 70px #06142190;backdrop-filter:blur(18px)}
-.intro .badge{display:inline-block;letter-spacing:.21em;color:var(--gold);font-size:10px;font-weight:900;border-bottom:1px solid #ffdf985e;padding-bottom:8px}
-.intro h1{font-size:clamp(48px,12vw,76px);margin:10px 0 0;line-height:1;font-weight:950;letter-spacing:-.04em}.intro h1 em{font-style:normal;color:var(--gold)}
-.intro p{color:#d9e4e9;font-size:13px;line-height:1.65;margin:16px 0}
-.intro .features{display:flex;gap:8px;flex-wrap:wrap;margin:20px 0}.intro .features span{border:1px solid #ffffff36;padding:6px 9px;border-radius:7px;color:#fff9;font-size:10px;letter-spacing:.03em}
-#start{width:100%;background:var(--gold);color:#142238;border:0;border-radius:13px;padding:15px;font-weight:950;letter-spacing:.08em;font-size:14px}#start:disabled{opacity:.6;cursor:wait}
-.intro .note{font-size:10px;text-align:center;color:#c5d0d9;margin-top:13px}
-#fatal{position:absolute;bottom:8px;left:8px;right:8px;color:#ffbaba;font-size:11px;text-align:center}
-#rotate{display:none;position:absolute;left:50%;transform:translateX(-50%);top:21%;background:rgba(17,30,43,.7);border-radius:9px;padding:8px 12px;font-size:11px;text-align:center}
-@media (max-width:650px){.topbar{gap:5px}.brand{padding:8px 10px}.brand b{font-size:12px}.brand small{font-size:8px}#quest{min-width:0;width:154px;max-width:154px;padding:7px 9px}#quest .line{font-size:10px}#minimap{width:97px;height:97px}.pill{padding:6px 10px;font-size:10px}.rightbar{gap:6px}#joystick{width:122px;height:122px}.actions{grid-template-columns:repeat(2,56px);gap:9px}.action{width:56px;height:56px}#interact-hint{bottom:max(150px,calc(env(safe-area-inset-bottom) + 135px))}.bottom-hint{display:none}}
-@media (orientation:portrait) and (max-width:650px){#rotate{display:block}.topbar{top:max(12px,env(safe-area-inset-top))}#joystick{bottom:max(39px,env(safe-area-inset-bottom))}.actions{bottom:max(44px,env(safe-area-inset-bottom))}}
-@media (pointer:fine){#joystick,.actions{opacity:.65}.bottom-hint{display:block}#rotate{display:none}}
-@media (max-height:420px){.intro{padding:15px 24px}.intro h1{font-size:46px}.intro p{margin:9px 0}.intro .features{margin:9px 0}.intro .note{margin-top:8px}#joystick{width:105px;height:105px;bottom:12px}.actions{bottom:10px}.bottom-hint{display:none}#minimap{width:88px;height:88px}#quest{max-width:160px}.brand small{display:none}}
-
-/* 0.2 — iPhone-safe responsive HUD: keep the right-side action area unobstructed. */
-.rightbar{flex-direction:column;align-items:flex-end}
-.right-buttons{display:flex;flex-direction:column;align-items:flex-end;gap:7px}
-#ui{overscroll-behavior:none}
-#ui[hidden]{display:none}
-#rotate{pointer-events:none;animation:rotateTip 5s ease-out forwards;z-index:1}
-@keyframes rotateTip{0%,65%{opacity:1;visibility:visible}100%{opacity:0;visibility:hidden}}
-#minimap{flex-shrink:0}
-.action{transition:transform .1s,background .16s}
-#joystick{bottom:max(24px,calc(env(safe-area-inset-bottom) + 16px))}
-.actions{bottom:max(20px,calc(env(safe-area-inset-bottom) + 15px))}
-#interact-hint{bottom:max(145px,calc(env(safe-area-inset-bottom) + 128px));right:18px}
-@media(orientation:portrait) and (max-width:650px){
-  .brand{padding:8px 10px}
-  .topbar{max-width:calc(100% - 118px)}
-  #quest{width:154px;max-width:min(154px,calc(100vw - 230px))}
-  #minimap{width:82px;height:82px}
-  .rightbar{right:max(9px,env(safe-area-inset-right))}
-  .right-buttons{gap:5px}
-  .right-buttons .pill{padding:7px 8px;font-size:9px}
-  #joystick{width:116px;height:116px;left:max(18px,env(safe-area-inset-left))}
-  #stick{width:53px;height:53px}
-  .actions{grid-template-columns:repeat(2,51px);gap:9px;right:max(13px,env(safe-area-inset-right))}
-  .action{width:51px;height:51px}
-  .action span{font-size:9px}
-  #rotate{top:29%;max-width:190px;font-size:10px}
-}
-@media(orientation:landscape) and (max-height:540px){
-  .topbar{left:max(12px,env(safe-area-inset-left));top:max(6px,env(safe-area-inset-top));gap:7px}
-  .brand{padding:7px 11px}
-  .brand b{font-size:12px}
-  .brand small{font-size:8px;display:block}
-  #quest{width:178px;min-width:0;padding:7px 10px}
-  #quest .line{font-size:10px}
-  #quest .progress{margin-top:4px}
-  .rightbar{top:max(6px,env(safe-area-inset-top));right:max(12px,env(safe-area-inset-right));flex-direction:row;align-items:flex-start;gap:6px}
-  #minimap{width:77px;height:77px;border-radius:12px}
-  .right-buttons{gap:5px}
-  .right-buttons .pill{padding:6px 7px;font-size:9px}
-  #joystick{width:101px;height:101px;left:max(17px,env(safe-area-inset-left));bottom:max(8px,env(safe-area-inset-bottom))}
-  #stick{width:48px;height:48px}
-  .actions{grid-template-columns:repeat(2,49px);gap:8px;right:max(18px,env(safe-area-inset-right));bottom:max(8px,env(safe-area-inset-bottom))}
-  .action{width:49px;height:49px;font-size:17px}
-  .action span{font-size:8px}
-  #interact-hint{bottom:125px;right:max(17px,env(safe-area-inset-right))}
-  #rotate{display:none}
-  .bottom-hint{display:none}
-}
-@media(orientation:landscape) and (max-height:380px){
-  #quest{width:145px}#minimap{width:65px;height:65px}
-  .right-buttons .pill{font-size:8px;padding:4px 5px}
-  #joystick{width:89px;height:89px}
-  .actions{grid-template-columns:repeat(2,43px);gap:6px}
-  .action{width:43px;height:43px}
-}
-
-
-/* 0.2.1 — no overlapping instructional banners, and compact performance HUD. */
-#toast{
-  top:clamp(110px,26vh,230px);
-  padding:9px 14px;min-width:0;max-width:min(290px,76vw);
-  border-radius:11px;line-height:1.35;font-size:12px;
-  pointer-events:none;z-index:4;
-}
-#rotate{display:none!important}
-.brand small.perf-line{display:block;font-size:9px;line-height:1.5;letter-spacing:.04em;color:#9cdbcc;margin-top:3px}
-@media(orientation:landscape) and (max-height:540px){
-  #toast{top:98px;max-width:36vw;font-size:11px}
-  .brand small.perf-line{font-size:8px}
-}
-@media(orientation:portrait) and (max-width:650px){
-  #toast{top:clamp(145px,25vh,220px);max-width:68vw}
-}
-
-
-/* 0.3: a small secondary exploration goal; no new floating HUD panels. */
-#entrance-progress{font-size:10px;margin-top:5px;color:#a8e2d4;letter-spacing:.015em;font-weight:700}
-.brand small.zone-name{margin-top:3px;display:block;font-size:9px;color:#ffe0a1;letter-spacing:.09em}
-#btn-action.available{background:rgba(26,94,83,.79);border:2px solid #a8e2d4}
-@media(orientation:landscape) and (max-height:540px){
-  #entrance-progress{font-size:9px;margin-top:3px}
-  .brand small.zone-name{font-size:8px;margin-top:1px}
-}
-@media(orientation:portrait) and (max-width:650px){
-  #entrance-progress{font-size:9px;margin-top:4px}
-  .brand small.zone-name{font-size:8px}
-}
-
-
-/* 0.3.1 subdued mobile game design. */
-:root{--ink:#f3f4ee;--gold:#d5ddd6;--glass:rgba(23,32,39,.86);--border:rgba(209,225,223,.19)}
-.brand,#quest,.pill{background:rgba(20,29,36,.83);border:1px solid rgba(218,228,222,.18);
- box-shadow:0 8px 30px rgba(7,15,19,.19);backdrop-filter:blur(15px)}
-.brand{border-left:3px solid #91aba8}
-#quest .kicker{color:#c3d4cd}
-#quest .fill{background:linear-gradient(90deg,#789b92,#c8d0c4)}
-#entrance-progress{color:#9cc6bf}
-.brand small.zone-name{color:#b8d3cf}
-.pill{font-size:10px;letter-spacing:.02em;white-space:nowrap}
-#btn-quality{border-color:rgba(167,215,199,.4);color:#d8e9e2}
-.action{border-color:rgba(228,239,234,.42);background:rgba(21,33,37,.58)}
-#btn-action.available{background:rgba(34,88,79,.8)}
-#toast{background:rgba(24,38,41,.92);border-color:rgba(202,221,211,.38)}
-#minimap{border-radius:13px;background:rgba(22,35,38,.75)}
-@media (orientation:portrait) and (max-width:650px){
- .brand{padding:7px 9px}
- #quest{padding:7px 8px}
- #minimap{height:76px;width:76px}
- .right-buttons{gap:4px}
- .right-buttons .pill{font-size:9px;padding:5px 7px}
-}
-@media (orientation:landscape) and (max-height:540px){
- #minimap{width:72px;height:72px}
- .right-buttons{gap:4px}
- .right-buttons .pill{font-size:8px;padding:4px 8px}
-}
-
-
-/* 0.3.2 — lighter filmic mobile heads-up display. Retain comfortable hitboxes. */
-:root{
- --ink:#f2f2e9;--muted:#abbdb8;--gold:#f0c5a4;
- --glass:rgba(18,32,38,.78);--border:rgba(235,235,219,.18);
-}
-.brand,#quest{background:linear-gradient(135deg,rgba(24,43,49,.82),rgba(18,32,39,.72));box-shadow:0 5px 25px #12202b28;border-radius:11px}
-.brand{border-left:2px solid #d6baa3}
-.brand b{font-weight:850;letter-spacing:.15em}
-.brand small.zone-name{color:#e2bea6}
-#quest .kicker{color:#e7d1bc;letter-spacing:.13em}
-#quest .progress{background:rgba(226,237,228,.14)}
-#quest .fill{background:linear-gradient(90deg,#b3cbc5,#e9bda2)}
-#entrance-progress{color:#afccc4}
-#minimap{border:1px solid #e2d6c94f;box-shadow:0 5px 25px #131d2650}
-.right-buttons .pill{background:rgba(20,33,41,.72);border:1px solid #d7cbbc4b;font-weight:700}
-#btn-quality{color:#f0cfb8}
-#joystick{background:radial-gradient(circle,#84969624,#172a3360);border-color:#ebede58a;box-shadow:0 6px 20px #0002}
-#stick{background:linear-gradient(140deg,#e2e0d3d9,#849b9cbd)}
-.action{border:1.2px solid #e6ebe1aa;background:linear-gradient(140deg,#263c46c9,#172d38b8)}
-.action.available{background:linear-gradient(145deg,#527871da,#244b4aca)}
-#toast{border:1px solid #d7b59f80;background:#243e47ef}
-.intro{background:linear-gradient(130deg,#26353dea,#172b34e8);border:1px solid #d4d1bb44}
-.intro h1 em{color:#e9b9a1}
-.intro .badge{color:#e5bea5;border-color:#c4a28d}
-#start{background:linear-gradient(110deg,#e9b7a2,#e8cbb2)}
-@media(orientation:landscape) and (max-height:540px){
-  .brand{padding:7px 10px}#quest{padding:7px 9px}
-}
+:root{font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif;color:#e8f5f1;background:#112327}
+*{box-sizing:border-box}
+body{min-height:100dvh;margin:0;display:grid;place-items:center;padding:24px}
+main{max-width:600px;width:100%;padding:clamp(22px,5vw,44px);border-radius:24px;background:#1d3439;border:1px solid #3a5c60;box-shadow:0 20px 50px #05151780}
+small{font-size:13px;letter-spacing:.15em;text-transform:uppercase;color:#add9d2}
+h1{font-size:clamp(36px,8vw,56px);margin:12px 0;letter-spacing:-.04em}
+p{color:#c7ded9;line-height:1.6}
+.actions{display:grid;gap:12px;margin-top:26px}
+a.action{display:block;padding:19px 22px;border-radius:15px;background:#c8e7d8;color:#163538;text-decoration:none;font-size:18px;font-weight:750;text-align:center}
+a.action.secondary{color:#e9f7f2;background:#315359}
+a.action:focus-visible{outline:3px solid #fff;outline-offset:3px}
+footer{margin-top:28px;padding-top:20px;border-top:1px solid #476265;font-size:13px;color:#abc7c1}
+footer a{color:#c8e7d8}
 </style>
-<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js"}}</script>
 </head>
 <body>
-<div id="screen"></div>
-<div id="ui" hidden>
-  <div class="topbar"><div class="brand"><b>РАЙОН</b><small>MINI CITY · 0.3.2 · <span id="fps-counter">— FPS</span></small><small class="perf-line" id="perf-info">GPU: —</small><small id="zone-name" class="zone-name">НА УЛИЦЕ</small></div><div id="quest"><div class="kicker">ИССЛЕДУЙ РАЙОН</div><div class="line" id="quest-line">Найдено мест: 0 / 3</div><div class="progress"><div id="quest-fill" class="fill"></div></div><div id="entrance-progress">Подъезды: 0 / 3</div></div></div>
-  <div class="rightbar"><canvas id="minimap" width="240" height="240" aria-label="Карта района"></canvas><div class="right-buttons"><button id="btn-time" class="pill">☀️ ДЕНЬ</button><button id="btn-sound" class="pill">♫ ЗВУК: ВКЛ</button><button id="btn-quality" class="pill">⚙ СРЕДНЕЕ</button></div></div>
-  <div id="toast" role="status" aria-live="polite"></div>
-  
-  <div class="touch" id="joystick" aria-label="Джойстик"><div id="stick"></div></div>
-  <div class="actions"><button id="btn-action" class="action" aria-label="Взаимодействие"><span>ДЕЙСТВИЕ</span></button><button id="btn-jump" class="action" aria-label="Прыжок"><span>ПРЫЖОК</span></button><button id="btn-run" class="action" aria-label="Бег"><span>БЕГ</span></button></div>
-  <div id="interact-hint"></div>
-  <div class="bottom-hint">WASD — идти · мышь — камера · Shift — бег · Пробел — прыжок · E — действие</div>
+<main>
+<small>Открытый мир · Разработка</small>
+<h1>MINI CITY</h1>
+<p>Браузерный российский 3D-город. Предпросмотр первого дома и лестничных клеток, этап <strong>4.5.4.5</strong>.</p>
+<div class="actions">
+<a class="action" href="./play-lab/index.html?mode=game">🎮 Играть с персонажем</a>
+<a class="action secondary" href="./play-lab/index.html?mode=lab">🧪 Лаборатория — свободная камера</a>
 </div>
-<div id="welcome"><div class="intro">
-  <div class="badge">ОТКРЫТЫЙ МИР · БРАУЗЕРНАЯ 3D-ИГРА</div>
-  <h1>ТВОЙ<br><em>РАЙОН.</em></h1>
-  <p>Холодный город, мягкие рисованные облака и вечерние огни. Исследуй дворы и подъезды в новом художественном стиле.</p>
-  <div class="features"><span>МНОГОЭТАЖНЫЕ ПОДЪЕЗДЫ</span><span>НОВЫЙ ПЕРСОНАЖ</span><span>GRAPHIC REWORK</span><span>СМЕНА ВРЕМЕНИ СУТОК</span><span>ИССЛЕДОВАНИЕ</span></div>
-  <button id="start" disabled>ЗАГРУЗКА МИРА...</button>
-  <div class="note">Левый стик — ходьба, свайп — камера. Найди голубой вход и поднимись по лестнице. Качество переключается кнопкой ⚙.</div>
-  <div id="fatal"></div>
-</div></div>
-<script>window.addEventListener("error",function(e){if(!window.cityReady){document.getElementById("fatal").textContent="Не удалось загрузить игру. Проверь соединение с интернетом и обнови страницу.";}});window.addEventListener("unhandledrejection",function(){if(!window.cityReady){document.getElementById("fatal").textContent="Ошибка загрузки игрового движка. Попробуй обновить страницу.";}});</script>
-<script type="module" src="./game.js"></script>
+<footer>
+<p>Бесплатный хостинг GitHub Pages · HTTPS · без GitHack. Игра и лаборатория используют одни и те же файлы сцены.</p>
+<p>Версия: <code>177ceafe</code> · <a href="https://github.com/RGB7RED/Pollina-/pull/39">Изменения в GitHub</a></p>
+</footer>
+</main>
 </body>
 </html>
