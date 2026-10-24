@@ -283,9 +283,16 @@ for(const [id,direction] of [["free-up","up"],["free-down","down"]]){
 }
 $("free-reset").addEventListener("click",()=>freeCamera.reset());
 $("free-landing").addEventListener("click",()=>{
-  // 3rd-floor stair landing, facing the two centre apartment doors.
+  // Third floor: same room, real far apartment doors.
   freeCamera.position={x:entry.x,y:.70+2*config.floorHeight+1.62,z:-.70};
   freeCamera.yaw=0;freeCamera.pitch=-.16;
+});
+$("free-window").addEventListener("click",()=>{
+  // Third-storey half landing, facing the REAL front exterior facade.
+  // Camera ONLY: the game avatar never teleports.
+  freeCamera.position={x:entry.x-1.46,
+    y:.70+2*config.floorHeight+config.floorHeight/2+1.58,z:4.52};
+  freeCamera.yaw=Math.PI;freeCamera.pitch=-.08;
 });
 const lookTarget=new THREE.Vector3(),eyeTarget=new THREE.Vector3();
 const clock=new THREE.Clock();
