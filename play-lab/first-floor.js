@@ -33,7 +33,14 @@ export function planFirstFloor(building,entrance){
     // hall of front flat runs beside the side wall from Z=-3 to Z=-0.65.
     alongZ("front-rear-flat-"+side,-.65,left,right,near,1.02);
     const corridorWall=innerX+side*1.33;
-    alongX("private-hall-"+side,corridorWall,-3.08,-.65,-1.90,.91);
+    // Private hallway is SEALED from the neighbouring rear flat.
+    // Its only connection is to its own front room through the
+    // doorway in the transverse partition at Z=-0.65.
+    segments.push(rect("private-hall-side-"+side,
+      corridorWall-wall/2,corridorWall+wall/2,-3.08,-.65));
+    segments.push(rect("private-hall-rear-cap-"+side,
+      Math.min(corridorWall,innerX),Math.max(corridorWall,innerX),
+      -3.08-wall/2,-3.08+wall/2));
     alongZ("rear-wet-zone-"+side,-4.73,left,right,
       side<0?left+3.05:right-3.05,.92);
     alongX("rear-kitchen-bath-"+side,side<0?right-2.55:left+2.55,
