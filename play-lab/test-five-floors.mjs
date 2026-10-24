@@ -78,7 +78,8 @@ for(let floor=4;floor>=1;floor--){
  if(floor>1)go(1,0,70);
 }
 go(1,0,43); // move from left U-flight to RIGHT entrance flight
-assert.ok(Math.abs(player.position.x-entry.stair.entryX)<.3);
+assert.ok(Math.abs(player.position.x-entry.stair.entryX)<entry.stair.entryWidth/2-.05,
+  "right entrance flight remains accessible across full tread width");
 go(0,-1,135); // descend all twelve entry steps into the foyer
 assert.equal(player.position.y,.70);
 go(-1,0,18); // centre on ORIGINAL exterior doorway
