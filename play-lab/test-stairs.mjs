@@ -19,7 +19,7 @@ assert.equal(e.stair.backZ,-1.63);
 const x=e.x;
 assert.equal(e.groundHeight(x-.72,-1.15),.70+e.stair.halfRise);
 assert.equal(e.groundHeight(x+.72,-1.15),.70+e.stair.halfRise);
-assert.equal(e.groundHeight(x+.72,2.99),.70+BUILDING.floorHeight);
+assert.equal(e.groundHeight(x+.72,2.99,.70+BUILDING.floorHeight),.70+BUILDING.floorHeight);
 assert.ok(Math.abs(e.groundHeight(x-.72,2.99)-.816)<.02);
 assert.ok(collidesAt(x,-2.0,e.buildingObstacles,PLAYER_RADIUS),"stair rear wall");
 assert.ok(collidesAt(x,1.0,e.buildingObstacles,PLAYER_RADIUS),"flight divider");
@@ -41,8 +41,8 @@ function go(ax,az,n){
  }
 }
 go(0,1,145);
-assert.ok(p.position.z>=2.95&&p.position.z<=3.10,
- "straight centre corridor must not shortcut around a divided stairwell");
+assert.ok(p.position.z>=2.65&&p.position.z<=2.85,
+ "centre can reach flat landing but cannot ascend without choosing left flight");
 assert.equal(p.position.y,.70);
 go(-1,0,17);
 assert.ok(p.position.x<x-.39);
@@ -60,7 +60,7 @@ const maxHeight=Math.max(...record.map(p=>p.y));
 assert.ok(maxHeight>=3.47);
 assert.ok(record.some(v=>v.y>2&&v.y<3));
 assert.ok(p.position.y>.70+BUILDING.floorHeight-.01);
-assert.equal(p.entry.zone(p.position.x,p.position.z),"второй марш");
+assert.equal(p.entry.zone(p.position.x,p.position.z,p.position.y),"марш вниз");
 p.reset();
 assert.equal(p.position.y,0);
 assert.equal(p.innerDoorOpen,false);
