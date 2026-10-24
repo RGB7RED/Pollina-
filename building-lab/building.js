@@ -862,10 +862,17 @@ export function buildApartmentHouse(THREE,config={}){
   // Preserve the ORIGINAL operable entrance opening as well.
   const entryDoorVoid={bottom:C.plinth+.04,top:C.plinth+.04+2.28,
     halfWidth:1.71/2};
+  // Paint a horizontal GREEN DADO under each window, ending just
+  // BELOW the windowsill. In 4.5.4.7 painting followed an apartment
+  // floor modulo and restarted halfway through each window, producing
+  // an inverted green strip across the top of the real glass.
+  const greenBands=Array.from({length:C.floors-1},(_,i)=>{
+    const landingY=firstMid+i*2.42;
+    return {bottom:landingY-.12,top:landingY+.78};
+  });
   const cuts=[.70,shellTop,entryDoorVoid.top,
     ...windowIntervals.flatMap(w=>[w.bottom,w.top]),
-    ...Array.from({length:C.floors},(_,i)=>.70+1.39+i*2.42),
-    ...Array.from({length:C.floors},(_,i)=>.70+1.39+i*2.42+1.16)];
+    ...greenBands.flatMap(w=>[w.bottom,w.top])];
   const sorted=[...new Set(cuts.filter(v=>v>=.70&&v<=shellTop)
     .map(v=>Number(v.toFixed(5))))].sort((a,b)=>a-b);
   let plasterPanels=0;
@@ -873,9 +880,10 @@ export function buildApartmentHouse(THREE,config={}){
     const y0=sorted[j],y1=sorted[j+1];
     if(y1-y0<.005)continue;
     const midY=(y0+y1)/2;
-    const rel=midY-(.70+1.39);
-    const lower=rel<0?midY<1.90:
-      rel-Math.floor(rel/2.42)*2.42<1.16;
+    // Never put green ABOVE the sill, or in the upper half of the
+    // glazing. The entire opening shares the cream upper finish.
+    const lower=midY<1.90||
+      greenBands.some(b=>midY>=b.bottom&&midY<b.top);
     const mat=lower?mats.foyerLower:mats.foyerPaint;
     const windowOpen=windowIntervals.some(w=>midY>w.bottom&&midY<w.top);
     const doorwayOpen=midY>entryDoorVoid.bottom&&midY<entryDoorVoid.top;
@@ -888,10 +896,28 @@ export function buildApartmentHouse(THREE,config={}){
       plasterPanels++;
     }
   }
+  // The inside-facing PAINTED WALL ends at the original masonry hole,
+  // but the four perpendicular hole REVEALS were still exposed brick.
+  // Cover only the real jamb, sill and lintel faces, preserving a
+  // 1.29m clear opening and transparent glazing (no central infill).
+  const revealDepth=.165;
+  const revealMidZ=innerWindowZ+revealDepth/2;
+  let finishedWindowReveals=0;
+  for(const hole of windowIntervals){
+    const mid=(hole.bottom+hole.top)/2;
+    for(const side of [-1,1])
+      box(.052,hole.top-hole.bottom,revealDepth,mats.foyerPaint,
+        wx+side*(.70-.025),mid,revealMidZ);
+    for(const edge of [-1,1])
+      box(1.35,.052,revealDepth,mats.foyerPaint,
+        wx,edge<0?hole.bottom+.025:hole.top-.025,revealMidZ);
+    finishedWindowReveals++;
+  }
   audit.stairwellInterior={plasterPanels,wallZ:innerWindowZ,
     windowApertures:windowIntervals,entranceAperture:entryDoorVoid,
-    painted:true,
-    noBrickFacing:true,transparentWindowsUnobstructed:true};
+    greenBands,finishedWindowReveals,
+    painted:true,noBrickFacing:true,
+    transparentWindowsUnobstructed:true};
   // Two side windows per storey. The end walls are perforated too.
   for(const side of [-1,1]){
     for(let floor=0;floor<C.floors;floor++){
