@@ -114,7 +114,11 @@ export function planFirstFloor(building,entrance){
     // NORTH REAR APARTMENT: door z=-4.00 into its own 1.32m-wide
     // lengthwise hall; two separate wet-room entrances and a cross
     // corridor giving individual access to both north-facing bedrooms.
-    const rearBedroomFront=-8.20,rearHallFront=-7.18,wetSplit=-5.22;
+    // The west end-panel window centred at z=-7.85 occupies
+    // [-8.545,-7.155]. Neither the bedroom boundary nor the cross-hall
+    // partition may terminate in that glazing (including the frame).
+    // Keep the corridor BETWEEN these two structural cross-walls.
+    const rearBedroomFront=-9.00,rearHallFront=-6.90,wetSplit=-5.22;
     const wetDoorKitchen=-6.12,wetDoorBathroom=-4.25;
     wallX("rear-private-hall-"+side,near,rearHallFront,divider,[
       {z:wetDoorKitchen,width:.90},
@@ -149,7 +153,9 @@ export function planFirstFloor(building,entrance){
     // SOUTH FRONT APARTMENT: own z=-2.42 doorway. The long hall lies
     // next to the stair. Kitchen and bathroom each open DIRECTLY off
     // that hall; a transverse corridor serves all living rooms.
-    const frontCrossBack=.95,frontBedrooms=2.40;
+    // The other west end-panel window is z=+1.65, from +0.955
+    // to +2.345. Both corridor boundaries must clear that full sash.
+    const frontCrossBack=.80,frontBedrooms=2.60;
     const frontWetSplit=-.62;
     wallX("front-private-hall-"+side,near,divider,frontCrossBack,[
       {z:-1.80,width:.88},{z:.25,width:.88}
