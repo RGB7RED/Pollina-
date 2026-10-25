@@ -50,7 +50,7 @@ assert.equal(a.slopedWallFinish.entryFlightPainted,true);
 const entryVertices=positions.slice(0,18);
 assert.ok(Math.abs(entryVertices[2]-3.35)<eps);
 assert.ok(Math.abs(entryVertices[8]+1.58)<eps);
-assert.ok(Math.abs(entryVertices[1]-(.70-.15))<eps);
+assert.ok(Math.abs(entryVertices[1]-(0-.15))<eps);
 for(let i=0;i<8;i++){
   const v=positions.slice((i+1)*18,(i+2)*18);
   const z0=v[2],z1=v[8],foot0=v[1],foot1=v[7]-1.33;
@@ -92,7 +92,7 @@ for(let i=0;i<4;i++){
   assert.ok(faceAt(cream,opening.top-.12).length>0,
     "upper window wall must be cream");
   const jamb=6.062+.165/2;
-  for(const off of [-.56,.56])for(const dx of [-.395,.395]){
+  for(const off of [-.61,.61])for(const dx of [-.525,.525]){
     const sides=cubes.filter(t=>t.color===cream&&
       Math.abs(t.position.x-(x+off+dx))<eps&&
       Math.abs(t.position.z-jamb)<eps&&
@@ -103,11 +103,11 @@ for(let i=0;i<4;i++){
   }
   for(const pane of a.stairwellWindows.slice(i*2,i*2+2))
     assert.ok(pane.transparent&&pane.through&&
-      Math.abs(pane.top-pane.bottom-1.12)<eps);
+      Math.abs(pane.top-pane.bottom-.91)<eps);
 }
 assert.ok(a.stairwellInterior.innerHalfWidth<=entry.stairHalf-.08,
   "stairwell plaster stays inside the structural wall");
-assert.ok(a.stairwellWindows.slice(0,2).every(w=>Math.abs(Math.abs(w.centreX-x)-.56)<eps));
+assert.ok(a.stairwellWindows.slice(0,2).every(w=>Math.abs(Math.abs(w.centreX-x)-.61)<eps));
 assert.equal(a.completeStaircase.landing.depth,3.2699999999999996);
 assert.equal(a.completeStaircase.apartmentDoors.length,20);
 assert.equal(a.completeStaircase.electricPanels.length,5);
