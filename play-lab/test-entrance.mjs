@@ -9,7 +9,7 @@ const src=read("../building-lab/building.js");
 assert.match(game,/planPlayableEntrance\(config,pads\)/);
 assert.match(game,/doorPivot\.rotation\.y/);
 assert.match(game,/actorPivot\.position\.set\(state\.x,state\.y,state\.z\)/);
-assert.match(game,/setEntryDoorOpen\(/);
+assert.match(game,/controller\.toggleNearestDoor\(/);
 assert.match(html,/id="entry-action"/);
 assert.equal((game.match(/new THREE\.Scene\(/g)||[]).length,1,
   "one scene only: no interior world and no loading/teleport");
