@@ -68,6 +68,8 @@ class FakeClassList{
   if(val)this.set.add(cls);else this.set.delete(cls);
   return val;
  }
+ add(cls){this.set.add(cls);}
+ remove(cls){this.set.delete(cls);}
  contains(cls){return this.set.has(cls);}
 }
 class Node{
