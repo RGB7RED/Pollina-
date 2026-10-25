@@ -5,7 +5,7 @@ export function planPlayableEntrance(building,pads){
   const p=pads[0],x=p.x,facade=building.frontFacade??building.width/2;
   const halfX=building.length/2,rearFacade=building.backFacade??-building.width/2;
   const halfZ=-rearFacade;
-  const doorHalf=.81,insideEnd=3.35,foyerHalf=1.74;
+  const doorHalf=.81,insideEnd=3.35,foyerHalf=1.62;
   // U-stair follows the true stair mesh in building-lab/building.js.
   // The first floor and every complete-floor landing are at the BACK,
   // opposite the former door wall. Ascend forward on LEFT, then return
@@ -16,9 +16,9 @@ export function planPlayableEntrance(building,pads){
     frontZ:facade-.44,firstFrontZ:facade-.44,
     entryStartZ:3.35,entryRise:1.39,halfRise:storeyHeight/2,
     steps:12,entrySteps:12,firstFloor,foyerFloor,storeyHeight,
-    firstX:x-.97,secondX:x+.97,entryX:x+.97,
-    entryWidth:1.58,flightWidth:1.58};
-  const stairHalf=1.84,aisleHalf=.16,upperTurnY=firstFloor+stair.halfRise;
+    firstX:x-.90,secondX:x+.90,entryX:x+.90,
+    entryWidth:1.46,flightWidth:1.46};
+  const stairHalf=1.72,aisleHalf=.16,upperTurnY=firstFloor+stair.halfRise;
   if(p.width<2||insideEnd>=facade||foyerHalf>=p.width/2)
     throw Error("Entrance dimensions invalid");
   const rect=(name,minX,maxX,minZ,maxZ,minY=-Infinity,maxY=Infinity)=>
@@ -134,6 +134,17 @@ export function planPlayableEntrance(building,pads){
           side<0?wing.minX+.02:wing.maxX+.12,
           -halfZ,facade,plan.y-.10,plan.ceilingY+.01));
       }
+      // Open only the first residential floor of the formerly blocked
+      // rear shaft; keep all other floors and the stair-back wall solid.
+      const rearIndex=this.buildingObstacles.findIndex(o=>o.name==="stairwell-back");
+      if(rearIndex<0)throw Error("Missing shaft-rear collision volume");
+      const rear=this.buildingObstacles.splice(rearIndex,1)[0];
+      this.buildingObstacles.push(
+        {...rear,name:"stairwell-back-below",maxY:plan.y-.10},
+        {...rear,name:"stairwell-back-above",minY:plan.ceilingY+.01},
+        rect("stairwell-back-ground-divider",x-stairHalf,x+stairHalf,
+          stair.backZ-.075,stair.backZ+.075,plan.y-.10,plan.ceilingY+.01)
+      );
       this.buildingObstacles.push(...plan.obstacles);
       this.firstFloorPlan=plan;
     },
