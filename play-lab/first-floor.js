@@ -6,15 +6,20 @@
 export function planFirstFloor(building,entrance){
   if(building.floors!==5)throw Error("Five-storey reference required");
   const x=entrance.x,y=entrance.floorHeight(0),half=entrance.stairHalf;
-  const back=(building.backFacade??-building.width/2)+.27;
-  const front=(building.frontFacade??building.width/2)-.28;
+  // Finished room faces stay WITHIN the inner face of the concrete
+  // exterior panels, not in or behind their transparent glass.
+  const back=(building.backFacade??-building.width/2)+.42;
+  const front=(building.frontFacade??building.width/2)-.42;
   const divider=-3.21,ceilingY=y+building.floorHeight-.16;
   const wall=.11,openingHeight=2.08,wingDepth=9.56;
   if(ceilingY-y<=openingHeight+.06)
     throw Error("Room doors would intersect next-floor slab");
   const wings=[-1,1].map(side=>({
     side,innerX:x+side*half,
-    minX:side<0?Math.max(-building.length/2+.24,x-wingDepth):x+half,
+    // The westmost prototype wing must meet the REAL end-panel inner
+    // face, rather than terminate 0.8m before the facade and leave a
+    // hidden dead corridor behind its actual windows.
+    minX:side<0?-building.length/2+.36:x+half,
     maxX:side<0?x-half:x+wingDepth
   }));
   const doorKinds=["grey","brown","blue","dark"];
@@ -83,7 +88,28 @@ export function planFirstFloor(building,entrance){
     wallZ("separate-homes-"+side,divider,left,right);
     // Edge of the modelled wing seals it against the next building unit,
     // leaving existing transparent facade windows completely untouched.
-    wallX("outer-neighbour-"+side,outer,back,front);
+    if(side<0){
+      // Negative-X end wall contains TWO actual transparent windows.
+      // The former full-height "outer-neighbour" solid slab completely
+      // concealed both windows from the flats. Subtract matching holes.
+      const middle=(building.frontFacade+building.backFacade)/2;
+      const endWindowZ=[(building.backFacade+middle)/2,
+        (middle+building.frontFacade)/2],halfWindow=1.39/2;
+      let edge=back;
+      for(let i=0;i<endWindowZ.length;i++){
+        const z=endWindowZ[i],left=z-halfWindow,right=z+halfWindow;
+        if(left<=edge||right>=front)throw Error("End window outside flat");
+        segments.push(rect("end-lining-solid-"+i,outer-wall/2,outer+wall/2,
+          edge,left));
+        const sill=y+.64,lintel=sill+1.46;
+        segments.push(rect("end-lining-sill-"+i,outer-wall/2,outer+wall/2,
+          left,right,y-.10,sill));
+        segments.push(rect("end-lining-head-"+i,outer-wall/2,outer+wall/2,
+          left,right,lintel,ceilingY));
+        edge=right;
+      }
+      segments.push(rect("end-lining-tail",outer-wall/2,outer+wall/2,edge,front));
+    }else wallX("outer-neighbour-"+side,outer,back,front);
 
     // NORTH REAR APARTMENT: door z=-4.00 into its own 1.32m-wide
     // lengthwise hall; two separate wet-room entrances and a cross
@@ -140,13 +166,21 @@ export function planFirstFloor(building,entrance){
       // existing THREE front windows (bays 4,5,6). The cross hall has
       // three matching doorways so bedrooms cannot force passage
       // through each other.
-      const third=(right-left)/3,s1=left+third,s2=left+third*2;
+      // Equal thirds cut right through the facade windows. The actual
+      // three first-entrance window bays are 4, 5, 6: dividers belong
+      // exactly BETWEEN consecutive windows.
+      const bayX=n=>-building.length/2+1.85+
+        (n+.5)*(building.length-3.7)/building.windowBays;
+      const s1=(bayX(4)+bayX(5))/2;
+      const s2=(bayX(5)+bayX(6))/2;
+      if(!(left+.90<s1&&s1+1<s2&&s2+1<right))
+        throw Error("3-room dividers cannot fit between facade windows");
       wallX("three-room-separation-A",s1,frontBedrooms,front);
       wallX("three-room-separation-B",s2,frontBedrooms,front);
       wallZ("three-bedrooms-access",frontBedrooms,left,right,[
-        {x:left+third*.5,width:.94},
-        {x:left+third*1.5,width:.94},
-        {x:left+third*2.5,width:.94}
+        {x:(left+s1)/2,width:.94},
+        {x:(s1+s2)/2,width:.94},
+        {x:(s2+right)/2,width:.94}
       ]);
       room(3,"Жилая комната 1",left,s1,frontBedrooms,front);
       room(3,"Жилая комната 2",s1,s2,frontBedrooms,front);
@@ -162,6 +196,67 @@ export function planFirstFloor(building,entrance){
        back<=building.backFacade||front>=building.frontFacade)
       throw Error("Room extends outside actual masonry envelope");
   }
+  // The original stair masonry begins at Z=-4.85, but the new
+  // 19-metre-deep building extends 7.75m behind it. Both missing
+  // corridor-side walls MUST reach all the way to the rear facade.
+  const originalStairRear=-4.85;
+  for(const w of wings)
+    segments.push(rect("rear-stair-side-continuation-"+w.side,
+      w.innerX-wall/2,w.innerX+wall/2,
+      back,originalStairRear));
+  // Interior facing of both REAL outer concrete facades. Split it by
+  // each actual transparent window; never cover glazing with a
+  // second opaque wall or allow partition ends to intersect sashes.
+  const facadeLining=[];
+  const bayStep=(building.length-3.7)/building.windowBays;
+  const sillY=y+.64,lintelY=sillY+1.46;
+  const fullWindowWidth=1.40;
+  for(const wing of wings)for(const side of [-1,1]){
+    const z=side===1?building.frontFacade-.355:
+      building.backFacade+.355;
+    let edge=wing.minX;
+    const allBays=Array.from({length:building.windowBays},(_,i)=>
+      ({bay:i,x:-building.length/2+1.85+(i+.5)*bayStep}))
+      .filter(w=>w.x+fullWindowWidth/2>wing.minX+.001&&
+        w.x-fullWindowWidth/2<wing.maxX-.001&&
+        !(side===1&&[3,10,17,24].includes(w.bay)));
+    for(const [index,win] of allBays.entries()){
+      const l=Math.max(wing.minX,win.x-fullWindowWidth/2);
+      const r=Math.min(wing.maxX,win.x+fullWindowWidth/2);
+      if(l>edge+.001)
+        facadeLining.push(rect("panel-lining-solid-"+wing.side+"-"+side+"-"+index,
+          edge,l,z-.025,z+.025));
+      if(r-l>.01){
+        facadeLining.push(rect("panel-lining-sill-"+wing.side+"-"+side+"-"+index,
+          l,r,z-.025,z+.025,y-.10,sillY));
+        facadeLining.push(rect("panel-lining-head-"+wing.side+"-"+side+"-"+index,
+          l,r,z-.025,z+.025,lintelY,ceilingY));
+      }
+      edge=Math.max(edge,r);
+    }
+    if(wing.maxX-edge>.001)
+      facadeLining.push(rect("panel-lining-tail-"+wing.side+"-"+side,
+        edge,wing.maxX,z-.025,z+.025));
+  }
+  segments.push(...facadeLining);
+  // Explicit guard against NEW partitions cutting the middle of any
+  // facade window. Only walls perpendicular to the facade can do so.
+  const windowConflicts=[];
+  for(const w of wings){
+    const windows=Array.from({length:building.windowBays},(_,bay)=>
+      -building.length/2+1.85+(bay+.5)*bayStep)
+      .filter(x=>x>=w.minX&&x<=w.maxX);
+    for(const wall of segments){
+      if(!wall.name.includes("three-room-separation")&&
+         !wall.name.includes("rear-two-bedrooms-divider"))continue;
+      for(const cx of windows)
+        if(wall.minX<cx+.72&&wall.maxX>cx-.72 &&
+          (wall.maxZ>=front-.20||wall.minZ<=back+.20))
+          windowConflicts.push({wall:wall.name,windowX:cx});
+    }
+  }
+  if(windowConflicts.length)
+    throw Error("Partition intersects exterior window: "+JSON.stringify(windowConflicts));
   const stairWallColliders=wings.flatMap(w=>{
     const spans=[[back,-4.52],[-3.48,-2.94],[-1.90,front]];
     return spans.map(([a,b],i)=>rect("flat-side-wall-"+w.side+"-"+i,
@@ -172,6 +267,8 @@ export function planFirstFloor(building,entrance){
   const data={
     floor:1,y,ceilingY,wall,x,wings,doors,rooms,unitAreas,openings,
     segments,doorBlockers,back,front,divider,unfurnished:true,
+    facadeLiningCount:facadeLining.length,
+    windowConflicts,roofStyle:"flat-panel",
     template:"Khrushchevka-reference-2k-1k-1k-3k", 
     bounds:{back:building.backFacade,front:building.frontFacade},
     contains:(px,pz,py)=>Math.abs(py-y)<.24&&wings.some(w=>
