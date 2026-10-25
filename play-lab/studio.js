@@ -17,6 +17,19 @@ export function renderDebugInfo({fps=0,drawCalls=0,triangles=0,geometries=0,
     collision:collided?"Столкновение: ДА":"Столкновение: нет"
   };
 }
+// Browser viewport-safe position for the freely movable inspector panel.
+// Exported to keep mobile drag bounds testable without a browser.
+export function clampInspectorPosition(x,y,panelWidth,panelHeight,viewportWidth,viewportHeight,margin=8){
+  const sane=v=>Number.isFinite(v)?v:0;
+  const width=Math.max(0,sane(viewportWidth));
+  const height=Math.max(0,sane(viewportHeight));
+  const px=Math.max(0,sane(panelWidth)),py=Math.max(0,sane(panelHeight));
+  const pad=Math.max(0,sane(margin));
+  const clamp=(v,max)=>Math.min(Math.max(sane(v),pad),Math.max(pad,max-pad));
+  return {x:clamp(x,width-px),y:clamp(y,height-py)};
+}
+const INSPECTOR_POSITION_KEY="mini-city:scene-inspector:position:v1";
+
 export function buildColliderGizmos(THREE,obstacles){
   // One GPU batch for every blocking rectangle. Created lazily and only
   // displayed in LAB; completely invisible in GAME.
@@ -51,6 +64,7 @@ export class DeveloperStudio{
     this.controller=controller;
     this.mode=parseStudioMode(window.location.search);
     this.gizmos=null;this.collisionsShown=false;
+    this.dragging=null;this.panelHasPosition=false;this.savedInspectorPosition=null;
     const get=id=>{
       const el=document.getElementById(id);
       if(!el)throw Error("Developer Studio control missing: "+id);
@@ -59,6 +73,7 @@ export class DeveloperStudio{
     this.nodes={
       toggle:get("mode-toggle"),title:get("play-title"),panel:get("devtools"),
       panelToggle:get("devtools-toggle"),body:get("devtools-body"),
+      dragHandle:get("devtools-drag"),resetPosition:get("devtools-reset"),
       collisions:get("dev-collisions"),
       perf:get("dev-perf"),resources:get("dev-resources"),
       player:get("dev-player"),collision:get("dev-hit"),
@@ -73,8 +88,10 @@ export class DeveloperStudio{
       const opened=n.body.hidden;
       n.body.hidden=!opened;
       n.panelToggle.setAttribute("aria-expanded",String(opened));
-      n.panelToggle.textContent=opened?"▴ Свернуть":"▾ Развернуть";
+      n.panelToggle.textContent=opened?"▴ Закрыть":"▾ Открыть";
+      if(this.panelHasPosition)this.keepInspectorInViewport();
     });
+    this.bindInspectorMovement();
     n.collisions.addEventListener("click",()=>{
       this.setCollisions(!this.collisionsShown);
     });
@@ -82,6 +99,99 @@ export class DeveloperStudio{
       this.setMode(parseStudioMode(window.location.search),false);
     });
     this.applyMode();
+    if(this.mode===MODES.LAB&&this.savedInspectorPosition){
+      this.moveInspector(this.savedInspectorPosition.x,this.savedInspectorPosition.y);
+    }
+  }
+  // Coordinates are viewport CSS pixels. Avoid reading/caching panel height:
+  // opening the details grows the card; rotation may change both dimensions.
+  inspectorViewport(){
+    const v=window.visualViewport;
+    return {x:v?.offsetLeft??0,y:v?.offsetTop??0,
+      width:v?.width??window.innerWidth,height:v?.height??window.innerHeight};
+  }
+  moveInspector(x,y){
+    const panel=this.nodes.panel,area=this.inspectorViewport();
+    const rect=panel.getBoundingClientRect();
+    const pos=clampInspectorPosition(x-area.x,y-area.y,rect.width,rect.height,
+      area.width,area.height);
+    const left=pos.x+area.x,top=pos.y+area.y;
+    panel.style.left=left+"px";panel.style.top=top+"px";
+    panel.style.bottom="auto";panel.style.transform="none";
+    this.panelHasPosition=true;
+    return {x:left,y:top};
+  }
+  keepInspectorInViewport(){
+    if(!this.panelHasPosition||this.nodes.panel.hidden)return;
+    const r=this.nodes.panel.getBoundingClientRect();
+    this.moveInspector(r.left,r.top);
+  }
+  saveInspectorPosition(){
+    if(!this.panelHasPosition)return;
+    const r=this.nodes.panel.getBoundingClientRect();
+    this.savedInspectorPosition={x:r.left,y:r.top};
+    try{window.localStorage.setItem(INSPECTOR_POSITION_KEY,
+      JSON.stringify(this.savedInspectorPosition));}catch(_){}
+  }
+  resetInspectorPosition(){
+    this.panelHasPosition=false;this.savedInspectorPosition=null;
+    const el=this.nodes.panel;
+    el.style.left="";el.style.top="";el.style.bottom="";el.style.transform="";
+    try{window.localStorage.removeItem(INSPECTOR_POSITION_KEY);}catch(_){}
+  }
+  bindInspectorMovement(){
+    const n=this.nodes,handle=n.dragHandle;
+    // Safari allows pointer capture on a touch-action:none handle;
+    // touching elsewhere in the panel still scrolls text or uses buttons.
+    handle.addEventListener("pointerdown",event=>{
+      if(event.pointerType==="mouse"&&event.button!==0)return;
+      if(this.dragging||n.panel.hidden)return;
+      event.preventDefault();
+      const r=n.panel.getBoundingClientRect();
+      this.dragging={pointerId:event.pointerId,startX:event.clientX,
+        startY:event.clientY,left:r.left,top:r.top};
+      this.moveInspector(r.left,r.top);
+      n.panel.classList.add("dragging");
+      handle.setAttribute("aria-grabbed","true");
+      handle.setPointerCapture?.(event.pointerId);
+    });
+    handle.addEventListener("pointermove",event=>{
+      const d=this.dragging;
+      if(!d||event.pointerId!==d.pointerId)return;
+      event.preventDefault();
+      this.moveInspector(d.left+event.clientX-d.startX,
+        d.top+event.clientY-d.startY);
+    });
+    const finish=event=>{
+      if(!this.dragging||event.pointerId!==this.dragging.pointerId)return;
+      this.dragging=null;
+      n.panel.classList.remove("dragging");
+      handle.setAttribute("aria-grabbed","false");
+      if(handle.hasPointerCapture?.(event.pointerId))
+        handle.releasePointerCapture(event.pointerId);
+      this.saveInspectorPosition();
+    };
+    handle.addEventListener("pointerup",finish);
+    handle.addEventListener("pointercancel",finish);
+    handle.addEventListener("keydown",event=>{
+      const dx=event.key==="ArrowRight"?18:event.key==="ArrowLeft"?-18:0;
+      const dy=event.key==="ArrowDown"?18:event.key==="ArrowUp"?-18:0;
+      if(!dx&&!dy)return;
+      event.preventDefault();
+      const r=n.panel.getBoundingClientRect();
+      this.moveInspector(r.left+dx,r.top+dy);
+      this.saveInspectorPosition();
+    });
+    n.resetPosition.addEventListener("click",()=>this.resetInspectorPosition());
+    try{
+      const stored=JSON.parse(window.localStorage.getItem(INSPECTOR_POSITION_KEY));
+      if(stored&&Number.isFinite(stored.x)&&Number.isFinite(stored.y))
+        this.savedInspectorPosition=stored;
+    }catch(_){}
+    const resize=()=>this.keepInspectorInViewport();
+    window.addEventListener("resize",resize);
+    window.visualViewport?.addEventListener("resize",resize);
+    window.visualViewport?.addEventListener("scroll",resize);
   }
   setMode(mode,writeHistory=false){
     if(mode!==MODES.LAB&&mode!==MODES.GAME)
@@ -99,6 +209,8 @@ export class DeveloperStudio{
     document.body.classList.toggle("game-mode",!lab);
     document.body.classList.toggle("lab-mode",lab);
     n.panel.hidden=!lab;
+    if(lab&&this.savedInspectorPosition)
+      this.moveInspector(this.savedInspectorPosition.x,this.savedInspectorPosition.y);
     n.title.textContent=lab?"MINI CITY · Лаборатория сцены":"MINI CITY";
     n.toggle.textContent=lab?"🎮 Перейти в игру":"🧪 Режим разработчика";
     n.toggle.setAttribute("aria-label",lab?
