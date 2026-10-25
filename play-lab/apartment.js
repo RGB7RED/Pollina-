@@ -6,14 +6,16 @@ export const FIRST_APARTMENT_NUMBER=17;
 export function planFirstApartment(building,entry){
   if(building.floors!==5||entry.totalFloors!==5)throw Error("Apartment 17 requires the five-storey first entrance");
   const x=entry.x,floorY=entry.floorHeight(4),stairWall=x-entry.stairHalf;
-  const minX=x-6.30,maxX=stairWall,backZ=-6.12,frontZ=6.12;
+  const minX=x-6.30,maxX=stairWall,
+    backZ=(building.backFacade??-building.width/2)+.27,
+    frontZ=(building.frontFacade??building.width/2)-.28;
   const doorway={id:"apartment-17",x:stairWall,z:-2.42,width:1.04,
     hingeZ:-2.42-.47,floorY};
   const step=(building.length-3.7)/building.windowBays;
   const windowX=-building.length/2+1.85+1.5*step; // bay 1, both sides.
-  const windowBottom=building.plinth+4*building.floorHeight+.695;
-  const windowTop=windowBottom+1.59;
-  const ceilingY=building.plinth+building.floors*building.floorHeight-.22;
+  const windowBottom=floorY+.64;
+  const windowTop=windowBottom+1.46;
+  const ceilingY=(building.firstFloor??2.09)+building.floors*building.floorHeight-.16;
   if(!(windowX-0.7>minX+.15&&windowX+.7<maxX-.3&&
        windowBottom-floorY>.58&&windowTop<ceilingY-.10))
     throw Error("Apartment must align with REAL top-floor facade windows");
@@ -45,14 +47,18 @@ export function planFirstApartment(building,entry){
     openingZ1=doorway.z+doorway.width/2;
   const obstacles=[
     // The rest of the house's left slab remains solid at this height.
-    ob("apartment-left-neighbour",-building.length/2,minX, -building.width/2,building.width/2),
-    ob("apartment-front-masonry",minX,maxX,frontZ,building.width/2),
-    ob("apartment-back-masonry",minX,maxX,-building.width/2,backZ),
+    ob("apartment-left-neighbour",-building.length/2,minX,
+      building.backFacade??-building.width/2,building.frontFacade??building.width/2),
+    ob("apartment-front-masonry",minX,maxX,frontZ,
+      building.frontFacade??building.width/2),
+    ob("apartment-back-masonry",minX,maxX,
+      building.backFacade??-building.width/2,backZ),
     ob("apartment-left-partition",minX-.10,minX+.05,backZ,frontZ),
     // Real staircase wall, one DOOR aperture only at No.17.
     ob("apartment-stair-wall-back",maxX-.075,maxX+.075,backZ,openingZ0),
     ob("apartment-stair-wall-front",maxX-.075,maxX+.075,openingZ1,frontZ),
-    ob("apartment-next-flat-rear",maxX,x+entry.stairHalf,-building.width/2,entry.stair.backZ),
+    ob("apartment-next-flat-rear",maxX,x+entry.stairHalf,
+      building.backFacade??-building.width/2,entry.stair.backZ),
     ...aperture("kitchen-hall", -3.08,minX,minX+2.48,kitchenDoorX,.92),
     ...aperture("bath-hall",-3.08,minX+2.48,maxX,bathDoorX,.88),
     ...aperture("living-hall", .10,minX,maxX,livingDoorX,1.03),
@@ -69,8 +75,8 @@ export function planFirstApartment(building,entry){
   return {number:FIRST_APARTMENT_NUMBER,floor:5,entryX:x,doorway,doorBlocker,
     floorY,ceilingY,wallHeight,windowX,windowBottom,windowTop,
     bounds,rooms,obstacles,kitchenDoorX,bathDoorX,livingDoorX,
-    windows:[{side:"front",x:windowX,z:building.width/2,real:true},
-      {side:"back",x:windowX,z:-building.width/2,real:true}],
+    windows:[{side:"front",x:windowX,z:building.frontFacade??building.width/2,real:true},
+      {side:"back",x:windowX,z:building.backFacade??-building.width/2,real:true}],
     contains:within,
     canInteract:(px,pz,y)=>Math.abs(y-floorY)<.24&&
       Math.hypot(px-doorway.x,pz-doorway.z)<1.35,

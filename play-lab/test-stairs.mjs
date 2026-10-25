@@ -6,7 +6,7 @@ import {PlayerController,PLAYER_RADIUS,collidesAt} from "./controller.js";
 const source=path=>readFileSync(new URL(path,import.meta.url),"utf8");
 const game=source("./game.js"),view=source("./index.html");
 assert.equal((game.match(/new THREE\.Scene\(/g)||[]).length,1);
-assert.match(view,/лестниц|лестнич/i);
+assert.match(view,/лестниц|лестнич|лестнице/i);
 assert.match(game,/actorPivot\.position\.set\(state.x,state.y,state.z\)/);
 assert.doesNotMatch(game,/setInnerDoorOpen|innerDoorPivot/,
   "the former inner door was entirely removed from the game");

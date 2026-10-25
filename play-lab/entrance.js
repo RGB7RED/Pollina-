@@ -2,14 +2,16 @@
 // Collision geometry matches the first REAL facade opening and existing porch.
 export function planPlayableEntrance(building,pads){
   if(!building||!pads?.length)throw Error("Entrance requires real building and porch");
-  const p=pads[0],x=p.x,facade=building.width/2;
-  const halfX=building.length/2,halfZ=facade;
+  const p=pads[0],x=p.x,facade=building.frontFacade??building.width/2;
+  const halfX=building.length/2,rearFacade=building.backFacade??-building.width/2;
+  const halfZ=-rearFacade;
   const doorHalf=.81,insideEnd=3.35,foyerHalf=1.74;
   // U-stair follows the true stair mesh in building-lab/building.js.
   // The first floor and every complete-floor landing are at the BACK,
   // opposite the former door wall. Ascend forward on LEFT, then return
   // toward the BACK along RIGHT to the following complete-floor landing.
-  const foyerFloor=.70,firstFloor=2.09,storeyHeight=2.42;
+  const foyerFloor=.70,firstFloor=building.firstFloor??2.09,
+    storeyHeight=building.floorHeight??2.42;
   const stair={bottomZ:-1.58,turnZ:2.05,backZ:-4.85,
     frontZ:facade-.44,firstFrontZ:facade-.44,
     entryStartZ:3.35,entryRise:1.39,halfRise:storeyHeight/2,
@@ -71,8 +73,8 @@ export function planPlayableEntrance(building,pads){
         facade-.68,facade-.31,halfY-.06,halfY+.79);
     }),
     rect("heating-riser",x+1.38,x+1.53,
-      facade-.70,facade-.33,foyerFloor,building.plinth+
-        totalFloors*building.floorHeight),
+      facade-.70,facade-.33,foyerFloor,firstFloor+
+        totalFloors*storeyHeight),
     ...Array.from({length:totalFloors},(_,i)=>{
       const level=firstFloor+i*storeyHeight;
       return rect("electric-meter-cabinet-"+(i+1),
@@ -124,7 +126,7 @@ export function planPlayableEntrance(building,pads){
             low,high,-halfZ,facade,plan.y-.10,plan.ceilingY+.01));
         // End walls stay part of original house; openings only for
         // existing window geometry, NOT at random wall segments.
-        for(const z of [-halfZ,halfZ])
+        for(const z of [rearFacade,facade])
           this.buildingObstacles.push(rect(name+"-facade-edge",
             wing.minX,wing.maxX,z-.12,z+.12,plan.y-.10,plan.ceilingY+.01));
         this.buildingObstacles.push(rect(name+"-outer-edge",

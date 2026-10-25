@@ -20,7 +20,7 @@ for(const tuft of plan.grassTufts){
  assert.ok(tuft.height>=.18&&tuft.height<=.311);
  assert.ok(tuft.width>=1&&tuft.width<=1.221);
  assert.ok(Math.abs(tuft.x)>=BUILDING.length/2+1.2||
-   Math.abs(tuft.z)>=BUILDING.width/2+1.2,
+   tuft.z<=BUILDING.backFacade-1.2||tuft.z>=BUILDING.frontFacade+1.2,
    "grass may not grow through the residential building");
  for(const surface of plan.surfaces.filter(p=>p.kind!=="grass")){
    assert.ok(!(Math.abs(tuft.x-surface.x)<surface.width/2+.45&&
@@ -43,7 +43,7 @@ let greenSamples=0,nearbyTufts=0;
 for(let x=-64;x<=64;x+=1){
  for(let z=-41.5;z<=41.5;z+=1){
   if(onPaving(x,z))continue;
-  if(Math.abs(x)<BUILDING.length/2+1.2&&Math.abs(z)<BUILDING.width/2+1.2)continue;
+  if(Math.abs(x)<BUILDING.length/2+1.2&&z>BUILDING.backFacade-1.2&&z<BUILDING.frontFacade+1.2)continue;
   if(pads.some(p=>Math.abs(x-p.x)<p.width/2+.6&&
     Math.abs(z-p.centreZ)<p.depth/2+.6))continue;
   greenSamples++;

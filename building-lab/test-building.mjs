@@ -26,10 +26,10 @@ const THREE={Group:Obj,Object3D:Obj,Mesh,InstancedMesh,BufferGeometry,
 const result=buildApartmentHouse(THREE);
 const root=result.root,a=root.userData.geometryAudit,stats=result.stats;
 assert.equal(BUILDING.floors,5);assert.equal(BUILDING.entrances,4);
-assert.equal(BUILDING.length,74);assert.equal(BUILDING.width,12.8);
+assert.equal(BUILDING.length,74);assert.equal(BUILDING.width,16);
 assert.equal(BUILDING.windowBays,28);assert.equal(STAGES[1],"3.2 Фасад");
 assert.equal(root.userData.stage,"3.2");
-assert.equal(a.originalFootprint.length,74);assert.equal(a.originalFootprint.width,12.8);
+assert.equal(a.originalFootprint.length,74);assert.equal(a.originalFootprint.width,16);
 assert.equal(planFacade().filter(w=>w.entrance).length,4);
 // Regression for user's visual review: six *real window bays* (not door
 // decorations or painted panes) between each adjacent pair of entrances.
@@ -84,7 +84,7 @@ assert.equal(stats.downpipes,10);assert.equal(stats.airConditioners,10);
 assert.equal(stats.chimneys,7);
 assert.equal(a.doorPositions.length,4);
 assert.ok(stats.instancedElements>1600);
-assert.equal(result.roofTop,BUILDING.plinth+5*BUILDING.floorHeight+BUILDING.roofRise);
+assert.equal(result.roofTop,BUILDING.firstFloor+5*BUILDING.floorHeight+BUILDING.roofRise);
 assert.ok(root.userData.provisionalMaterials);
 assert.equal(root.userData.facadeTextureReady,false);
 const meshes=root.children.filter(c=>c instanceof Mesh);
