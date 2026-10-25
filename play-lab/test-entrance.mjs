@@ -20,7 +20,7 @@ const realPads=[-26.3625,-8.7875,8.7875,26.3625].map(x=>({
 }));
 const entry=planPlayableEntrance(BUILDING,realPads);
 assert.equal(entry.x,realPads[0].x);
-assert.equal(entry.facade,BUILDING.width/2);
+assert.equal(entry.facade,BUILDING.frontFacade);
 assert.equal(entry.insideEnd,3.35);
 assert.equal(entry.buildingObstacles.length,30);
 assert.ok(!collidesAt(entry.x,5.1,entry.buildingObstacles,PLAYER_RADIUS),
@@ -132,7 +132,7 @@ assert.equal(house.stats.doorHoles,4);
 assert.equal(house.root.userData.geometryAudit.entryPads.length,4);
 assert.ok(Math.abs(house.root.userData.geometryAudit.playableEntrance.x-entry.x)<.001);
 assert.equal(house.root.userData.geometryAudit.playableEntrance.vestibuleBack,entry.insideEnd);
-assert.ok(pivot.position.z<BUILDING.width/2,"door is recessed into REAL front opening");
+assert.ok(pivot.position.z<BUILDING.frontFacade,"door is recessed into REAL front opening");
 assert.equal(pivot.rotation.y,0);
 pivot.rotation.y=1.40;
 assert.ok(pivot.rotation.y>1,"leaf can physically pivot in place");
