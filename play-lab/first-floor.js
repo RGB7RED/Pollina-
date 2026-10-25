@@ -168,10 +168,19 @@ export function buildFirstFloor(THREE,plan){
     plate.scale.set(.014,.18,.18);
     plate.position.set(-d.side*.063,1.84,.47);
     pivot.add(plate);
-    const numeral=new THREE.Mesh(geometry,mats.dark);
-    numeral.scale.set(.018,.095,.048);
-    numeral.position.set(-d.side*.074,1.84,.47);
-    pivot.add(numeral);
+    const numeralSegments={
+      a:[0,.055,.075,.011],b:[.043,.026,.011,.046],
+      c:[.043,-.026,.011,.046],d:[0,-.055,.075,.011],
+      e:[-.043,-.026,.011,.046],f:[-.043,.026,.011,.046],
+      g:[0,0,.075,.011]
+    };
+    for(const mark of ({1:"bc",2:"abged",3:"abgcd",4:"fgbc"})[d.number]){
+      const [oz,oy,w,h]=numeralSegments[mark];
+      const numeral=new THREE.Mesh(geometry,mats.dark);
+      numeral.scale.set(.018,h,w);
+      numeral.position.set(-d.side*.074,1.84+oy,.47+oz);
+      pivot.add(numeral);
+    }
     root.add(pivot);doorPivots.set(d.number,pivot);
     for(const z of [d.z-.52,d.z+.52])
       box(.15,2.15,.06,mats.frame,d.x,plan.y+1.075,z);
