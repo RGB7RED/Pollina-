@@ -31,7 +31,7 @@ const instances=house.root.children.filter(m=>m instanceof InstancedMesh)
 assert.equal(BUILDING.floors,5);
 assert.equal(BUILDING.entrances,4);
 assert.equal(BUILDING.length,74);
-assert.equal(BUILDING.width,12.8);
+assert.equal(BUILDING.width,19);
 assert.equal(stair.landing.minZ,-4.85);
 assert.equal(e.stair.backZ,stair.landing.minZ);
 assert.equal(stair.landing.maxZ,-1.58);
@@ -68,7 +68,7 @@ for(let i=0;i<4;i++){
   assert.ok(Math.abs(w.bottom-rad.windowSillY)<eps);
   assert.ok(w.transparent&&w.through);
   assert.ok(rad.y+rad.height/2<w.bottom-.07);
-  assert.ok(collidesAt(x,BUILDING.width/2-.50,e.buildingObstacles,
+  assert.ok(collidesAt(x,BUILDING.frontFacade-.50,e.buildingObstacles,
     PLAYER_RADIUS,rad.landingY),
     "the radiator is a real obstacle at this landing only");
 }
