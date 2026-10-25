@@ -109,7 +109,7 @@ assert.equal(entry.groundHeight(x,0,stair.firstFloor+stair.storeyRise),null,
   "upper central shaft cannot be walked on as an invisible floor");
 assert.ok(collidesAt(x,6.26,entry.buildingObstacles,PLAYER_RADIUS,3.30),
   "transparent window remains a physical EXTERIOR wall");
-assert.ok(!collidesAt(x+1.4,5.25,entry.buildingObstacles,PLAYER_RADIUS,3.30),
+assert.ok(!collidesAt(x+1.15,5.25,entry.buildingObstacles,PLAYER_RADIUS,3.30),
   "first-floor intermediate turnaround above foyer is fully open");
 assert.equal(house.root.children.filter(x=>x instanceof InstancedMesh).length<=35,true,
   "four new clear windows share a single GPU batch");
