@@ -46,10 +46,10 @@ for(let i=0;i<entranceBays.length-1;i++){
   }
 }
 assert.equal(stats.entrances,4);assert.equal(stats.doorHoles,4);
-assert.equal(stats.windows,286);assert.equal(stats.windowHoles,286);
-assert.equal(a.holes.length,290);
+assert.equal(stats.windows,296);assert.equal(stats.windowHoles,296);
+assert.equal(a.holes.length,300);
 assert.equal(a.holes.filter(h=>h.axis==="end").length,20);
-assert.equal(a.holes.filter(h=>h.axis==="long").length,270);
+assert.equal(a.holes.filter(h=>h.axis==="long").length,280);
 assert.equal(stats.balconies,planFacade().filter(p=>p.balcony).length);
 for(const kind of ["A","B","C","D"])assert.ok(stats.balconyKinds[kind]>=4,"missing balcony "+kind);
 assert.equal(a.balconyPositions.length,stats.balconies);
@@ -84,9 +84,9 @@ assert.equal(stats.downpipes,10);assert.equal(stats.airConditioners,10);
 assert.equal(stats.chimneys,7);
 assert.equal(a.doorPositions.length,4);
 assert.ok(stats.instancedElements>1600);
-assert.equal(result.roofTop,BUILDING.firstFloor+5*BUILDING.floorHeight+BUILDING.roofRise);
-assert.ok(root.userData.provisionalMaterials);
-assert.equal(root.userData.facadeTextureReady,false);
+assert.equal(result.roofTop,BUILDING.firstFloor+5*BUILDING.floorHeight+BUILDING.roofClearance+BUILDING.roofRise);
+assert.equal(root.userData.provisionalMaterials,false);
+assert.equal(root.userData.facadeTextureReady,true);
 const meshes=root.children.filter(c=>c instanceof Mesh);
 const instances=meshes.filter(c=>c instanceof InstancedMesh);
 assert.ok(instances.length>=17 && instances.length<=33,"mobile batch budget (one transparent window batch)");
@@ -98,9 +98,11 @@ for(const m of landingMeshes[0].matrices){
   assert.ok(Math.abs(m.scale.x-5.5)<1e-5&&Math.abs(m.scale.z-3.15)<1e-5,
     "landing footprint stays car-sized");
 }
-const roof=meshes.find(c=>c.name?.includes("hipped pitched roof"));
-assert.ok(roof&&roof.geometry.normals);
-assert.equal(roof.geometry.position.array.length,54);
+const roof=meshes.find(c=>c.name?.includes("flat five-storey roof"));
+assert.ok(roof&&roof.geometry);
+assert.equal(a.roof.type,"flat");
+assert.ok(a.roof.deckY>BUILDING.firstFloor+5*BUILDING.floorHeight);
+assert.ok(a.roof.parapetTop>a.roof.deckY);
 // For each declared opening, independently inspect the actual masonry boxes.
 // A continuous painted wall will fail this test because it crosses the void.
 const eps=1e-5;
@@ -119,10 +121,11 @@ for(const g of a.windowGlazing){
   assert.ok(g.frontDepth>g.glassDepth,"glass must be inset behind outer wall");
   assert.equal(g.opening.kind,"window");
 }
-const masonry=instances.filter(m=>m.material.color===0x977f78||m.material.color===0x92766e);
+const masonry=instances.filter(m=>m.material.color===0xc7c5bd||m.material.color===0xc0beb5);
 assert.equal(masonry.reduce((n,m)=>n+m.count,0),a.wallPieces.length,
   "each audited masonry piece must be an actual instance");
 assert.ok(!meshes.some(m=>m.name==="main brick shell"),"no full wall behind openings");
+assert.ok(a.windowGlazing.every(g=>g.transparent===true),"all 296 windows transparent");
 console.log("Building 3.2 geometry PASS:",JSON.stringify({
   floors:BUILDING.floors,windows:stats.windows,realWindowVoids:stats.windowHoles,
   doorVoids:stats.doorHoles,balconyVariants:stats.balconyKinds,
