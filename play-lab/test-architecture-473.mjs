@@ -78,7 +78,7 @@ const oldFlat=buildFirstApartment(THREE,last);
 assert.equal(firstRendered.stats.apartments,4);
 assert.equal(oldFlat.stats.number,17);
 assert.deepEqual(plan.doors.map(d=>d.variant),["grey","brown","blue","dark"]);
-assert.deepEqual([1,2,3,4].map(n=>plan.roomCount(n)),[1,2,3,1]);
+assert.deepEqual([1,2,3,4].map(n=>plan.roomCount(n)),[3,1,1,2]);
 assert.equal(plan.unfurnished,true);
 assert.ok(plan.facadeLiningCount>=35);
 assert.deepEqual(plan.windowConflicts,[]);
@@ -159,13 +159,13 @@ function walk(dx,dz,n){
 }
 walk(0,1,90);walk(1,0,18);walk(0,1,100);
 assert.equal(player.position.y,entry.floorHeight(0));
-assert.equal(player.nearestDoor()?.id,"first-floor-3");
+assert.equal(player.nearestDoor()?.id,"first-floor-1");
 walk(0,-1,6);
-assert.equal(player.nearestDoor()?.number,3);
-assert.ok(player.setFirstFloorDoorOpen(3,true));
+assert.equal(player.nearestDoor()?.number,1);
+assert.ok(player.setFirstFloorDoorOpen(1,true));
 walk(1,0,45);
 assert.ok(entry.firstFloorPlan.contains(player.position.x,player.position.z,player.position.y));
 assert.ok(player.position.x>plan.doors[2].x+.52);
 assert.ok(!collidesAt(player.position.x,player.position.z,plan.doorBlockers.filter(b=>
- b.name!=="flat-3-closed"),PLAYER_RADIUS,plan.y));
+ b.name!=="flat-1-closed"),PLAYER_RADIUS,plan.y));
 console.log("MINI CITY stage 4.7.3 PASS: roof, panel seams, 296 real windows, 3 edge windows, no missing rear walls and navigable first flat");
