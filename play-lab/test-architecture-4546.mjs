@@ -63,7 +63,7 @@ const nearestNeighbourGlassEdge=Math.min(...neighbourWindows.map(h=>
 assert.ok(nearestNeighbourGlassEdge>entry.stairHalf-.07,
   "new wall's inner face stops neighbour apartment windows being exposed");
 // One full, real, clear window per turnaround, with the original facade.
-assert.deepEqual(a.stairwellWindows.map(w=>w.floor),[1,2,3,4]);
+assert.deepEqual(a.stairwellWindows.map(w=>w.floor),[1,1,2,2,3,3,4,4]);
 assert.ok(a.stairwellWindows.every(w=>w.through&&w.transparent));
 assert.equal(stair.landing.doorsPerFloor,4);
 assert.equal(stair.landing.doorWidth,1.04);
