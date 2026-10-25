@@ -1,22 +1,21 @@
 import {GLTFExporter} from "three/addons/exporters/GLTFExporter.js";
-import {makeBrickTexture} from "./materials.js";
+import {makePanelTexture} from "./materials.js";
 
 // Create a portable glTF export scene, independent from the rendered lab.
-// The production facade uses a world-coordinate WebGL shader; glTF does not
-// support that shader. For GLB we bake those exact world-space UV coordinates
-// into the two masonry meshes. All other groups remain instanced.
-export function makePortableHouse(THREE,labRoot,{brickTexture=makeBrickTexture(THREE)}={}){
+// The Building Lab concrete-panel atlas is projected with world-space
+// coordinates. Portable glTF needs baked UVs on those two wall batches.
+// All window meshes stay physically transparent and remain instanced.
+export function makePortableHouse(THREE,labRoot,{panelTexture=makePanelTexture(THREE)}={}){
   const portable=new THREE.Group();
   portable.name="MINI_CITY_apartment_house";
   let bakedWalls=0,instances=0,roofCount=0;
   for(const original of labRoot.children){
     const isInstanced=original.isInstancedMesh===true;
     const isMasonry=isInstanced&&typeof original.material?.customProgramCacheKey==="function"
-      &&original.material.customProgramCacheKey()==="mini-city-world-brick-v1";
+      &&original.material.customProgramCacheKey()==="mini-city-world-panel-v1";
     if(isMasonry){
-      // Expand ONLY the structural masonry (not the 5k window/balcony
-      // details). A single UV layout cannot be shared across differently
-      // scaled brick strips when using glTF EXT_mesh_gpu_instancing.
+      // Expand ONLY structural panel geometry, not window or balcony
+      // details. Different world-space wall transforms need unique UVs.
       const g=original.geometry.index?
         original.geometry.toNonIndexed():original.geometry;
       const pos=g.getAttribute("position"),normal=g.getAttribute("normal");
@@ -26,9 +25,9 @@ export function makePortableHouse(THREE,labRoot,{brickTexture=makeBrickTexture(T
       const uvs=new Float32Array(original.count*verticesPerBox*2);
       const matrix=new THREE.Matrix4(),normalMatrix=new THREE.Matrix3();
       const worldPos=new THREE.Vector3(),worldNormal=new THREE.Vector3();
-      const uvScale=original.material.userData.miniCityBrickScale;
+      const uvScale=original.material.userData.miniCityPanelScale;
       if(!uvScale||uvScale.length!==2)
-        throw Error("World-aligned brick texture scale is missing");
+        throw Error("World-aligned panel texture scale is missing");
       for(let i=0;i<original.count;i++){
         original.getMatrixAt(i,matrix);
         normalMatrix.getNormalMatrix(matrix);
@@ -57,9 +56,9 @@ export function makePortableHouse(THREE,labRoot,{brickTexture=makeBrickTexture(T
       geo.setAttribute("uv",new THREE.BufferAttribute(uvs,2));
       geo.computeBoundingSphere();
       const mat=new THREE.MeshStandardMaterial({
-        name:"world_baked_brick",
+        name:"world_baked_panel",
         color:original.material.color.clone(),
-        map:brickTexture,
+        map:panelTexture,
         roughness:.94,
         metalness:0
       });
@@ -74,12 +73,13 @@ export function makePortableHouse(THREE,labRoot,{brickTexture=makeBrickTexture(T
     copy.castShadow=false;copy.receiveShadow=false;
     portable.add(copy);
     if(isInstanced)instances+=original.count;
-    else if(original.name?.includes("hipped pitched roof"))roofCount++;
+    else if(original.name?.includes("flat five-storey roof"))roofCount++;
   }
   portable.userData={
     asset:"mini-city/apartment_house",stage:"3.4",
-    dimensionsMetres:[74,12.8,17.64],
-    note:"Geometry from approved Building Lab stage 3.3; entrance pads included",
+    dimensionsMetres:[labRoot.userData.config.length,labRoot.userData.config.width,
+      labRoot.userData.roofTop],
+    note:"Five-storey precast panel Khrushchevka with flat bitumen roof; original door/pad layout",
   };
   return {root:portable,stats:{bakedWallParts:bakedWalls,instancedParts:instances,
     roofs:roofCount,totalNodes:portable.children.length}};
