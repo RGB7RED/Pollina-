@@ -1,0 +1,34 @@
+name: MINI CITY 4.7.8 — Architecture acceptance
+on:
+  push:
+    branches:
+      - fix/mini-city-stage478-stair-windows-ground-plinth
+  workflow_dispatch:
+jobs:
+  geometry-and-traversal:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax checks
+        run: |
+          node --check building-lab/building.js
+          node --check play-lab/entrance.js
+          node --check play-lab/game.js
+          node --check play-lab/first-floor.js
+      - name: House and first-floor regression tests
+        run: |
+          node building-lab/test-building.mjs
+          node play-lab/test-architecture-476.mjs
+      - name: Stage 4.7.8 architecture acceptance
+        run: node play-lab/test-architecture-478.mjs
+      - name: Character walking from street through all five floors and back
+        run: node play-lab/test-five-floors.mjs
+      - name: Preserve apartment 17 and compact mobile studio
+        run: |
+          node play-lab/test-apartment.mjs
+          node play-lab/test-studio.mjs
