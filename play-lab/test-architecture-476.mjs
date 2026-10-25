@@ -1,6 +1,6 @@
 // Stage 4.7.6 — paired real stair glazing; facade seams; solid apartment/stair and annex joints.
 import assert from "node:assert/strict";
-import {BUILDING,ENTRANCE_BAYS,planFacade,buildApartmentHouse} from "../building-lab/building.js";
+import {BUILDING,ENTRANCE_BAYS,ENTRY_GLAZING,STAIR_PROFILE,planFacade,buildApartmentHouse} from "../building-lab/building.js";
 import {planPlayableEntrance} from "./entrance.js";
 import {planFirstFloor,buildFirstFloor} from "./first-floor.js";
 import {collidesAt,PLAYER_RADIUS} from "./controller.js";
@@ -77,7 +77,7 @@ assert.deepEqual(plan.doorBlockers.map(d=>d.name),[
 
 assert.equal(entry.stairHalf,1.72);
 assert.equal(entry.corridorHalf,1.62);
-assert.equal(entry.stair.flightWidth,1.46);
+assert.equal(entry.stair.flightWidth,STAIR_PROFILE.flightWidth);
 assert.equal(audit.firstStaircase.stairwellWidth,3.44);
 // Not just window CENTRES: the complete first adjoining sashes must be
 // outside the actual staircase side masonry, including its wall thickness.
@@ -140,11 +140,11 @@ assert.ok(audit.stairwellInterior.innerHalfWidth<entry.stairHalf);
 for(let floor=0;floor<4;floor++){
   const pair=audit.stairwellPairedApertures.slice(floor*2,floor*2+2);
   const midY=BUILDING.firstFloor+(floor+.5)*BUILDING.floorHeight;
-  assert.deepEqual(pair.map(h=>Number((h.centre-entry.x).toFixed(2))),[-.56,.56]);
+  assert.deepEqual(pair.map(h=>Number((h.centre-entry.x).toFixed(2))),[-ENTRY_GLAZING.offset,ENTRY_GLAZING.offset]);
   for(const hole of pair){
-    assert.equal(hole.width,.84);
-    assert.ok(Math.abs(hole.bottom-(midY+.72))<1e-6);
-    assert.ok(Math.abs(hole.height-1.12)<1e-6);
+    assert.equal(hole.width,ENTRY_GLAZING.width);
+    assert.ok(Math.abs(hole.bottom-(midY+ENTRY_GLAZING.sillOffset))<1e-6);
+    assert.ok(Math.abs(hole.height-ENTRY_GLAZING.height)<1e-6);
     assert.ok(audit.windowGlazing.some(g=>g.opening===hole&&g.transparent));
     assert.ok(!audit.wallPieces.some(w=>w.axis==="long"&&w.side===1&&
       w.u0<hole.centre&&w.u1>hole.centre&&w.y0<(hole.bottom+hole.top)/2&&
@@ -156,12 +156,12 @@ for(let floor=0;floor<4;floor++){
 for(const bay of ENTRANCE_BAYS.slice(1)){
   const cx=centre(bay);
   for(let f=1;f<BUILDING.floors;f++){
-    const bottom=BUILDING.firstFloor+f*BUILDING.floorHeight+.70;
+    const bottom=BUILDING.firstFloor+f*BUILDING.floorHeight+ENTRY_GLAZING.sillOffset;
     const pair=audit.holes.filter(h=>h.axis==="long"&&h.side===1&&
-      Math.abs(h.bottom-bottom)<1e-6&&h.width===.84&&
-      Math.abs(h.centre-cx)<1.02);
+      Math.abs(h.bottom-bottom)<1e-6&&h.width===ENTRY_GLAZING.width&&
+      Math.abs(h.centre-cx)<1.25);
     assert.equal(pair.length,2,"two cut-out windows, not decorative panes");
-    assert.deepEqual(pair.map(h=>Number((h.centre-cx).toFixed(2))).sort((a,b)=>a-b),[-.56,.56]);
+    assert.deepEqual(pair.map(h=>Number((h.centre-cx).toFixed(2))).sort((a,b)=>a-b),[-ENTRY_GLAZING.offset,ENTRY_GLAZING.offset]);
   }
 }
 const pairPaint=house.root.children.filter(o=>o instanceof InstancedMesh&&

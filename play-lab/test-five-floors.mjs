@@ -12,7 +12,7 @@ const pads=[-26.3625,-8.7875,8.7875,26.3625].map(x=>({
  x,width:5.5,depth:3.15,centreZ:7.875
 }));
 const entry=planPlayableEntrance(BUILDING,pads),x=entry.x;
-assert.equal(entry.buildingObstacles.length,30);
+assert.equal(entry.buildingObstacles.length,26);
 assert.equal(entry.totalFloors,5);
 assert.equal(entry.stair.steps,12);
 assert.equal(entry.stair.turnZ,2.05);
@@ -50,11 +50,11 @@ function go(a,z,n){
 function at(y,name){assert.ok(Math.abs(player.position.y-y)<.000001,
  name+" got "+player.position.y+" expected "+y);}
 go(0,1,90); // enter the now spacious single-door vestibule
-assert.equal(player.position.y,.70);
+assert.equal(player.position.y,0);
 go(1,0,18); // align with stair that runs beside the RIGHT wall
 assert.ok(player.position.x>entry.stair.entryX-.20);
 go(0,1,100); // stop on usable floor, not against the new electric cabinet
-at(entry.stair.firstFloor,"raised rear landing 1");
+at(entry.stair.firstFloor,"rear landing 1");
 assert.ok(player.position.z<-2.5);
 for(let floor=1;floor<5;floor++){
  go(-1,0,floor===1?40:70);assert.ok(player.position.x<x-1.0);
@@ -81,7 +81,7 @@ go(1,0,43); // move from left U-flight to RIGHT entrance flight
 assert.ok(Math.abs(player.position.x-entry.stair.entryX)<entry.stair.entryWidth/2-.05,
   "right entrance flight remains accessible across full tread width");
 go(0,-1,135); // descend all twelve entry steps into the foyer
-assert.equal(player.position.y,.70);
+assert.equal(player.position.y,0);
 go(-1,0,18); // centre on ORIGINAL exterior doorway
 assert.ok(Math.abs(player.position.x-x)<.3);
 go(0,-1,160);

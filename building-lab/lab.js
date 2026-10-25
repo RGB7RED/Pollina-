@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import {OrbitControls} from "three/addons/controls/OrbitControls.js";
-import {BUILDING,buildApartmentHouse} from "./building.js";
+import {BUILDING,buildApartmentHouse} from "./building.js?v=478";
 import {encodeHouseGLB,downloadGLB} from "./export-glb.js";
 import {applyFacadeFinishes} from "./materials.js";
 import {FreeCamera,normalizedStick,CAMERA_SPEEDS,LOOK_SENSITIVITIES} from "./free-camera.js";
