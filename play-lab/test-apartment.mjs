@@ -33,8 +33,8 @@ assert.deepEqual(apartment.rooms.map(x=>x.label),
  ["Прихожая","Кухня","Санузел","Жилая комната"]);
 assert.ok(apartment.bounds.minX> -BUILDING.length/2);
 assert.ok(apartment.bounds.maxX<entry.x);
-assert.ok(apartment.bounds.minZ> -BUILDING.width/2);
-assert.ok(apartment.bounds.maxZ<BUILDING.width/2);
+assert.ok(apartment.bounds.minZ>BUILDING.backFacade);
+assert.ok(apartment.bounds.maxZ<BUILDING.frontFacade);
 const matching=planFacade(BUILDING).filter(w=>w.floor===4&&w.bay===1);
 assert.equal(matching.length,2);
 assert.ok(matching.some(w=>w.side===-1));
