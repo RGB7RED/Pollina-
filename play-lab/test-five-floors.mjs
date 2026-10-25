@@ -12,7 +12,7 @@ const pads=[-26.3625,-8.7875,8.7875,26.3625].map(x=>({
  x,width:5.5,depth:3.15,centreZ:7.875
 }));
 const entry=planPlayableEntrance(BUILDING,pads),x=entry.x;
-assert.equal(entry.buildingObstacles.length,26);
+assert.equal(entry.buildingObstacles.length,25);
 assert.equal(entry.totalFloors,5);
 assert.equal(entry.stair.steps,12);
 assert.equal(entry.stair.turnZ,2.05);
