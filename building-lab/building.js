@@ -980,7 +980,7 @@ export function buildApartmentHouse(THREE,config={}){
       for(const sign of [-1,1]){
         const u0=w.x+(sign<0?-step/2:0);
         const u1=w.x+(sign<0?0:step/2);
-        const h=punch("long",1,u0,u1,y0,y1,w.x+sign*.56,
+        const h=punch("long",1,u0,u1,y0,y1,w.x+sign*ENTRY_GLAZING.offset,
           ENTRY_GLAZING.width,floorLevel(w.floor)+ENTRY_GLAZING.sillOffset,
           ENTRY_GLAZING.height,mats.brick,"window");
         windowDetail(h,w.variation,false,false);
