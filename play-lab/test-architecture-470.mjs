@@ -22,7 +22,7 @@ const THREE={Group:Obj,Object3D:Obj,Mesh,InstancedMesh,BoxGeometry:Geo,
  BufferGeometry:Geo,Float32BufferAttribute:Attr,MeshStandardMaterial:Mat,DoubleSide:2};
 const house=buildApartmentHouse(THREE),audit=house.root.userData.geometryAudit;
 assert.deepEqual(audit.completeStaircase.apartmentDoors.filter(x=>x.accessible).map(x=>x.number),
- [1,2,3,4,17]);
+ [3,4,1,2,17]);
 assert.equal(audit.firstFloorApertures.length,4);
 assert.equal(BUILDING.length,74);
 assert.equal(BUILDING.entrances,4);
@@ -43,7 +43,7 @@ entry.installFirstFloor(plan);
 assert.throws(()=>entry.installFirstFloor(plan),/already installed/);
 assert.equal(plan.floor,1);
 assert.equal(plan.doors.length,4);
-assert.deepEqual(plan.doors.map(d=>d.number),[1,2,3,4]);
+assert.deepEqual(plan.doors.map(d=>d.number),[3,4,1,2]);
 assert.deepEqual(plan.doors.map(d=>d.type),["1к","2к","3к","1к"]);
 assert.ok(plan.rooms.length>=12);
 assert.ok(plan.unfurnished);
@@ -70,20 +70,20 @@ function go(dx,dz,count){
 go(0,1,90);go(1,0,18);go(0,1,100);
 assert.equal(p.position.y,plan.y);
 go(0,-1,6);
-assert.equal(p.nearestDoor()?.number,3);
+assert.equal(p.nearestDoor()?.number,1);
 const oldX=p.position.x;
 go(1,0,35);
 assert.ok(p.position.x<=plan.doors[2].x-PLAYER_RADIUS+.08,
  "closed first-floor door is physically solid");
-assert.ok(p.setFirstFloorDoorOpen(3,true));
+assert.ok(p.setFirstFloorDoorOpen(1,true));
 go(1,0,45);
 assert.ok(p.position.x>plan.doors[2].x+.52,
  "opened door allows a direct physical approach into flat 3");
 assert.equal(p.position.y,plan.y);
 assert.ok(entry.isInside(p.position.x,p.position.z,p.position.y));
-assert.ok(p.firstFloorDoorOpen.has(3));
+assert.ok(p.firstFloorDoorOpen.has(1));
 go(0,-1,18); // move away from the swing arc before closing
-assert.equal(p.setFirstFloorDoorOpen(3,false),true,
+assert.equal(p.setFirstFloorDoorOpen(1,false),true,
  "door can close safely once avatar clears the opening");
 p.reset();
 assert.equal(p.firstFloorDoorOpen.size,0);
