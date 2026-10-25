@@ -122,7 +122,7 @@ assert.equal(entry.zone(player.position.x,player.position.z,player.position.y),
 walk(-1,0,20);walk(0,1,29);
 assert.equal(entry.zone(player.position.x,player.position.z,player.position.y),
  "Квартира №17 · Кухня");
-walk(0,-1,29);walk(1,0,32);walk(0,1,29);
+walk(0,-1,29);walk(1,0,30);walk(0,1,29);
 assert.equal(entry.zone(player.position.x,player.position.z,player.position.y),
  "Квартира №17 · Санузел");
 walk(0,-1,29);walk(-1,0,17);walk(0,-1,47);
