@@ -18,8 +18,10 @@ export function modelYawForCamera(lookYaw){
 }
 
 export function facadeObstacles(building,pads=[]){
-  const halfX=building.length/2,halfZ=building.width/2;
-  const obstacles=[{name:"building",minX:-halfX,maxX:halfX,minZ:-halfZ,maxZ:halfZ}];
+  const halfX=building.length/2,
+    front=building.frontFacade??building.width/2,
+    back=building.backFacade??-building.width/2;
+  const obstacles=[{name:"building",minX:-halfX,maxX:halfX,minZ:back,maxZ:front}];
   for(const [i,p] of pads.entries()){
     obstacles.push({name:"entry-"+(i+1),
       minX:p.x-p.width/2,maxX:p.x+p.width/2,
