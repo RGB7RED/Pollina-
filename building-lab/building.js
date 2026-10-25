@@ -509,6 +509,13 @@ export function buildApartmentHouse(THREE,config={}){
           wallX,y0,z0,wallX,y1+height,z1,wallX,y1,z1
         );
       }
+      // Continue green dado and white trim along the entrance flight
+      // from foyer +0.70 to the first residential landing +2.09.
+      const entrySlopeX=x+(stairHalfWidth-.114);
+      wallQuad(slopeGreen,entrySlopeX,entranceStartZ,rearLandingEndZ,
+        foyerFloor,baseFloor,-.15,1.33);
+      wallQuad(slopeTrim,entrySlopeX-.005,entranceStartZ,rearLandingEndZ,
+        foyerFloor,baseFloor,1.15,.045);
       for(let f=0;f<C.floors-1;f++){
         const y=baseFloor+f*storeyRise;
         for(const [side,y0,y1] of [
@@ -547,9 +554,10 @@ export function buildApartmentHouse(THREE,config={}){
       flushWallFaces(slopeGreen,mats.foyerLower);
       flushWallFaces(slopeTrim,mats.frameWhite);
       audit.slopedWallFinish={
-        bands:(C.floors-1)*2,triangles:slopeGreen.length/9,
+        bands:(C.floors-1)*2+1,triangles:slopeGreen.length/9,
         trimTriangles:slopeTrim.length/9,
         noTiltedBoxes:true,joinedToFlatLandings:true,
+        entryFlightPainted:true,
         firstFlight:{z0:rearLandingEndZ,z1:halfLandingZ,
           startY:baseFloor,endY:baseFloor+rise},
         sharedMaterial:true
@@ -908,8 +916,8 @@ export function buildApartmentHouse(THREE,config={}){
   const deckSpans=[];
   let cursor=-C.length/2+.32;
   for(const ex of entranceCentres){
-    deckSpans.push([cursor,ex-1.84]);
-    cursor=ex+1.84;
+    deckSpans.push([cursor,ex-1.79]);
+    cursor=ex+1.79;
   }
   deckSpans.push([cursor,C.length/2-.32]);
   const deckBack=C.backFacade+.32,deckFront=C.frontFacade-.32;
@@ -955,6 +963,18 @@ export function buildApartmentHouse(THREE,config={}){
     // instead of regular apartment-window heights, to avoid half windows.
     if(w.side===1&&w.bay===ENTRANCE_BAYS[0]&&w.floor>0)continue;
     const y0=bandStart(w.floor),y1=bandEnd(w.floor);
+    // At every other entrance use TWO distinct small stair windows,
+    // each on its own side of the concrete-panel seam.
+    if(w.side===1&&w.floor>0&&ENTRANCE_BAYS.includes(w.bay)){
+      for(const sign of [-1,1]){
+        const u0=w.x+(sign<0?-step/2:0);
+        const u1=w.x+(sign<0?0:step/2);
+        const h=punch("long",1,u0,u1,y0,y1,w.x+sign*.56,
+          .84,floorLevel(w.floor)+.70,1.12,mats.brick,"window");
+        windowDetail(h,w.variation,false,false);
+      }
+      continue;
+    }
     const centre=w.x,side=w.side;
     const isDoor=w.entrance,balcony=w.balcony&&!isDoor;
     const openingWidth=isDoor?1.71:balcony?1.44:1.40;
@@ -962,7 +982,7 @@ export function buildApartmentHouse(THREE,config={}){
     const height=isDoor?2.28:balcony?2.20:regularWindowHeight;
     // The first entrance window sits below the old 2F boundary; trim
     // the entry-door masonry at the FIRST actual stair-window sill.
-    const entryColumnTop=C.firstFloor+C.floorHeight/2+.80-.035;
+    const entryColumnTop=C.firstFloor+C.floorHeight/2+.72-.035;
     const moduleTop=isDoor&&w.bay===ENTRANCE_BAYS[0]?entryColumnTop:y1;
     const hole=punch("long",side,centre-step/2,centre+step/2,y0,moduleTop,
       centre,openingWidth,low,height,mats.brick,isDoor?"door":"window");
@@ -976,41 +996,48 @@ export function buildApartmentHouse(THREE,config={}){
         audit.firstFloorWindowHoles.push(hole);
     }
   }
-  // First-floor apertures were punched in the common vertical grid above.
-  // FIRST entrance: four full-height windows, each placed above its
-  // intermediate return. One existing brick column is split into real
-  // masonry piers + lintels; never overlay glass on opaque brick.
+  // Actual TWO short glazing apertures beside the stair-panel joint.
+  // Each is .84m wide and 1.12m high; center pier remains solid.
   const entryBay=plan.find(w=>w.entrance&&w.bay===ENTRANCE_BAYS[0]);
   const wx=entryBay.x,spanLeft=wx-step/2,spanRight=wx+step/2;
-  const windowWidth=1.40,windowLeft=wx-windowWidth/2,
-    windowRight=wx+windowWidth/2;
-  const columnStart=C.firstFloor+C.floorHeight/2+.80-.035;
-  wallStrip("long",1,spanLeft,windowLeft,columnStart,shellTop,mats.brick);
-  wallStrip("long",1,windowRight,spanRight,columnStart,shellTop,mats.brick);
+  const pairOffset=.56,paneWidth=.84,paneHalf=paneWidth/2;
+  const outerEdge=pairOffset+paneHalf,innerEdge=pairOffset-paneHalf;
+  const columnStart=C.firstFloor+C.floorHeight/2+.72-.035;
+  wallStrip("long",1,spanLeft,wx-outerEdge,columnStart,shellTop,mats.brick);
+  wallStrip("long",1,wx+outerEdge,spanRight,columnStart,shellTop,mats.brick);
   let priorTop=columnStart;
+  const stairPairApertures=[];
   for(let i=0;i<C.floors-1;i++){
     const midY=C.firstFloor+(i+.5)*C.floorHeight;
-    const bottom=midY+.80,height=1.42,top=bottom+height;
+    const bottom=midY+.72,height=1.12,top=bottom+height;
     if(bottom<priorTop||top>=shellTop)
-      throw Error("Stairwell opening overlaps previous window/roof");
-    wallStrip("long",1,windowLeft,windowRight,priorTop,bottom,mats.brick);
-    const hole={axis:"long",side:1,centre:wx,width:windowWidth,
-      bottom,top,height,kind:"window"};
-    audit.holes.push(hole);stats.windowHoles++;
-    windowDetail(hole,i,false,true);
+      throw Error("Paired stair glazing intersects another window or roof");
+    wallStrip("long",1,wx-outerEdge,wx+outerEdge,priorTop,bottom,mats.brick);
+    wallStrip("long",1,wx-innerEdge,wx+innerEdge,bottom,top,mats.brick);
+    for(const sign of [-1,1]){
+      const hole={axis:"long",side:1,centre:wx+sign*pairOffset,
+        width:paneWidth,bottom,top,height,kind:"window",stairLanding:i+1};
+      audit.holes.push(hole);stats.windowHoles++;
+      windowDetail(hole,i,false,true);
+      stairPairApertures.push(hole);
+    }
     priorTop=top;
   }
-  wallStrip("long",1,windowLeft,windowRight,priorTop,shellTop,mats.brick);
+  wallStrip("long",1,wx-outerEdge,wx+outerEdge,priorTop,shellTop,mats.brick);
+  // Vertical seam runs through the solid CENTER pier, not through glass.
+  box(.028,shellTop-columnStart,.032,mats.panelJoint,
+    wx,(shellTop+columnStart)/2,C.frontFacade+.023);
+  audit.stairwellPairedApertures=stairPairApertures;
   // Inside the EXISTING brick wall, add a continuous cream/green
   // plaster lining. All four window-shaped apertures are subtracted
   // from the interior paint too — NEVER cover the real transparent
   // glazing with a coloured rectangle. Existing outside brick remains.
   const innerWindowZ=C.frontFacade-wallDepth-.018;
-  const innerHalfWidth=1.84;
+  const innerHalfWidth=1.72-.085; // inside staircase finish, no intrusion into flats
   const firstMid=C.firstFloor+C.floorHeight/2;
   const windowIntervals=Array.from({length:C.floors-1},(_,i)=>{
-    const lo=firstMid+i*C.floorHeight+.80;
-    return {bottom:lo,top:lo+1.42};
+    const lo=firstMid+i*C.floorHeight+.72;
+    return {bottom:lo,top:lo+1.12};
   });
   // Preserve the ORIGINAL operable entrance opening as well.
   const entryDoorVoid={bottom:C.plinth+.04,top:C.plinth+.04+2.28,
@@ -1042,10 +1069,12 @@ export function buildApartmentHouse(THREE,config={}){
     const mat=lower?mats.foyerLower:mats.foyerPaint;
     const windowOpen=windowIntervals.some(w=>midY>w.bottom&&midY<w.top);
     const doorwayOpen=midY>entryDoorVoid.bottom&&midY<entryDoorVoid.top;
-    const holeHalf=doorwayOpen?entryDoorVoid.halfWidth:windowOpen?.70:0;
-    const ranges=holeHalf?
-      [[-innerHalfWidth,-holeHalf],[holeHalf,innerHalfWidth]]:
-      [[-innerHalfWidth,innerHalfWidth]];
+    const ranges=windowOpen
+      ?[[-innerHalfWidth,-outerEdge],[-innerEdge,innerEdge],[outerEdge,innerHalfWidth]]
+      :doorwayOpen
+        ?[[-innerHalfWidth,-entryDoorVoid.halfWidth],
+          [entryDoorVoid.halfWidth,innerHalfWidth]]
+        :[[-innerHalfWidth,innerHalfWidth]];
     for(const [l,r] of ranges){
       box(r-l,y1-y0,.025,mat,wx+(l+r)/2,midY,innerWindowZ);
       plasterPanels++;
@@ -1058,14 +1087,14 @@ export function buildApartmentHouse(THREE,config={}){
   const revealDepth=.165;
   const revealMidZ=innerWindowZ+revealDepth/2;
   let finishedWindowReveals=0;
-  for(const hole of windowIntervals){
-    const mid=(hole.bottom+hole.top)/2;
+  for(const hole of windowIntervals)for(const sign of [-1,1]){
+    const mid=(hole.bottom+hole.top)/2,cx=wx+sign*pairOffset;
     for(const side of [-1,1])
       box(.052,hole.top-hole.bottom,revealDepth,mats.foyerPaint,
-        wx+side*(.70-.025),mid,revealMidZ);
+        cx+side*(paneHalf-.025),mid,revealMidZ);
     for(const edge of [-1,1])
-      box(1.35,.052,revealDepth,mats.foyerPaint,
-        wx,edge<0?hole.bottom+.025:hole.top-.025,revealMidZ);
+      box(paneWidth-.05,.052,revealDepth,mats.foyerPaint,
+        cx,edge<0?hole.bottom+.025:hole.top-.025,revealMidZ);
     finishedWindowReveals++;
   }
   audit.stairwellInterior={plasterPanels,wallZ:innerWindowZ,
