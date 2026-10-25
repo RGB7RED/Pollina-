@@ -44,7 +44,7 @@ for(let floor=1;floor<=5;floor++){
   const light=lights.find(l=>l.kind==="apartment-landing"&&l.floor===floor);
   assert.ok(light,"fixture on every apartment floor");
   const ceiling=floor<5?level+stair.storeyRise-.16:
-    BUILDING.plinth+BUILDING.floors*BUILDING.floorHeight-.16;
+    BUILDING.firstFloor+BUILDING.floors*BUILDING.floorHeight-.16;
   assert.ok(Math.abs(light.ceilingY-ceiling)<E,"fixture aligned with slab underside or roof");
   assert.ok(light.housingY+light.housingH/2<ceiling,"housing wholly below ceiling");
   assert.ok(light.glassY+light.glassH/2<light.housingY,
