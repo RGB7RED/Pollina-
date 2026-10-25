@@ -628,7 +628,9 @@ export function buildApartmentHouse(THREE,config={}){
           }
         }
         for(let local=0;local<4;local++){
-          const number=floor*4+local+1;
+          // Correct the first-floor numbering without relocating the
+          // separately modelled legacy fifth-floor apartment No.17.
+          const number=floor===0?[3,4,1,2][local]:floor*4+local+1;
           const side=local<2?-1:1;
           const sidePosition=sideDoorPositions[local%2];
           const doorX=x+side*(stairHalfWidth-.11),doorZ=sidePosition;
