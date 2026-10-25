@@ -6,7 +6,7 @@ import {buildTreeMeshes} from "./tree-models.js";
 export const STREET_LAYOUT=Object.freeze({
   length:108,roadNear:16.05,roadFar:25.15,
   sidewalkNear:[9.55,15.98],sidewalkFar:[25.25,30.2],
-  rearPath:[-12.05,-8.05],worldWidth:130,worldDepth:85
+  rearPath:[-15.75,-11.25],worldWidth:130,worldDepth:85
 });
 const rect=(kind,x,z,width,depth,y=0)=>({kind,x,z,width,depth,y});
 const obstruction=(name,x,z,rx,rz)=>({
@@ -26,8 +26,10 @@ export function sampleGrassTufts(surfaces,building,pads=[],{buildingPresent=true
     if(paved.some(r=>Math.abs(x-r.x)<r.width/2+.62&&
       Math.abs(z-r.z)<r.depth/2+.62))return true;
     if(!buildingPresent)return false;
+    const front=building.frontFacade??building.width/2;
+    const back=building.backFacade??-building.width/2;
     if(Math.abs(x)<building.length/2+1.2&&
-       Math.abs(z)<building.width/2+1.2)return true;
+       z>back-1.2&&z<front+1.2)return true;
     return pads.some(p=>Math.abs(x-p.x)<p.width/2+.6&&
       Math.abs(z-p.centreZ)<p.depth/2+.6);
   };
@@ -88,7 +90,7 @@ export function planStreet(building,pads=[],options={}){
     ...[-35,-10,10,35].map(x=>({x,z:15.27,row:"front"})),
     ...[-35,35].map(x=>({x,z:26.15,row:"opposite"}))
   ];
-  const benches=options.furniture===false?[]:[-30,-12,12,30].map(x=>({x,z:-12.75}));
+  const benches=options.furniture===false?[]:[-30,-12,12,30].map(x=>({x,z:-16.50}));
   const obstacles=[
     ...trees.map((t,i)=>obstruction("tree-"+i,t.x,t.z,.35,.35)),
     ...lamps.map((t,i)=>obstruction("lamp-"+i,t.x,t.z,.25,.25)),
@@ -96,7 +98,10 @@ export function planStreet(building,pads=[],options={}){
   ];
   // Stop accidental scene changes from placing scenery into walls, door
   // slabs or on the initial player spawn. Collision and art share this plan.
-  const house=obstruction("house",0,0,building.length/2,building.width/2);
+  const rear=building.backFacade??-building.width/2;
+  const front=building.frontFacade??building.width/2;
+  const house=obstruction("house",0,(front+rear)/2,
+    building.length/2,(front-rear)/2);
   const entrances=pads.map((p,i)=>obstruction("entry-"+i,p.x,p.centreZ,
     p.width/2,p.depth/2));
   const overlap=(a,b)=>a.minX<b.maxX&&a.maxX>b.minX&&
