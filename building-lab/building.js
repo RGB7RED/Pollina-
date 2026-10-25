@@ -7,9 +7,9 @@ export const BUILDING={
   floors:5,
   entrances:4,
   length:74,
-  width:16.0, // 6.4 m street-facing + 9.6 m rear facade
+  width:19.0, // preserve street-facing +6.4m; extend rear wing to -12.6m
   frontFacade:6.4,
-  backFacade:-9.6,
+  backFacade:-12.6,
   plinth:.66,
   firstFloor:2.09,
   floorHeight:2.42,
