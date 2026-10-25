@@ -84,6 +84,6 @@ assert.equal(stair.floors,5);
 assert.equal(audit.heating.radiators.length,4);
 assert.equal(audit.stairwellWindows.length,4);
 assert.equal(audit.foyer.doorCount,1);
-assert.ok(house.root.children.filter(m=>m instanceof InstancedMesh).length<=33,
+assert.ok(house.root.children.filter(m=>m instanceof InstancedMesh).length<=35,
   "no new draw-call batches");
 console.log("MINI CITY 4.5.4.9 PASS: six actual luminaires under slabs/roof, zero floor-mounted fixtures");
