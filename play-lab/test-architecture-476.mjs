@@ -129,7 +129,7 @@ assert.ok(!queue.some(([i,j])=>atX(i)<leftWing.maxX-.5),
 console.log("MINI CITY 4.7.5 PASS: rear second room reachable, neighbour flat sealed, stair windows fully clear, numbers 4-3-1-2");
 
 
-// Regression 4.7.6: four real short DOUBLE sash pairs above the first canopy.
+// Stage 4.7.8: first-entrance double sashes align exactly with all three other entrances.
 assert.equal(house.stats.windows,312);
 assert.equal(house.stats.windowHoles,312);
 assert.equal(audit.stairwellWindows.length,8);
@@ -139,8 +139,15 @@ assert.equal(audit.stairwellInterior.innerHalfWidth,1.635);
 assert.ok(audit.stairwellInterior.innerHalfWidth<entry.stairHalf);
 for(let floor=0;floor<4;floor++){
   const pair=audit.stairwellPairedApertures.slice(floor*2,floor*2+2);
-  const midY=BUILDING.firstFloor+(floor+.5)*BUILDING.floorHeight;
+  const midY=BUILDING.firstFloor+(floor+1)*BUILDING.floorHeight;
   assert.deepEqual(pair.map(h=>Number((h.centre-entry.x).toFixed(2))),[-ENTRY_GLAZING.offset,ENTRY_GLAZING.offset]);
+  const secondX=centre(ENTRANCE_BAYS[1]);
+  const reference=audit.holes.filter(h=>h.axis==="long"&&h.side===1&&
+    Math.abs(h.bottom-(midY+ENTRY_GLAZING.sillOffset))<1e-6&&
+    Math.abs(h.centre-secondX)<1.25);
+  assert.equal(reference.length,2,"reference second entrance has two real openings");
+  assert.deepEqual(pair.map(h=>h.bottom),reference.map(h=>h.bottom));
+  assert.deepEqual(pair.map(h=>h.top),reference.map(h=>h.top));
   for(const hole of pair){
     assert.equal(hole.width,ENTRY_GLAZING.width);
     assert.ok(Math.abs(hole.bottom-(midY+ENTRY_GLAZING.sillOffset))<1e-6);
