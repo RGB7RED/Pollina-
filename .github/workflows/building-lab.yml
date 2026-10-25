@@ -37,6 +37,7 @@ on:
       - fix/mini-city-v033-stage4549-ceiling-mounted-stairwell-lights
       - feat/mini-city-v033-stage460-first-enterable-apartment
       - feat/mini-city-v033-stage470-catalog-assets-first-floor-plan
+      - fix/mini-city-v033-stage471-deeper-house-aligned-floors-reference-layout
     paths:
       - 'building-lab/**'
       - 'bus-stop-lab/**'
@@ -110,6 +111,8 @@ jobs:
         run: node play-lab/test-five-floors.mjs
       - name: Test stage 4.5.4.3 facade windows, real openings and upper landing headroom
         run: node play-lab/test-architecture-4543.mjs
+      - name: Test stage 4.7.1 unified five-storey shell, deeper rear facade and restored reference plan
+        run: node play-lab/test-architecture-471.mjs
       - name: Test stage 4.7 first-floor Khrushchevka flats, end windows and isolated catalogue assets
         run: node play-lab/test-architecture-470.mjs
       - name: Test stage 4.6 first real apartment 17, in-place 3D rooms, original aligned windows and full player journey
