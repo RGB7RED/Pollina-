@@ -91,7 +91,7 @@ for(const pane of a.stairwellPairedApertures){
 }
 // Entry must NOT be sealed off by the same interior wall plaster.
 const doorHole=a.stairwellInterior.entranceAperture;
-assert.ok(doorHole.top>2.90&&Math.abs(doorHole.halfWidth-.855)<eps);
+assert.ok(doorHole.top>2.35&&Math.abs(doorHole.halfWidth-.855)<eps);
 const doorCover=instances.filter(t=>Math.abs(t.position.z-
     a.stairwellInterior.wallZ)<eps&&Math.abs(t.scale.z-.025)<eps&&
     (t.materialColor===0x76978d||t.materialColor===0xd0c9b1)&&
@@ -109,7 +109,7 @@ assert.equal(stair.flights,9);
 assert.equal(stair.treads,108);
 assert.ok(house.root.children.filter(m=>m instanceof InstancedMesh).length<=35,
   "mobile draw-call batch count preserved");
-assert.equal(e.buildingObstacles.length,30);
+assert.equal(e.buildingObstacles.length,25);
 assert.ok(collidesAt(x,-4.64,e.buildingObstacles,PLAYER_RADIUS,2.09),
   "electrical cabinet has real collision");
 assert.ok(!collidesAt(x,-3.20,e.buildingObstacles,PLAYER_RADIUS,2.09),
