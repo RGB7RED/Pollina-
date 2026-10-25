@@ -157,7 +157,7 @@ function walk(dx,dz,n){
   assert.ok(Math.abs(player.position.y-prev.y)<.19);
  }
 }
-walk(0,1,90);walk(1,0,18);walk(0,1,100);
+walk(0,1,90);walk(1,0,16);walk(0,1,100);
 assert.equal(player.position.y,entry.floorHeight(0));
 assert.equal(player.nearestDoor()?.id,"first-floor-1");
 walk(0,-1,6);
