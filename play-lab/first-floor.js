@@ -123,10 +123,10 @@ export function planFirstFloor(building,entrance){
     // SOUTH FRONT APARTMENT: own z=-2.42 doorway. The long hall lies
     // next to the stair. Kitchen and bathroom each open DIRECTLY off
     // that hall; a transverse corridor serves all living rooms.
-    const frontCrossBack=1.35,frontBedrooms=2.20;
+    const frontCrossBack=.95,frontBedrooms=2.40;
     const frontWetSplit=-.62;
     wallX("front-private-hall-"+side,near,divider,frontCrossBack,[
-      {z:-1.80,width:.88},{z:.40,width:.88}
+      {z:-1.80,width:.88},{z:.25,width:.88}
     ]);
     wallZ("front-kitchen-bath-"+side,frontWetSplit,wet0,wet1);
     wallZ("front-cross-hall-wet-"+side,frontCrossBack,wet0,wet1,
