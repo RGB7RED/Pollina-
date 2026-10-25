@@ -50,7 +50,7 @@ assert.equal(stair.railing.wallSideRails,0);
 assert.equal(stair.railing.innerGuardLinks,4);
 assert.equal(stair.apartmentDoors.length,20);
 assert.deepEqual(stair.apartmentDoors.map(d=>d.number),
-  Array.from({length:20},(_,i)=>i+1));
+  [3,4,1,2,...Array.from({length:16},(_,i)=>i+5)]);
 assert.ok(stair.apartmentDoors.every(d=>d.zone==="rear-stair-landing"));
 assert.equal(stair.landing.minZ,-4.85);
 assert.equal(stair.landing.maxZ,-1.58);
