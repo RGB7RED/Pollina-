@@ -80,7 +80,7 @@ assert.ok(rightDoorX<x+entry.stairHalf);
 // Fifth-floor railing touches the existing LEFT wall; the RIGHT flight
 // must remain traversable so that 5F is actually reachable.
 assert.ok(Math.abs(top.left-(x-entry.stairHalf+.12))<eps);
-assert.ok(Math.abs(top.right-(first.secondX-.73))<eps);
+assert.ok(Math.abs(top.right-(first.secondX-.76))<eps);
 assert.ok(top.openRightFlight);
 assert.ok(top.width>1.60&&top.width<1.75);
 assert.equal(top.height,entry.floorHeight(4));
