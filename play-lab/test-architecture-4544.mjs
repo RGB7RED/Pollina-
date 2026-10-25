@@ -78,7 +78,7 @@ const treads=instances.filter(t=>Math.abs(t.scale.x-1.46)<eps&&
   Math.abs(t.scale.z-entranceTreadLength)<eps);
 assert.equal(treads.length,24,"12 genuine two-layer entrance steps");
 assert.equal(new Set(treads.map(t=>t.position.y.toFixed(4))).size,24);
-const transverse=instances.filter(t=>Math.abs(t.scale.x-.36)<eps&&
+const transverse=instances.filter(t=>Math.abs(t.scale.x-.34)<eps&&
   Math.abs(t.scale.y-.08)<eps&&Math.abs(t.scale.z-.075)<eps&&
   Math.abs(t.position.x-x)<eps);
 assert.equal(transverse.length,3,"three full-floor inner shaft connectors; fifth has longer wall rail");
