@@ -90,13 +90,13 @@ const railPieces=instances.filter(t=>t.color===0x646f72&&
 assert.equal(railPieces.length,27,"24 inner U-flight rails + three entry inner rails");
 assert.ok(railPieces.every(t=>Math.abs(t.position.x-x)<1.0),
   "no exposed handrail mounted against the two outer walls");
-assert.equal(audit.stairwellWindows.length,4);
-assert.deepEqual(audit.stairwellWindows.map(w=>w.floor),[1,2,3,4]);
-for(let i=0;i<4;i++){
+assert.equal(audit.stairwellWindows.length,8);
+assert.deepEqual(audit.stairwellWindows.map(w=>w.floor),[1,1,2,2,3,3,4,4]);
+for(let i=0;i<8;i++){
   const w=audit.stairwellWindows[i];
-  const turn=stair.firstFloor+(i+.5)*stair.storeyRise;
-  assert.ok(Math.abs(w.bottom-turn-.80)<eps,"window sill just above its landing");
-  assert.ok(Math.abs(w.top-w.bottom-1.42)<eps,"full-size window");
+  const turn=stair.firstFloor+(Math.floor(i/2)+.5)*stair.storeyRise;
+  assert.ok(Math.abs(w.bottom-turn-.72)<eps,"window sill just above its landing");
+  assert.ok(Math.abs(w.top-w.bottom-1.12)<eps,"full-size window");
   assert.ok(w.transparent&&w.through,"real transparent pane");
   const mid=(w.top+w.bottom)/2;
   assert.ok(!audit.wallPieces.some(p=>p.axis==="long"&&p.side===1&&
