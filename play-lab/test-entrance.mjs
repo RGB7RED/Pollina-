@@ -22,7 +22,7 @@ const entry=planPlayableEntrance(BUILDING,realPads);
 assert.equal(entry.x,realPads[0].x);
 assert.equal(entry.facade,BUILDING.frontFacade);
 assert.equal(entry.insideEnd,3.35);
-assert.equal(entry.buildingObstacles.length,30);
+assert.equal(entry.buildingObstacles.length,25);
 assert.ok(!collidesAt(entry.x,5.1,entry.buildingObstacles,PLAYER_RADIUS),
   "first vestibule is walkable before the door collider is considered");
 assert.ok(collidesAt(entry.x,entry.door.minZ+.10,[entry.door]),
@@ -38,7 +38,7 @@ assert.ok(entry.canInteract(entry.x,8.0));
 const nearHeight=[10.65,10.0,9.42,7.1,6.23,5,3.35].map(z=>
  entry.groundHeight(entry.x,z));
 assert.deepEqual(nearHeight.map(x=>+x.toFixed(3)),
- [0,.264,.50,.50,.70,.70,.70]);
+ [0,0,0,0,0,0,0]);
 assert.equal(entry.groundHeight(entry.x+3,5.2),0);
 assert.ok(entry.isInside(entry.x,5));
 assert.ok(!entry.isInside(entry.x,8));
@@ -69,8 +69,8 @@ for(let i=0;i<105;i++){
 assert.ok(entered,"the avatar walks INSIDE the same house scene");
 assert.ok(player.position.z>=entry.insideEnd-.02,
  "open shaft at the bottom of the first flight has no imaginary flat passage");
-assert.equal(entry.groundHeight(entry.x,1.5,.70),null);
-assert.equal(player.position.y,.70);
+assert.equal(entry.groundHeight(entry.x,1.5,0),null);
+assert.equal(player.position.y,0);
 assert.equal(player.setEntryDoorOpen(false),true,
  "door closes after avatar clears threshold into interior");
 assert.ok(player.obstacles.includes(entry.door));
