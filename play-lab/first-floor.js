@@ -163,13 +163,13 @@ export function planFirstFloor(building,entrance){
       // existing THREE front windows (bays 4,5,6). The cross hall has
       // three matching doorways so bedrooms cannot force passage
       // through each other.
-      // The old equal thirds fell ACROSS real windows (especially bays
-      // 5 and 6). Use midpoints BETWEEN the four facade windows, giving
-      // each of the three rooms at least one unobstructed exterior sash.
+      // Equal thirds cut right through the facade windows. The actual
+      // three first-entrance window bays are 4, 5, 6: dividers belong
+      // exactly BETWEEN consecutive windows.
       const bayX=n=>-building.length/2+1.85+
         (n+.5)*(building.length-3.7)/building.windowBays;
       const s1=(bayX(4)+bayX(5))/2;
-      const s2=(bayX(6)+bayX(7))/2;
+      const s2=(bayX(5)+bayX(6))/2;
       if(!(left+.90<s1&&s1+1<s2&&s2+1<right))
         throw Error("3-room dividers cannot fit between facade windows");
       wallX("three-room-separation-A",s1,frontBedrooms,front);
