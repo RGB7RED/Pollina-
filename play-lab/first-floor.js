@@ -160,8 +160,19 @@ export function buildFirstFloor(THREE,plan){
     leaf.scale.set(.09,2.04,.94);leaf.position.set(0,1.02,.47);
     pivot.add(leaf);
     const handle=new THREE.Mesh(geometry,mats.metal);
-    handle.scale.set(.034,.12,.08);handle.position.set(.078,1.04,.77);
-    pivot.add(handle);root.add(pivot);doorPivots.set(d.number,pivot);
+    handle.scale.set(.034,.12,.08);handle.position.set(-d.side*.078,1.04,.77);
+    pivot.add(handle);
+    // Restore NUMBER PLATES as well as the previous four door colors.
+    // These are children of the hinged leaf, not orphaned on the wall.
+    const plate=new THREE.Mesh(geometry,mats.frame);
+    plate.scale.set(.014,.18,.18);
+    plate.position.set(-d.side*.063,1.84,.47);
+    pivot.add(plate);
+    const numeral=new THREE.Mesh(geometry,mats.dark);
+    numeral.scale.set(.018,.095,.048);
+    numeral.position.set(-d.side*.074,1.84,.47);
+    pivot.add(numeral);
+    root.add(pivot);doorPivots.set(d.number,pivot);
     for(const z of [d.z-.52,d.z+.52])
       box(.15,2.15,.06,mats.frame,d.x,plan.y+1.075,z);
     box(.15,.075,1.10,mats.frame,d.x,plan.y+2.18,d.z);
