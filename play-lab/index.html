@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#20343d">
-<title>MINI CITY 4.7 — Планировка первого этажа и каталог отдельных объектов</title>
+<title>MINI CITY 4.7.1 — Глубже дом, новые уровни и точная планировка · Играть</title>
 <style>
 :root{color-scheme:dark;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;color:#ecf2eb}
 *{box-sizing:border-box}
@@ -124,7 +124,7 @@ body.game-mode .menu{max-width:min(47vw,190px)}
   <section class="card brand">
     <small>MINI CITY / PLAY LAB</small>
     <h1 id="play-title">MINI CITY · Лаборатория сцены</h1>
-    <p>4.7: первый этаж первого подъезда перестроен по референсу: четыре отдельные квартиры №1–4, разные комнатности, коридоры, кухня и санузел без мебели. Все четыре двери открываются. По краям фасада по два окна. Каталог получил самостоятельные папки дверей, окон, отопления, освещения и оборудования. Прежняя квартира №17 на пятом этаже сохранена как экспериментальный прототип. Вся игра — одна сцена.</p>
+    <p>4.7.1: дом углублён только со стороны двора (до 16 м), четыре подъезда и улица остались на прежнем месте. Высоты всех пяти этажей, окон, балконов и крыши согласованы с лестничной клеткой: жилые отметки 2,09 / 4,51 / 6,93 / 9,35 / 11,77 м. Первый этаж перестроен по плану: 2к слева сзади, 1к справа сзади, 1к слева спереди, 3к справа спереди. Комнаты пока без мебели, четыре прежних разных варианта квартирных дверей возвращены с номерами. Все четыре двери открываются. По краям фасада по два окна. Каталог получил самостоятельные папки дверей, окон, отопления, освещения и оборудования. Прежняя квартира №17 на пятом этаже сохранена как экспериментальный прототип. Вся игра — одна сцена.</p>
     <p id="world-info">Подготовка улицы…</p>
     <button id="hud-toggle" type="button" aria-expanded="true">▴ Свернуть описание</button>
     <button id="mode-toggle" type="button">🎮 Перейти в игру</button>
@@ -165,10 +165,10 @@ body.game-mode .menu{max-width:min(47vw,190px)}
 </section>
 <div id="status" role="status">Загрузка настоящих моделей…<button id="retry" hidden>Повторить загрузку</button></div>
 <div id="reticle">+</div>
-<div id="tips"><span class="lab-help">🛠️ Камера: джойстик/WASD — перемещение; свайп — обзор; кнопки ↑↓ или Space/Q — высота; Shift — быстрее. Без персонажа.</span><span class="game-help">🎮 Войди через ОДНУ дверь в подъезд и поднимись на ПЕРВЫЙ этаж: двери №1–4 открываются кнопкой или клавишей E. Внутри — перегородки и пустые помещения по плану. На 5-м этаже сохранена экспериментальная квартира №17. Каталог: ссылка «Каталог объектов».</span></div>
+<div id="tips"><span class="lab-help">🛠️ Камера: джойстик/WASD — перемещение; свайп — обзор; кнопки ↑↓ или Space/Q — высота; Shift — быстрее. Без персонажа.</span><span class="game-help">🎮 Войди через ОДНУ дверь в подъезд, поднимись по лестнице на ПЕРВЫЙ этаж: двери №1–4 открываются кнопкой или клавишей E. Внутри — перегородки и пустые помещения по плану. На 5-м этаже сохранена экспериментальная квартира №17. Каталог: ссылка «Каталог объектов».</span></div>
 <div id="stick" aria-label="Экранный джойстик перемещения"><div id="stick-knob"></div></div>
 <div id="free-controls" aria-label="Высота свободной камеры"><button id="free-up">↑ Выше</button><button id="free-down">↓ Ниже</button><button id="free-first-floor">🏠 1-й этаж</button><button id="free-landing">🏢 5-й этаж</button><button id="free-reset">⌖ Общий вид</button></div>
 <div id="actions"><button id="entry-action" hidden aria-pressed="false">🚪 Открыть дверь</button><button id="run" aria-pressed="false">⚡ Бег: ВЫКЛ</button><button id="switch-view">👁 Вид от 1-го лица</button></div>
-<script type="module" src="./game.js"></script>
+<script type="module" src="./game.js?v=471"></script>
 </body>
 </html>
