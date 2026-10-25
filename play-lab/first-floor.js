@@ -1,101 +1,146 @@
-// MINI CITY first residential floor: four separate Khrushchevka flats
-// based on the reference plan, with no furniture. World coordinates/metres.
+// MINI CITY 4.7.1 — first-floor plan rebuilt against supplied Khrushchevka drawing.
+// Back of building is negative Z; entrance/street stays at +6.4m.
+// Quadrants (from above): rear-left 2k, rear-right 1k,
+// front-left 1k, front-right 3k. NO FURNITURE.
 export function planFirstFloor(building,entrance){
+  if(building.floors!==5)throw Error("Five-storey plan required");
   const x=entrance.x,y=entrance.floorHeight(0),half=entrance.stairHalf;
-  if(building.floors!==5)throw Error("Five-storey prototype required");
-  const wingSize=9.56,ceilingY=y+2.24,back=-6.10,front=6.10;
+  const back=(building.backFacade??-building.width/2)+.27;
+  const front=(building.frontFacade??building.width/2)-.28;
+  const divider=-3.21,ceilingY=y+building.floorHeight-.16,wall=.11;
+  const wingDepth=9.56;
   const wings=[-1,1].map(side=>({
-    side,minX:side<0?Math.max(-building.length/2+.24,x-wingSize):x+half,
-    maxX:side<0?x-half:x+wingSize,innerX:x+side*half
+    side,innerX:x+side*half,
+    minX:side<0?Math.max(-building.length/2+.24,x-wingDepth):x+half,
+    maxX:side<0?x-half:x+wingDepth
   }));
-  const doors=[{number:1,side:-1,z:-2.42,type:"1к"},
-    {number:2,side:-1,z:-4.00,type:"2к"},
-    {number:3,side:1,z:-2.42,type:"3к"},
-    {number:4,side:1,z:-4.00,type:"1к"}]
-    .map(d=>({...d,x:x+d.side*half,y,width:1.04}));
-  const wall=.11,segments=[],rooms=[];
+  const doorKinds=["grey","brown","blue","dark"];
+  const doors=[{number:1,side:-1,z:-2.42,type:"1к",quadrant:"front"},
+    {number:2,side:-1,z:-4.00,type:"2к",quadrant:"rear"},
+    {number:3,side:1,z:-2.42,type:"3к",quadrant:"front"},
+    {number:4,side:1,z:-4.00,type:"1к",quadrant:"rear"}]
+    .map((d,i)=>({...d,x:x+d.side*half,y,width:1.04,
+      variant:doorKinds[i],paletteIndex:i}));
+  const segments=[],rooms=[],unitAreas=[];
   const rect=(name,minX,maxX,minZ,maxZ)=>({
     name,minX,maxX,minZ,maxZ,minY:y-.10,maxY:ceilingY});
-  function alongZ(name,z,min,max,at,width=.93){
-    if(!(at-width/2>min&&at+width/2<max))throw Error("Bad door opening");
-    segments.push(rect(name+"-a",min,at-width/2,z-wall/2,z+wall/2));
-    segments.push(rect(name+"-b",at+width/2,max,z-wall/2,z+wall/2));
+  function wallZ(name,z,left,right,opening){
+    if(!opening){segments.push(rect(name,left,right,z-wall/2,z+wall/2));return;}
+    const a=opening.x-opening.width/2,b=opening.x+opening.width/2;
+    if(a<=left+.04||b>=right-.04)throw Error("Bad transverse opening "+name);
+    wallZ(name+"-west",z,left,a);wallZ(name+"-east",z,b,right);
   }
-  function alongX(name,xx,min,max,at,width=.90){
-    if(!(at-width/2>min&&at+width/2<max))throw Error("Bad room passage");
-    segments.push(rect(name+"-a",xx-wall/2,xx+wall/2,min,at-width/2));
-    segments.push(rect(name+"-b",xx-wall/2,xx+wall/2,at+width/2,max));
+  function wallX(name,xx,backZ,frontZ,opening){
+    if(!opening){segments.push(rect(name,xx-wall/2,xx+wall/2,backZ,frontZ));return;}
+    const a=opening.z-opening.width/2,b=opening.z+opening.width/2;
+    if(a<=backZ+.04||b>=frontZ-.04)throw Error("Bad longitudinal opening "+name);
+    wallX(name+"-back",xx,backZ,a);wallX(name+"-front",xx,b,frontZ);
   }
-  for(const wing of wings){
-    const {side,minX,maxX,innerX}=wing,left=minX,right=maxX;
-    const near=innerX+side*.75;
-    // Rear and front flats have independent entrance doors. Private
-    // hall of front flat runs beside the side wall from Z=-3 to Z=-0.65.
-    alongZ("front-rear-flat-"+side,-.65,left,right,near,1.02);
-    const corridorWall=innerX+side*1.33;
-    // Private hallway is SEALED from the neighbouring rear flat.
-    // Its only connection is to its own front room through the
-    // doorway in the transverse partition at Z=-0.65.
-    segments.push(rect("private-hall-side-"+side,
-      corridorWall-wall/2,corridorWall+wall/2,-3.08,-.65));
-    segments.push(rect("private-hall-rear-cap-"+side,
-      Math.min(corridorWall,innerX),Math.max(corridorWall,innerX),
-      -3.08-wall/2,-3.08+wall/2));
-    alongZ("rear-wet-zone-"+side,-4.73,left,right,
-      side<0?left+3.05:right-3.05,.92);
-    alongX("rear-kitchen-bath-"+side,side<0?right-2.55:left+2.55,
-      back,-4.73,-5.42,.90);
-    const frontDoorX=side<0?left+3.00:right-3.00;
-    alongZ("front-living-"+side,1.68,left,right,frontDoorX,1.00);
-    alongX("front-kitchen-bath-"+side,side<0?right-2.36:left+2.36,
-      -.65,1.68,.48,.90);
-    if(side===1){
-      const splitX=left+(right-left)*.49;
-      // THREE independent residential rooms (not one big 3K label):
-      // left room + two smaller rooms on right, linked by doorways.
-      alongX("three-room-right",splitX,1.68,front,2.50,1.0);
-      alongZ("third-room-right",3.65,splitX,right,right-1.55,.99);
+  function room(flat,name,minX,maxX,minZ,maxZ){
+    if(maxX-minX<.65||maxZ-minZ<.65)throw Error("Room too small "+name);
+    rooms.push({flat,name,minX,maxX,minZ,maxZ});
+  }
+  for(const w of wings){
+    const {side,minX:left,maxX:right,innerX}=w;
+    const at=d=>innerX+side*d, near=(a,b)=>(a+b)/2;
+    const rearNo=side<0?2:4,frontNo=side<0?1:3;
+    const lane=at(2.35),bedSplit=at(4.40);
+    // Adjacent apartments NEVER share an interior doorway.
+    wallZ("separation-of-flats-"+side,divider,left,right);
+    // External edge is a partition against the next, still locked unit,
+    // not a duplicated brick facade blocking the genuine outdoor glass.
+    const edge=side<0?left:right;
+    wallX("neighbour-edge-"+side,edge,back,front);
+    // REAR apartment has an independent vestibule from door z=-4.0.
+    // Bathroom next to the stair; kitchen beside it; main rooms at the
+    // rear real-window facade; two living rooms only in rear-left 2k.
+    wallZ("rear-room-boundary-"+side,-6.32,left,right,
+      {x:at(1.35),width:.96});
+    wallX("rear-bathroom-"+side,lane,-6.32,divider,
+      {z:-4.84,width:.84});
+    if(side<0){
+      wallX("two-room-bedroom-divider",bedSplit,back,-6.32,
+        {z:-7.30,width:.94});
+      room(2,"Жилая комната 1",left,bedSplit,back,-6.32);
+      room(2,"Жилая комната 2",bedSplit,right,back,-6.32);
+    }else room(4,"Жилая комната",left,right,back,-6.32);
+    room(rearNo,"Кухня",Math.min(edge,lane),Math.max(edge,lane),-6.32,divider);
+    room(rearNo,"Санузел",Math.min(innerX,lane),Math.max(innerX,lane),-6.32,divider);
+    room(rearNo,"Прихожая",left,right,-5.20,divider);
+    // FRONT apartment has its own independent entry hall z=-2.42.
+    // Kitchens and bathrooms are around the staircase service core.
+    // Living rooms follow the FRONT glazed wall, never the communal shaft.
+    wallX("front-wet-core-"+side,lane,-.90,1.45,
+      {z:.18,width:.88});
+    wallZ("front-rooms-boundary-"+side,1.45,left,right,
+      {x:at(3.05),width:1.02});
+    room(frontNo,"Прихожая",left,right,divider,-.90);
+    room(frontNo,"Кухня",Math.min(edge,lane),Math.max(edge,lane),-.90,1.45);
+    room(frontNo,"Санузел",Math.min(innerX,lane),Math.max(innerX,lane),-.90,1.45);
+    if(side<0){
+      // The left-front 1k has ONE residential room, not a cut-up maze.
+      room(1,"Жилая комната",left,right,1.45,front);
+    }else{
+      // Three genuinely separate living rooms on the right-front 3k.
+      const split=at(4.03),splitZ=3.82;
+      wallX("three-room-living-divider",split,1.45,front,
+        {z:2.38,width:.95});
+      const midX=(split+edge)/2;
+      wallZ("three-room-third-bedroom",splitZ,Math.min(split,edge),
+        Math.max(split,edge),{x:midX,width:.95});
+      room(3,"Жилая комната 1",Math.min(innerX,split),Math.max(innerX,split),1.45,front);
+      room(3,"Жилая комната 2",Math.min(split,edge),Math.max(split,edge),1.45,splitZ);
+      room(3,"Жилая комната 3",Math.min(split,edge),Math.max(split,edge),splitZ,front);
     }
-    const frontNo=side<0?1:3,rearNo=side<0?2:4;
-    rooms.push({flat:rearNo,name:"Прихожая",section:"rear"},
-      {flat:rearNo,name:"Кухня",section:"rear"},
-      {flat:rearNo,name:"Санузел",section:"rear"},
-      {flat:rearNo,name:"Жилые комнаты",section:"rear"});
-    rooms.push({flat:frontNo,name:"Прихожая",section:"front"},
-      {flat:frontNo,name:"Кухня",section:"front"},
-      {flat:frontNo,name:"Санузел",section:"front"},
-      {flat:frontNo,name:"Жилые комнаты",section:"front"});
-    if(left < -building.length/2||right > building.length/2)
-      throw Error("Apartment crosses outer facade");
+    for(const section of ["front","rear"])
+      unitAreas.push({number:section==="front"?frontNo:rearNo,side,
+        minX:left,maxX:right,
+        minZ:section==="front"?divider:back,
+        maxZ:section==="front"?front:divider});
+    if(left< -building.length/2||right>building.length/2||
+       back<=building.backFacade||front>=building.frontFacade)
+      throw Error("First-floor room extends through exterior shell");
   }
-  // Rendered by building.js, but represented independently in the
-  // numerical collision plan: do not allow walking through solid
-  // side masonry anywhere except the four actual door openings.
-  const stairWallColliders=wings.flatMap(wing=>{
-    const intervals=[[back,-4.52],[-3.48,-2.94],[-1.90,front]];
-    return intervals.map(([z0,z1],i)=>rect("flat-side-wall-"+wing.side+"-"+i,
-      wing.innerX-.075,wing.innerX+.075,z0,z1));
+  // A real collision boundary along the actual stairwell wall:
+  // two openings centered at -4.00/-2.42, exactly as building.js.
+  const stairWallColliders=wings.flatMap(w=>{
+    const zs=[back,-4.52,-3.48,-2.94,-1.90,front];
+    return [[zs[0],zs[1]],[zs[2],zs[3]],[zs[4],zs[5]]]
+      .map(([a,b],i)=>rect("flat-side-wall-"+w.side+"-"+i,
+        w.innerX-.075,w.innerX+.075,a,b));
   });
   const doorBlockers=doors.map(d=>rect("flat-"+d.number+"-closed",
     d.x-.06,d.x+.06,d.z-.52,d.z+.52));
-  return {floor:1,y,ceilingY,x,wall,wings,doors,rooms,segments,
-    doorBlockers,back,front,unfurnished:true,template:"Khrushchevka-4-flats",
+  const data={floor:1,y,ceilingY,wall,x,wings,doors,rooms,unitAreas,
+    segments,doorBlockers,back,front,divider,unfurnished:true,
+    template:"Khrushchevka-reference-2k-1k-1k-3k",
     contains:(px,pz,py)=>Math.abs(py-y)<.24&&wings.some(w=>
       px>=w.minX-.11&&px<=w.maxX+.11&&pz>=back&&pz<=front),
-    obstacles:[...segments,...stairWallColliders]};
+    obstacles:[...segments,...stairWallColliders],
+    roomCount:(n)=>rooms.filter(r=>r.flat===n&&r.name.startsWith("Жилая комната")).length
+  };
+  for(const [number,living] of [[1,1],[2,2],[3,3],[4,1]])
+    if(data.roomCount(number)!==living)throw Error("Apartment room count "+number);
+  return data;
 }
 export function buildFirstFloor(THREE,plan){
-  const root=new THREE.Group();root.name="FIRST FLOOR: FOUR UNFURNISHED FLATS";
+  const root=new THREE.Group();root.name="First floor · furnished: false · plan 2k/1k/1k/3k";
   const geometry=new THREE.BoxGeometry(1,1,1),dummy=new THREE.Object3D();
   const mats={
     wall:new THREE.MeshStandardMaterial({color:0xd5ccba,roughness:.95}),
     slab:new THREE.MeshStandardMaterial({color:0x9a937d,roughness:.98}),
     frame:new THREE.MeshStandardMaterial({color:0xd3c9b4,roughness:.88}),
-    wood:new THREE.MeshStandardMaterial({color:0x6b645c,roughness:.84}),
-    metal:new THREE.MeshStandardMaterial({color:0x879291,roughness:.66})
+    metal:new THREE.MeshStandardMaterial({color:0x879291,roughness:.66}),
+    // Restore the four ORIGINAL distinct door appearances by number,
+    // matching building.js apartmentPalette, no uniform brown leaves.
+    grey:new THREE.MeshStandardMaterial({color:0x7f8989,roughness:.84}),
+    brown:new THREE.MeshStandardMaterial({color:0x64554e,roughness:.85}),
+    blue:new THREE.MeshStandardMaterial({color:0x4b6975,roughness:.84}),
+    dark:new THREE.MeshStandardMaterial({color:0x444f53,roughness:.83})
   };
-  const batches=new Map();function box(w,h,d,m,x,y,z){
-    if(Math.min(w,h,d)<=0)throw Error("Bad first-floor box");
+  const batches=new Map();
+  function box(w,h,d,m,x,y,z){
+    if(Math.min(w,h,d)<=0)throw Error("Invalid apartment geometry");
     const q=batches.get(m)||[];if(!batches.has(m))batches.set(m,q);
     dummy.position.set(x,y,z);dummy.rotation.set(0,0,0);
     dummy.scale.set(w,h,d);dummy.updateMatrix();q.push(dummy.matrix.clone());
@@ -103,31 +148,34 @@ export function buildFirstFloor(THREE,plan){
   for(const s of plan.segments)
     box(s.maxX-s.minX,s.maxY-s.minY,s.maxZ-s.minZ,mats.wall,
       (s.minX+s.maxX)/2,(s.minY+s.maxY)/2,(s.minZ+s.maxZ)/2);
-  for(const wing of plan.wings)
-    box(wing.maxX-wing.minX,.14,plan.front-plan.back,mats.slab,
-      (wing.minX+wing.maxX)/2,plan.y-.07,(plan.back+plan.front)/2);
+  // Two separate REAL slabs; the staircase hole remains open.
+  for(const w of plan.wings)
+    box(w.maxX-w.minX,.14,plan.front-plan.back,mats.slab,
+      (w.minX+w.maxX)/2,plan.y-.07,(plan.back+plan.front)/2);
   const doorPivots=new Map();
   for(const d of plan.doors){
     const pivot=new THREE.Group();pivot.name="flat-door-"+d.number;
     pivot.position.set(d.x,plan.y,d.z-.47);
-    const leaf=new THREE.Mesh(geometry,mats.wood);
-    leaf.scale.set(.08,2.04,.94);leaf.position.set(0,1.02,.47);
+    const leaf=new THREE.Mesh(geometry,mats[d.variant]);
+    leaf.scale.set(.09,2.04,.94);leaf.position.set(0,1.02,.47);
     pivot.add(leaf);
-    const knob=new THREE.Mesh(geometry,mats.metal);
-    knob.scale.set(.035,.12,.08);knob.position.set(.08,1.04,.77);
-    pivot.add(knob);root.add(pivot);doorPivots.set(d.number,pivot);
+    const handle=new THREE.Mesh(geometry,mats.metal);
+    handle.scale.set(.034,.12,.08);handle.position.set(.078,1.04,.77);
+    pivot.add(handle);root.add(pivot);doorPivots.set(d.number,pivot);
     for(const z of [d.z-.52,d.z+.52])
       box(.15,2.15,.06,mats.frame,d.x,plan.y+1.075,z);
     box(.15,.075,1.10,mats.frame,d.x,plan.y+2.18,d.z);
   }
   for(const [material,transforms] of batches){
-    const instanced=new THREE.InstancedMesh(geometry,material,transforms.length);
-    transforms.forEach((m,i)=>instanced.setMatrixAt(i,m));
-    instanced.instanceMatrix.needsUpdate=true;instanced.computeBoundingSphere();
-    instanced.castShadow=true;instanced.receiveShadow=true;root.add(instanced);
+    const m=new THREE.InstancedMesh(geometry,material,transforms.length);
+    transforms.forEach((matrix,i)=>m.setMatrixAt(i,matrix));
+    m.instanceMatrix.needsUpdate=true;m.computeBoundingSphere();
+    m.castShadow=true;m.receiveShadow=true;root.add(m);
   }
   root.userData.firstFloorAudit={apartments:4,doors:[1,2,3,4],
-    emptyRooms:true,template:plan.template,wallSegments:plan.segments.length,
+    variants:plan.doors.map(d=>d.variant),emptyRooms:true,
+    template:plan.template,wallSegments:plan.segments.length,
+    livingRooms:Object.fromEntries([1,2,3,4].map(n=>[n,plan.roomCount(n)])),
     instancedBatches:batches.size,firstFloorOnly:true};
   return {root,doorPivots,stats:root.userData.firstFloorAudit};
 }
