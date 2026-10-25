@@ -23,13 +23,17 @@ export function planFirstFloor(building,entrance){
   if(ceilingY-y<=openingHeight+.06)
     throw Error("Room doors would intersect next-floor slab");
   // Restrict the right wing without changing the west-end panel windows.
+  // Structural stair wall is 14cm thick and centred on x±stairHalf.
+  // Residential finished areas begin beyond its OUTER face, never
+  // inside the old staircase masonry or painted stairwell panels.
+  const stairWallFace=.08;
   const wings=[-1,1].map(side=>({
     side,innerX:x+side*half,
     // The westmost prototype wing must meet the REAL end-panel inner
     // face, rather than terminate 0.8m before the facade and leave a
     // hidden dead corridor behind its actual windows.
-    minX:side<0?-building.length/2+.36:x+half,
-    maxX:side<0?x-half:rightWingEnd
+    minX:side<0?-building.length/2+.36:x+half+stairWallFace,
+    maxX:side<0?x-half-stairWallFace:rightWingEnd
   }));
   // Preserve the original four door colours BY PHYSICAL LOCATION while
   // numbering the right front/rear 1/2 and left front/rear 3/4.
@@ -355,12 +359,19 @@ export function buildFirstFloor(THREE,plan){
   for(const s of plan.segments)
     box(s.maxX-s.minX,s.maxY-s.minY,s.maxZ-s.minZ,mats.wall,
       (s.minX+s.maxX)/2,(s.minY+s.maxY)/2,(s.minZ+s.maxZ)/2);
-  // Real floor/ceiling behind the staircase, not a visual-only room.
+  // No 8–12cm black crevice at the join with the old -4.85m stair
+  // masonry: BOTH slabs physically pass under the wall and intersect
+  // the side walls by their half-thickness. Walkable room boundaries
+  // remain unchanged, so no floor is laid on the staircase itself.
   const annex=plan.annex;
-  box(annex.maxX-annex.minX,.14,annex.maxZ-annex.minZ,mats.slab,
-    (annex.minX+annex.maxX)/2,plan.y-.07,(annex.minZ+annex.maxZ)/2);
-  box(annex.maxX-annex.minX,.12,annex.maxZ-annex.minZ,mats.slab,
-    (annex.minX+annex.maxX)/2,plan.ceilingY+.06,(annex.minZ+annex.maxZ)/2);
+  const slabMinX=annex.minX-.20,slabMaxX=annex.maxX+.20;
+  const slabFrontZ=-4.77; // extends 8cm through former -4.85m wall
+  const slabCentreX=(slabMinX+slabMaxX)/2;
+  const slabCentreZ=(annex.minZ+slabFrontZ)/2;
+  box(slabMaxX-slabMinX,.14,slabFrontZ-annex.minZ,mats.slab,
+    slabCentreX,plan.y-.07,slabCentreZ);
+  box(slabMaxX-slabMinX,.12,slabFrontZ-annex.minZ,mats.slab,
+    slabCentreX,plan.ceilingY+.06,slabCentreZ);
   // Two separate REAL slabs; the staircase hole remains open.
   for(const w of plan.wings)
     box(w.maxX-w.minX,.14,plan.front-plan.back,mats.slab,
