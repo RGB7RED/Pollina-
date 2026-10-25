@@ -9,7 +9,7 @@ const game=read("./game.js"),view=read("./index.html");
 assert.equal((game.match(/new THREE\.Scene\(/g)||[]).length,1);
 assert.match(game,/function updateEntryAction\(/);
 assert.match(game,/controller\.nearestDoor\(/);
-assert.match(game,/controller\.setEntryDoorOpen\(/);
+assert.match(game,/controller\.toggleNearestDoor\(/);
 assert.doesNotMatch(game,/innerDoorPivot|setInnerDoorOpen|innerDoorOpen/,
   "game must have no removed inner-door runtime");
 assert.match(view,/id="entry-action"/);
