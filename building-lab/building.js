@@ -287,7 +287,7 @@ export function buildApartmentHouse(THREE,config={}){
       // room to a corridor despite 4.36m of interior building width.
       // Side walls shift inward to cover adjoining apartment-bay windows.
       // Interior narrowing, not a change to the existing outer facade.
-      const stairHalfWidth=1.84,foyerHalfWidth=1.74,depth=face-3.35;
+      const stairHalfWidth=1.72,foyerHalfWidth=1.62,depth=face-3.35;
       box(foyerHalfWidth*2,.12,depth,mats.foundation,x,.64,floorMid);
       // Paint the inner faces of the SAME shifted structural stairwell walls.
       // They hide neighbouring facade windows without another fake facade.
@@ -315,8 +315,8 @@ export function buildApartmentHouse(THREE,config={}){
       const facadeInnerZ=C.frontFacade-wallDepth,frontZ=facadeInnerZ-.12;
       const entranceStartZ=3.35,entranceRun=entranceStartZ-rearLandingEndZ;
       const run=halfLandingZ-rearLandingEndZ,runStep=run/stepsPerFlight;
-      const firstX=x-.97,secondX=x+.97;
-      const flightWidth=1.58,innerGuardOffset=.79;
+      const firstX=x-.90,secondX=x+.90;
+      const flightWidth=1.46,innerGuardOffset=.73;
       const entryFlightX=secondX,entryFlightWidth=flightWidth;
       const shaftGap=2*(secondX-x)-flightWidth;
       if(shaftGap<=.25||secondX-x+flightWidth/2>=stairHalfWidth-.07)
@@ -630,7 +630,7 @@ export function buildApartmentHouse(THREE,config={}){
         for(let local=0;local<4;local++){
           // Correct the first-floor numbering without relocating the
           // separately modelled legacy fifth-floor apartment No.17.
-          const number=floor===0?[3,4,1,2][local]:floor*4+local+1;
+          const number=floor===0?[4,3,1,2][local]:floor*4+local+1;
           const side=local<2?-1:1;
           const sidePosition=sideDoorPositions[local%2];
           const doorX=x+side*(stairHalfWidth-.11),doorZ=sidePosition;

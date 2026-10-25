@@ -78,7 +78,7 @@ const oldFlat=buildFirstApartment(THREE,last);
 assert.equal(firstRendered.stats.apartments,4);
 assert.equal(oldFlat.stats.number,17);
 assert.deepEqual(plan.doors.map(d=>d.variant),["grey","brown","blue","dark"]);
-assert.deepEqual([1,2,3,4].map(n=>plan.roomCount(n)),[3,1,1,2]);
+assert.deepEqual([1,2,3,4].map(n=>plan.roomCount(n)),[3,2,2,1]);
 assert.equal(plan.unfurnished,true);
 assert.ok(plan.facadeLiningCount>=35);
 assert.deepEqual(plan.windowConflicts,[]);
@@ -157,7 +157,7 @@ function walk(dx,dz,n){
   assert.ok(Math.abs(player.position.y-prev.y)<.19);
  }
 }
-walk(0,1,90);walk(1,0,18);walk(0,1,100);
+walk(0,1,90);walk(1,0,16);walk(0,1,100);
 assert.equal(player.position.y,entry.floorHeight(0));
 assert.equal(player.nearestDoor()?.id,"first-floor-1");
 walk(0,-1,6);

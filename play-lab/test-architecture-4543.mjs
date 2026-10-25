@@ -32,7 +32,7 @@ assert.equal(a.completeStaircase.floors,5);
 assert.equal(a.completeStaircase.flights,9);
 assert.equal(a.completeStaircase.apartmentDoors.length,20);
 assert.deepEqual(a.completeStaircase.apartmentDoors.map(d=>d.number),
-  [3,4,1,2,...Array.from({length:16},(_,i)=>i+5)]);
+  [4,3,1,2,...Array.from({length:16},(_,i)=>i+5)]);
 assert.equal(opposite.facadeOuterZ,BUILDING.frontFacade);
 assert.ok(opposite.upperTurnEndZ>5.8);
 assert.ok(opposite.upperTurnEndZ<opposite.facadeInnerZ);

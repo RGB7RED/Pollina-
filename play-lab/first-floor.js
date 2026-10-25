@@ -35,8 +35,8 @@ export function planFirstFloor(building,entrance){
   // numbering the right front/rear 1/2 and left front/rear 3/4.
   const doorKinds=["grey","brown","blue","dark"];
   const doors=[
-    {number:3,side:-1,z:-2.42,type:"1к",quadrant:"front"},
-    {number:4,side:-1,z:-4.00,type:"2к",quadrant:"rear"},
+    {number:4,side:-1,z:-2.42,type:"1к",quadrant:"front"},
+    {number:3,side:-1,z:-4.00,type:"2к",quadrant:"rear"},
     {number:1,side:1,z:-2.42,type:"3к",quadrant:"front"},
     {number:2,side:1,z:-4.00,type:"1к",quadrant:"rear"}
   ].map((d,i)=>({...d,x:x+d.side*half,y,width:1.04,
@@ -92,7 +92,7 @@ export function planFirstFloor(building,entrance){
     const inner=innerX;
     const corridor0=Math.min(inner,near),corridor1=Math.max(inner,near);
     const wet0=Math.min(outer,near),wet1=Math.max(outer,near);
-    const rearNo=side<0?4:2,frontNo=side<0?3:1;
+    const rearNo=side<0?3:2,frontNo=side<0?4:1;
     if(right-left<6.70||back>-10.25)
       throw Error("Insufficient real house depth for separate reference rooms");
     // Unbroken wall between the independently entered north and south homes.
@@ -151,13 +151,13 @@ export function planFirstFloor(building,entrance){
       wallZ("rear-bedrooms-entry-"+side,rearBedroomFront,left,right,[
         {x:c1,width:.95},{x:c2,width:.95}
       ]);
-      room(4,"Жилая комната 1",left,split,back,rearBedroomFront);
-      room(4,"Жилая комната 2",split,right,back,rearBedroomFront);
+      room(3,"Жилая комната 1",left,split,back,rearBedroomFront);
+      room(3,"Жилая комната 2",split,right,back,rearBedroomFront);
     }else{
       wallZ("rear-bedroom-entry-"+side,rearBedroomFront,left,right,[
         {x:(left+right)/2,width:1.03}
       ]);
-      room(2,"Жилая комната",left,right,back,rearBedroomFront);
+      room(2,"Жилая комната 1",left,right,back,rearBedroomFront);
     }
     unit(rearNo,side,"rear",left,right,back,divider);
 
@@ -206,21 +206,49 @@ export function planFirstFloor(building,entrance){
       wallZ("front-one-bedroom-access",frontBedrooms,left,right,[
         {x:at(1.62),width:1.04}
       ]);
-      room(3,"Жилая комната",left,right,frontBedrooms,front);
+      room(4,"Жилая комната",left,right,frontBedrooms,front);
     }
     unit(frontNo,side,"front",left,right,divider,front);
     if(left< -building.length/2||right>building.length/2||
        back<=building.backFacade||front>=building.frontFacade)
       throw Error("Room extends outside actual masonry envelope");
   }
+  // Enclose the void behind the staircase as a second REAL room of flat 2.
+  const annex={number:2,minX:x-half+.12,maxX:x+half-.12,
+    minZ:back,maxZ:-4.93,doorZ:-7.76,doorWidth:1.22};
+  if(!(annex.doorZ-annex.doorWidth/2 > -9.00+.18 &&
+       annex.doorZ+annex.doorWidth/2 < -6.90-.12))
+    throw Error("Annex doorway must join flat 2 cross-hall");
+  room(2,"Жилая комната 2",annex.minX,annex.maxX,annex.minZ,annex.maxZ);
+  // Back facade bay 3 retains its full transparent window.
+  const rearWindowX=bayCentre(3),rearWindowHalf=.70;
+  const rearLineZ=building.backFacade+.355;
+  const backLining=(name,a,b,lo=y-.10,hi=ceilingY)=>{
+    if(b-a>.001)segments.push(rect(name,a,b,rearLineZ-.025,rearLineZ+.025,lo,hi));
+  };
+  backLining("annex-rear-left",annex.minX,rearWindowX-rearWindowHalf);
+  backLining("annex-rear-sill",rearWindowX-rearWindowHalf,
+    rearWindowX+rearWindowHalf,y-.10,y+.64);
+  backLining("annex-rear-lintel",rearWindowX-rearWindowHalf,
+    rearWindowX+rearWindowHalf,y+2.10,ceilingY);
+  backLining("annex-rear-right",rearWindowX+rearWindowHalf,annex.maxX);
   // The original stair masonry begins at Z=-4.85, but the new
   // 19-metre-deep building extends 7.75m behind it. Both missing
   // corridor-side walls MUST reach all the way to the rear facade.
   const originalStairRear=-4.85;
-  for(const w of wings)
-    segments.push(rect("rear-stair-side-continuation-"+w.side,
-      w.innerX-wall/2,w.innerX+wall/2,
-      back,originalStairRear));
+  for(const w of wings){
+    if(w.side<0){
+      segments.push(rect("rear-stair-side-continuation-"+w.side,
+        w.innerX-wall/2,w.innerX+wall/2,back,originalStairRear));
+    }else{
+      // Keep an upper lintel but cut a physical passage below it.
+      segments.push(rect("rear-stair-side-continuation-1",
+        w.innerX-wall/2,w.innerX+wall/2,back,originalStairRear,
+        y+openingHeight,ceilingY));
+      wallX("annex-access-2",w.innerX,back,originalStairRear,
+        [{z:annex.doorZ,width:annex.doorWidth}]);
+    }
+  }
   // Interior facing of both REAL outer concrete facades. Split it by
   // each actual transparent window; never cover glazing with a
   // second opaque wall or allow partition ends to intersect sashes.
@@ -274,31 +302,36 @@ export function planFirstFloor(building,entrance){
   if(windowConflicts.length)
     throw Error("Partition intersects exterior window: "+JSON.stringify(windowConflicts));
   const stairWallColliders=wings.flatMap(w=>{
-    const spans=[[back,-4.52],[-3.48,-2.94],[-1.90,front]];
+    const spans=w.side<0
+      ?[[back,-4.52],[-3.48,-2.94],[-1.90,front]]
+      :[[back,annex.doorZ-annex.doorWidth/2],
+        [annex.doorZ+annex.doorWidth/2,-4.52],
+        [-3.48,-2.94],[-1.90,front]];
     return spans.map(([a,b],i)=>rect("flat-side-wall-"+w.side+"-"+i,
       w.innerX-.075,w.innerX+.075,a,b));
   });
   const doorBlockers=doors.map(d=>rect("flat-"+d.number+"-closed",
     d.x-.06,d.x+.06,d.z-.52,d.z+.52));
   const data={
-    floor:1,y,ceilingY,wall,x,wings,doors,rooms,unitAreas,openings,
+    floor:1,y,ceilingY,wall,x,wings,annex,doors,rooms,unitAreas,openings,
     segments,doorBlockers,back,front,divider,unfurnished:true,
     facadeLiningCount:facadeLining.length,
     windowConflicts,roofStyle:"flat-panel",
     template:"Khrushchevka-reference-2k-1k-1k-3k", 
     bounds:{back:building.backFacade,front:building.frontFacade},
-    contains:(px,pz,py)=>Math.abs(py-y)<.24&&wings.some(w=>
-      px>=w.minX-.11&&px<=w.maxX+.11&&pz>=back&&pz<=front),
+    contains:(px,pz,py)=>Math.abs(py-y)<.24&&(
+      wings.some(w=>px>=w.minX-.11&&px<=w.maxX+.11&&pz>=back&&pz<=front)||
+      (px>=annex.minX&&px<=annex.maxX&&pz>=annex.minZ&&pz<=annex.maxZ)),
     obstacles:[...segments,...stairWallColliders],
     roomCount:n=>rooms.filter(r=>r.flat===n&&r.name.startsWith("Жилая комната")).length
   };
-  for(const [number,count] of [[1,3],[2,1],[3,1],[4,2]])
+  for(const [number,count] of [[1,3],[2,2],[3,2],[4,1]])
     if(data.roomCount(number)!==count)
       throw Error("Apartment "+number+" does not match reference");
   return data;
 }
 export function buildFirstFloor(THREE,plan){
-  const root=new THREE.Group();root.name="First floor · furnished: false · plan 2k/1k/1k/3k";
+  const root=new THREE.Group();root.name="First floor · 4.7.5 rear annexe";
   const geometry=new THREE.BoxGeometry(1,1,1),dummy=new THREE.Object3D();
   const mats={
     wall:new THREE.MeshStandardMaterial({color:0xd5ccba,roughness:.95}),
@@ -322,6 +355,12 @@ export function buildFirstFloor(THREE,plan){
   for(const s of plan.segments)
     box(s.maxX-s.minX,s.maxY-s.minY,s.maxZ-s.minZ,mats.wall,
       (s.minX+s.maxX)/2,(s.minY+s.maxY)/2,(s.minZ+s.maxZ)/2);
+  // Real floor/ceiling behind the staircase, not a visual-only room.
+  const annex=plan.annex;
+  box(annex.maxX-annex.minX,.14,annex.maxZ-annex.minZ,mats.slab,
+    (annex.minX+annex.maxX)/2,plan.y-.07,(annex.minZ+annex.maxZ)/2);
+  box(annex.maxX-annex.minX,.12,annex.maxZ-annex.minZ,mats.slab,
+    (annex.minX+annex.maxX)/2,plan.ceilingY+.06,(annex.minZ+annex.maxZ)/2);
   // Two separate REAL slabs; the staircase hole remains open.
   for(const w of plan.wings)
     box(w.maxX-w.minX,.14,plan.front-plan.back,mats.slab,
