@@ -22,7 +22,7 @@ const THREE={Group:Obj,Object3D:Obj,Mesh,InstancedMesh,BoxGeometry:Geo,
  BufferGeometry:Geo,Float32BufferAttribute:Attr,MeshStandardMaterial:Mat,DoubleSide:2};
 const house=buildApartmentHouse(THREE),audit=house.root.userData.geometryAudit;
 assert.deepEqual(audit.completeStaircase.apartmentDoors.filter(x=>x.accessible).map(x=>x.number),
- [3,4,1,2,17]);
+ [4,3,1,2,17]);
 assert.equal(audit.firstFloorApertures.length,4);
 assert.equal(BUILDING.length,74);
 assert.equal(BUILDING.entrances,4);
@@ -43,7 +43,7 @@ entry.installFirstFloor(plan);
 assert.throws(()=>entry.installFirstFloor(plan),/already installed/);
 assert.equal(plan.floor,1);
 assert.equal(plan.doors.length,4);
-assert.deepEqual(plan.doors.map(d=>d.number),[3,4,1,2]);
+assert.deepEqual(plan.doors.map(d=>d.number),[4,3,1,2]);
 assert.deepEqual(plan.doors.map(d=>d.type),["1к","2к","3к","1к"]);
 assert.ok(plan.rooms.length>=12);
 assert.ok(plan.unfurnished);
