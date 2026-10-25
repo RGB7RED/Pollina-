@@ -126,7 +126,7 @@ function walk(dx,dz,n){
 }
 walk(0,1,90);walk(1,0,18);walk(0,1,100);
 assert.equal(player.position.y,entry.floorHeight(0));
-assert.equal(player.nearestDoor()?.id,undefined);
+assert.equal(player.nearestDoor()?.id,"first-floor-3");
 walk(0,-1,6);
 assert.equal(player.nearestDoor()?.number,3);
 assert.ok(player.setFirstFloorDoorOpen(3,true));
