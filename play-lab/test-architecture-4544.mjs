@@ -36,21 +36,21 @@ assert.equal(stair.treads,108);
 assert.equal(first.entryFlight.steps,12);
 assert.equal(first.entryFlight.bottom,.70);
 assert.equal(first.entryFlight.top,2.09);
-assert.ok(Math.abs(first.entryFlight.centreX-(entry.x+.97))<1e-8);
+assert.ok(Math.abs(first.entryFlight.centreX-(entry.x+.90))<1e-8);
 assert.ok(first.entryFlight.centreX>x);
-assert.ok(first.entryFlight.centreX+first.entryFlight.width/2<=x+1.84);
+assert.ok(first.entryFlight.centreX+first.entryFlight.width/2<=x+1.72);
 assert.equal(audit.foyer.doorCount,1);
 assert.equal(audit.foyer.mailboxLevel,3.30);
 assert.equal(first.entryFlight.minZ,entry.stair.bottomZ);
 assert.equal(first.entryFlight.maxZ,entry.stair.entryStartZ);
-assert.equal(first.stairwellWidth,3.68);
-assert.equal(stair.railing.flightWidth,1.58);
+assert.equal(first.stairwellWidth,3.44);
+assert.equal(stair.railing.flightWidth,1.46);
 assert.equal(stair.railing.frontGuardLinks,4);
 assert.equal(stair.railing.wallSideRails,0);
 assert.equal(stair.railing.innerGuardLinks,4);
 assert.equal(stair.apartmentDoors.length,20);
 assert.deepEqual(stair.apartmentDoors.map(d=>d.number),
-  [3,4,1,2,...Array.from({length:16},(_,i)=>i+5)]);
+  [4,3,1,2,...Array.from({length:16},(_,i)=>i+5)]);
 assert.ok(stair.apartmentDoors.every(d=>d.zone==="rear-stair-landing"));
 assert.equal(stair.landing.minZ,-4.85);
 assert.equal(stair.landing.maxZ,-1.58);
@@ -74,7 +74,7 @@ const instances=meshes.flatMap(m=>m.matrices.map(t=>({
   transparent:m.material.transparent===true
 })));
 const entranceTreadLength=(entry.stair.entryStartZ-entry.stair.bottomZ)/12-.014;
-const treads=instances.filter(t=>Math.abs(t.scale.x-1.58)<eps&&
+const treads=instances.filter(t=>Math.abs(t.scale.x-1.46)<eps&&
   Math.abs(t.scale.z-entranceTreadLength)<eps);
 assert.equal(treads.length,24,"12 genuine two-layer entrance steps");
 assert.equal(new Set(treads.map(t=>t.position.y.toFixed(4))).size,24);
