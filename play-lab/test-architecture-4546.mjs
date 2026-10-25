@@ -37,22 +37,22 @@ assert.equal(stair.floors,5);
 assert.equal(stair.apartmentDoors.length,20);
 assert.equal(stair.flights,9);
 assert.equal(stair.treads,108);
-assert.equal(first.stairwellWidth,3.68,"former width was 4.36m");
-assert.equal(entry.stairHalf,1.84);
-assert.equal(a.foyer.halfWidth,1.74);
-assert.equal(entry.corridorHalf,1.74);
-assert.equal(stair.railing.flightWidth,1.58,"existing wide treads stay wide");
-assert.ok(Math.abs(stair.railing.shaftGap-.36)<eps);
+assert.equal(first.stairwellWidth,3.44,"former width was 4.36m");
+assert.equal(entry.stairHalf,1.72);
+assert.equal(a.foyer.halfWidth,1.62);
+assert.equal(entry.corridorHalf,1.62);
+assert.equal(stair.railing.flightWidth,1.46,"existing wide treads stay wide");
+assert.ok(Math.abs(stair.railing.shaftGap-.34)<eps);
 assert.equal(entry.stair.aisleHalf,undefined);
 assert.ok(Math.abs(entry.aisleHalf-.16)<eps);
-assert.ok(Math.abs(first.firstX-(x-.97))<eps);
-assert.ok(Math.abs(first.secondX-(x+.97))<eps);
-assert.ok(Math.abs(first.entryFlight.centreX-(x+.97))<eps);
+assert.ok(Math.abs(first.firstX-(x-.90))<eps);
+assert.ok(Math.abs(first.secondX-(x+.90))<eps);
+assert.ok(Math.abs(first.entryFlight.centreX-(x+.90))<eps);
 const leftMost=first.firstX-stair.railing.flightWidth/2;
 const rightMost=first.secondX+stair.railing.flightWidth/2;
 assert.ok(leftMost>x-entry.stairHalf+.07-.03);
 assert.ok(rightMost<x+entry.stairHalf-.07+.03);
-assert.ok(Math.abs((first.secondX-first.firstX)-stair.railing.flightWidth-.36)<eps);
+assert.ok(Math.abs((first.secondX-first.firstX)-stair.railing.flightWidth-.34)<eps);
 // The neighbouring facade windows start beyond the new inner wall: there
 // is no longer a sightline to their glazing from within the staircase.
 const neighbourWindows=a.holes.filter(h=>h.axis==="long"&&h.side===1&&
@@ -69,7 +69,7 @@ assert.equal(stair.landing.doorsPerFloor,4);
 assert.equal(stair.landing.doorWidth,1.04);
 assert.equal(stair.landing.sideDoorWidth,1.04);
 assert.deepEqual(stair.apartmentDoors.map(d=>d.number),
-  [3,4,1,2,...Array.from({length:16},(_,i)=>i+5)]);
+  [4,3,1,2,...Array.from({length:16},(_,i)=>i+5)]);
 const doorFrames=instances.filter(t=>Math.abs(t.scale.x-1.04)<eps&&
   Math.abs(t.scale.y-2.15)<eps&&Math.abs(t.scale.z-.09)<eps);
 assert.equal(doorFrames.length,15,
@@ -80,9 +80,9 @@ assert.ok(rightDoorX<x+entry.stairHalf);
 // Fifth-floor railing touches the existing LEFT wall; the RIGHT flight
 // must remain traversable so that 5F is actually reachable.
 assert.ok(Math.abs(top.left-(x-entry.stairHalf+.12))<eps);
-assert.ok(Math.abs(top.right-(first.secondX-.79))<eps);
+assert.ok(Math.abs(top.right-(first.secondX-.73))<eps);
 assert.ok(top.openRightFlight);
-assert.ok(top.width>1.80&&top.width<2.0);
+assert.ok(top.width>1.70&&top.width<1.85);
 assert.equal(top.height,entry.floorHeight(4));
 const topRails=instances.filter(t=>Math.abs(t.scale.x-top.width)<eps&&
   Math.abs(t.scale.y-.075)<eps&&Math.abs(t.position.z-top.z)<eps);
