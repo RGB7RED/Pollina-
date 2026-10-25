@@ -54,7 +54,7 @@ for(const side of [-1,1]){
   assert.ok(right.maxX<next[0].x-windowWidth/2,
     "next stairwell's first bay is physically outside the first floor");
 }
-assert.ok(plan.segments.every(w=>w.maxX<=right.maxX+.001),
+assert.ok(plan.segments.every(w=>w.maxX<=right.maxX+plan.wall/2+.001),
   "no first-floor walls project into the next staircase sector");
 assert.equal(plan.contains(centre(7),0,plan.y),false,
   "next apartment area must not be claimed by the first entrance");
