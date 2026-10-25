@@ -51,8 +51,8 @@ assert.ok(batches.some(b=>b.material.color===0x858783),
  "panel joints are actual batched precast joints, not drawn bricks");
 assert.ok(!batches.some(b=>b.material.color===0x977f78),
  "original red-brick facade batch is removed");
-assert.equal(stats.windows,296);
-assert.equal(stats.windowHoles,296);
+assert.equal(stats.windows,312);
+assert.equal(stats.windowHoles,312);
 assert.equal(audit.windowGlazing.length,stats.windows);
 assert.ok(audit.windowGlazing.every(g=>g.transparent&&g.opacity<.5),
  "every dwelling/end/entrance window is real transparent glass");
@@ -168,4 +168,4 @@ assert.ok(entry.firstFloorPlan.contains(player.position.x,player.position.z,play
 assert.ok(player.position.x>plan.doors[2].x+.52);
 assert.ok(!collidesAt(player.position.x,player.position.z,plan.doorBlockers.filter(b=>
  b.name!=="flat-1-closed"),PLAYER_RADIUS,plan.y));
-console.log("MINI CITY stage 4.7.3 PASS: roof, panel seams, 296 real windows, 3 edge windows, no missing rear walls and navigable first flat");
+console.log("MINI CITY stage 4.7.3 PASS: roof, panel seams, 312 real windows, 3 edge windows, no missing rear walls and navigable first flat");
