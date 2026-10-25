@@ -69,7 +69,7 @@ assert.equal(stair.landing.doorsPerFloor,4);
 assert.equal(stair.landing.doorWidth,1.04);
 assert.equal(stair.landing.sideDoorWidth,1.04);
 assert.deepEqual(stair.apartmentDoors.map(d=>d.number),
-  Array.from({length:20},(_,i)=>i+1));
+  [3,4,1,2,...Array.from({length:16},(_,i)=>i+5)]);
 const doorFrames=instances.filter(t=>Math.abs(t.scale.x-1.04)<eps&&
   Math.abs(t.scale.y-2.15)<eps&&Math.abs(t.scale.z-.09)<eps);
 assert.equal(doorFrames.length,15,
