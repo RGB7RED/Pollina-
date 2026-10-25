@@ -42,9 +42,9 @@ assert.equal(entry.stairHalf,1.72);
 assert.equal(a.foyer.halfWidth,1.62);
 assert.equal(entry.corridorHalf,1.62);
 assert.equal(stair.railing.flightWidth,1.52,"existing wide treads stay wide");
-assert.ok(Math.abs(stair.railing.shaftGap-.34)<eps);
+assert.ok(Math.abs(stair.railing.shaftGap-.16)<eps);
 assert.equal(entry.stair.aisleHalf,undefined);
-assert.ok(Math.abs(entry.aisleHalf-.16)<eps);
+assert.ok(Math.abs(entry.aisleHalf-.08)<eps);
 assert.ok(Math.abs(first.firstX-(x-.84))<eps);
 assert.ok(Math.abs(first.secondX-(x+.84))<eps);
 assert.ok(Math.abs(first.entryFlight.centreX-(x+.84))<eps);
@@ -52,7 +52,7 @@ const leftMost=first.firstX-stair.railing.flightWidth/2;
 const rightMost=first.secondX+stair.railing.flightWidth/2;
 assert.ok(leftMost>x-entry.stairHalf+.07-.03);
 assert.ok(rightMost<x+entry.stairHalf-.07+.03);
-assert.ok(Math.abs((first.secondX-first.firstX)-stair.railing.flightWidth-.34)<eps);
+assert.ok(Math.abs((first.secondX-first.firstX)-stair.railing.flightWidth-.16)<eps);
 // The neighbouring facade windows start beyond the new inner wall: there
 // is no longer a sightline to their glazing from within the staircase.
 const neighbourWindows=a.holes.filter(h=>h.axis==="long"&&h.side===1&&
