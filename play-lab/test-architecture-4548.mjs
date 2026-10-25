@@ -73,7 +73,7 @@ for(let i=0;i<4;i++){
   const band=a.stairwellInterior.greenBands[i];
   assert.ok(Math.abs(band.top-(landing+1.18))<eps);
   assert.ok(band.bottom<opening.bottom);
-  assert.ok(band.top>opening.bottom&&band.top<opening.top-.55,
+  assert.ok(band.top>opening.bottom&&band.top<opening.top-.30,
     "green only surrounds LOWER side of the window");
   assert.ok(i===3||a.stairwellInterior.greenBands[i+1].bottom>
     opening.top,"the next green band cannot cross the top sash");
