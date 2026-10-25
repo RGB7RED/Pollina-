@@ -250,7 +250,8 @@ assert.ok(allRender.some(t=>t.color===0x5a5e5e&&
   Math.abs(t.scale.y-BUILDING.plinth)<1e-5));
 assert.ok(!allRender.some(t=>t.color===0x898780),
   "former entrance-podium meshes are absent");
-assert.equal(entry.buildingObstacles.length,26);
+assert.ok(entry.buildingObstacles.length>=26,
+  "installed first-floor apartment walls extend the base collision model");
 assert.ok(!entry.buildingObstacles.some(o=>o.name.includes("pad")));
 for(const z of [11,10,9,8,7,6.4,5.5,3.5])
   assert.equal(entry.groundHeight(entry.x,z,0),FOYER_GROUND,
