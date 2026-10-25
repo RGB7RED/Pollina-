@@ -31,6 +31,8 @@ on:
       - fix/mini-city-v033-stage4543-facade-windows-clear-void
       - fix/mini-city-v033-stage4544-raised-first-floor-central-entry-flight
       - fix/mini-city-v033-stage4545-right-entry-wider-flights-single-door-mailboxes-rails
+      - fix/mini-city-v033-stage472-whole-house-depth-floor-reconcile
+      - gh-pages
     paths:
       - 'building-lab/**'
       - 'bus-stop-lab/**'
@@ -44,6 +46,9 @@ on:
       - 'studio/**'
       - 'models/**'
       - '.github/workflows/building-lab.yml'
+  pull_request:
+    branches:
+      - gh-pages
   workflow_dispatch:
 jobs:
   building-shape:
@@ -63,6 +68,10 @@ jobs:
           node --check building-lab/materials.js
           node --check building-lab/export-glb.js
           node --check play-lab/game.js
+          node --check play-lab/first-floor.js
+          node --check play-lab/apartment.js
+          node --check building-asset-lab/asset.js
+          node --check building-asset-lab/lab.js
           node --check play-lab/controller.js
           node --check play-lab/entrance.js
           node --check play-lab/free-camera.js
@@ -94,6 +103,14 @@ jobs:
           node street-asset-lab/test-isolation.mjs
           node street-asset-lab/test-viewer.mjs
           node object-viewer/test-free-flight.mjs
+      - name: Test 4.7.2 widened house, revised apartment floor plan and rear setback
+        run: node play-lab/test-architecture-472.mjs
+      - name: Test 4.7.1 shared floor height alignment and four distinct apartment doors
+        run: node play-lab/test-architecture-471.mjs
+      - name: Test 4.7 first-floor rooms and standalone component catalog
+        run: node play-lab/test-architecture-470.mjs
+      - name: Test apartment 17 all-room physical roundtrip
+        run: node play-lab/test-apartment.mjs
       - name: Test stage 4.5.1 physical first entrance, swinging door and continuous movement
         run: node play-lab/test-entrance.mjs
       - name: Test stage 4.5.2 two swing doors, mailboxes, ground-floor landing and continuous movement
