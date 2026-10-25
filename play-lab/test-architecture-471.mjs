@@ -99,7 +99,7 @@ assert.ok(street.benches.every(b=>b.z<BUILDING.backFacade-1.3));
 const outside=facadeObstacles(BUILDING,audit.entryPads).find(b=>b.name==="building");
 assert.equal(outside.minZ,-9.6);assert.equal(outside.maxZ,6.4);
 const player=new PlayerController({building:BUILDING,pads:audit.entryPads,
- entry,extras:street.obstacles});
+ entry,extras:street.obstacles,spawn:{x:entry.x,z:10.85}});
 assert.ok(player.setEntryDoorOpen(true));
 let maxStepY=0;
 function walk(dx,dz,steps){
