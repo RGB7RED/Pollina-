@@ -1,126 +1,187 @@
-// MINI CITY 4.7.1 — first-floor plan rebuilt against supplied Khrushchevka drawing.
-// Back of building is negative Z; entrance/street stays at +6.4m.
-// Quadrants (from above): rear-left 2k, rear-right 1k,
-// front-left 1k, front-right 3k. NO FURNITURE.
+// MINI CITY 4.7.2 — four independent, EMPTY Khrushchevka apartments.
+// Reference map: north/rear = top of plan, south/front = entry street.
+// Top left 2-room, top right 1-room, bottom left 1-room,
+// bottom right 3-room. Wet rooms adjoin the staircase service core.
+// All 4 halls, kitchens, bathrooms and bedrooms have REAL wall openings.
 export function planFirstFloor(building,entrance){
-  if(building.floors!==5)throw Error("Five-storey plan required");
+  if(building.floors!==5)throw Error("Five-storey reference required");
   const x=entrance.x,y=entrance.floorHeight(0),half=entrance.stairHalf;
   const back=(building.backFacade??-building.width/2)+.27;
   const front=(building.frontFacade??building.width/2)-.28;
-  const divider=-3.21,ceilingY=y+building.floorHeight-.16,wall=.11;
-  const wingDepth=9.56;
+  const divider=-3.21,ceilingY=y+building.floorHeight-.16;
+  const wall=.11,openingHeight=2.08,wingDepth=9.56;
+  if(ceilingY-y<=openingHeight+.06)
+    throw Error("Room doors would intersect next-floor slab");
   const wings=[-1,1].map(side=>({
     side,innerX:x+side*half,
     minX:side<0?Math.max(-building.length/2+.24,x-wingDepth):x+half,
     maxX:side<0?x-half:x+wingDepth
   }));
   const doorKinds=["grey","brown","blue","dark"];
-  const doors=[{number:1,side:-1,z:-2.42,type:"1к",quadrant:"front"},
+  const doors=[
+    {number:1,side:-1,z:-2.42,type:"1к",quadrant:"front"},
     {number:2,side:-1,z:-4.00,type:"2к",quadrant:"rear"},
     {number:3,side:1,z:-2.42,type:"3к",quadrant:"front"},
-    {number:4,side:1,z:-4.00,type:"1к",quadrant:"rear"}]
-    .map((d,i)=>({...d,x:x+d.side*half,y,width:1.04,
-      variant:doorKinds[i],paletteIndex:i}));
-  const segments=[],rooms=[],unitAreas=[];
-  const rect=(name,minX,maxX,minZ,maxZ)=>({
-    name,minX,maxX,minZ,maxZ,minY:y-.10,maxY:ceilingY});
-  function wallZ(name,z,left,right,opening){
-    if(!opening){segments.push(rect(name,left,right,z-wall/2,z+wall/2));return;}
-    const a=opening.x-opening.width/2,b=opening.x+opening.width/2;
-    if(a<=left+.04||b>=right-.04)throw Error("Bad transverse opening "+name);
-    wallZ(name+"-west",z,left,a);wallZ(name+"-east",z,b,right);
+    {number:4,side:1,z:-4.00,type:"1к",quadrant:"rear"}
+  ].map((d,i)=>({...d,x:x+d.side*half,y,width:1.04,
+    variant:doorKinds[i],paletteIndex:i}));
+  const segments=[],rooms=[],unitAreas=[],openings=[];
+  function rect(name,minX,maxX,minZ,maxZ,minY=y-.10,maxY=ceilingY){
+    if(maxX-minX<=.001||maxZ-minZ<=.001||maxY-minY<=.001)
+      throw Error("Invalid partition dimensions "+name);
+    return {name,minX,maxX,minZ,maxZ,minY,maxY};
   }
-  function wallX(name,xx,backZ,frontZ,opening){
-    if(!opening){segments.push(rect(name,xx-wall/2,xx+wall/2,backZ,frontZ));return;}
-    const a=opening.z-opening.width/2,b=opening.z+opening.width/2;
-    if(a<=backZ+.04||b>=frontZ-.04)throw Error("Bad longitudinal opening "+name);
-    wallX(name+"-back",xx,backZ,a);wallX(name+"-front",xx,b,frontZ);
+  function wallZ(name,z,left,right,doors=[]){
+    let edge=left;
+    for(const [i,gap] of doors.slice().sort((a,b)=>a.x-b.x).entries()){
+      const a=gap.x-gap.width/2,b=gap.x+gap.width/2;
+      if(a<=edge+.08||b>=right-.08)
+        throw Error("Transverse room opening overlaps another "+name);
+      segments.push(rect(name+"-solid-"+i,edge,a,z-wall/2,z+wall/2));
+      segments.push(rect(name+"-lintel-"+i,a,b,z-wall/2,z+wall/2,
+        y+openingHeight,ceilingY));
+      openings.push({name:name+"-door-"+i,axis:"z",x:gap.x,z,
+        width:gap.width,height:openingHeight});
+      edge=b;
+    }
+    segments.push(rect(name+"-tail",edge,right,z-wall/2,z+wall/2));
+  }
+  function wallX(name,xx,backZ,frontZ,doors=[]){
+    let edge=backZ;
+    for(const [i,gap] of doors.slice().sort((a,b)=>a.z-b.z).entries()){
+      const a=gap.z-gap.width/2,b=gap.z+gap.width/2;
+      if(a<=edge+.08||b>=frontZ-.08)
+        throw Error("Longitudinal room opening overlaps another "+name);
+      segments.push(rect(name+"-solid-"+i,xx-wall/2,xx+wall/2,edge,a));
+      segments.push(rect(name+"-lintel-"+i,xx-wall/2,xx+wall/2,a,b,
+        y+openingHeight,ceilingY));
+      openings.push({name:name+"-door-"+i,axis:"x",x:xx,z:gap.z,
+        width:gap.width,height:openingHeight});
+      edge=b;
+    }
+    segments.push(rect(name+"-tail",xx-wall/2,xx+wall/2,edge,frontZ));
   }
   function room(flat,name,minX,maxX,minZ,maxZ){
-    if(maxX-minX<.65||maxZ-minZ<.65)throw Error("Room too small "+name);
+    if(maxX-minX<.75||maxZ-minZ<.75)
+      throw Error("Room too narrow: "+flat+" "+name);
     rooms.push({flat,name,minX,maxX,minZ,maxZ});
   }
+  const unit=(number,side,which,left,right,z0,z1)=>unitAreas.push({
+    number,side,section:which,minX:left,maxX:right,minZ:z0,maxZ:z1
+  });
   for(const w of wings){
     const {side,minX:left,maxX:right,innerX}=w;
-    const at=d=>innerX+side*d, near=(a,b)=>(a+b)/2;
+    const at=d=>innerX+side*d;
+    const near=at(1.32),outer=side<0?left:right;
+    const inner=innerX;
+    const corridor0=Math.min(inner,near),corridor1=Math.max(inner,near);
+    const wet0=Math.min(outer,near),wet1=Math.max(outer,near);
     const rearNo=side<0?2:4,frontNo=side<0?1:3;
-    const lane=at(2.35),bedSplit=at(4.40);
-    // Adjacent apartments NEVER share an interior doorway.
-    wallZ("separation-of-flats-"+side,divider,left,right);
-    // External edge is a partition against the next, still locked unit,
-    // not a duplicated brick facade blocking the genuine outdoor glass.
-    const edge=side<0?left:right;
-    wallX("neighbour-edge-"+side,edge,back,front);
-    // REAR apartment has an independent vestibule from door z=-4.0.
-    // Bathroom next to the stair; kitchen beside it; main rooms at the
-    // rear real-window facade; two living rooms only in rear-left 2k.
-    wallZ("rear-room-boundary-"+side,-6.32,left,right,
-      {x:at(1.35),width:.96});
-    wallX("rear-bathroom-"+side,lane,-6.32,divider,
-      {z:-4.84,width:.84});
+    if(right-left<7.4||back>-10.25)
+      throw Error("Insufficient real house depth for separate reference rooms");
+    // Unbroken wall between the independently entered north and south homes.
+    wallZ("separate-homes-"+side,divider,left,right);
+    // Edge of the modelled wing seals it against the next building unit,
+    // leaving existing transparent facade windows completely untouched.
+    wallX("outer-neighbour-"+side,outer,back,front);
+
+    // NORTH REAR APARTMENT: door z=-4.00 into its own 1.32m-wide
+    // lengthwise hall; two separate wet-room entrances and a cross
+    // corridor giving individual access to both north-facing bedrooms.
+    const rearBedroomFront=-8.20,rearHallFront=-7.18,wetSplit=-5.22;
+    const wetDoorKitchen=-6.12,wetDoorBathroom=-4.25;
+    wallX("rear-private-hall-"+side,near,rearHallFront,divider,[
+      {z:wetDoorKitchen,width:.90},
+      {z:wetDoorBathroom,width:.90}
+    ]);
+    wallZ("rear-cross-hall-kitchen-"+side,rearHallFront,
+      wet0,wet1,[{x:(wet0+wet1)/2,width:.96}]);
+    wallZ("rear-kitchen-bath-"+side,wetSplit,wet0,wet1);
+    room(rearNo,"Прихожая",corridor0,corridor1,rearHallFront,divider);
+    room(rearNo,"Кухня",wet0,wet1,rearHallFront,wetSplit);
+    room(rearNo,"Санузел",wet0,wet1,wetSplit,divider);
+    // The cross hall occupies the full wing width for one metre and
+    // connects to the private hall without going through the kitchen.
+    room(rearNo,"Коридор",left,right,rearBedroomFront,rearHallFront);
     if(side<0){
-      wallX("two-room-bedroom-divider",bedSplit,back,-6.32,
-        {z:-7.30,width:.94});
-      room(2,"Жилая комната 1",left,bedSplit,back,-6.32);
-      room(2,"Жилая комната 2",bedSplit,right,back,-6.32);
-    }else room(4,"Жилая комната",left,right,back,-6.32);
-    room(rearNo,"Кухня",Math.min(edge,lane),Math.max(edge,lane),-6.32,divider);
-    room(rearNo,"Санузел",Math.min(innerX,lane),Math.max(innerX,lane),-6.32,divider);
-    room(rearNo,"Прихожая",left,right,-5.20,divider);
-    // FRONT apartment has its own independent entry hall z=-2.42.
-    // Kitchens and bathrooms are around the staircase service core.
-    // Living rooms follow the FRONT glazed wall, never the communal shaft.
-    wallX("front-wet-core-"+side,lane,-.90,1.45,
-      {z:.18,width:.88});
-    wallZ("front-rooms-boundary-"+side,1.45,left,right,
-      {x:at(3.05),width:1.02});
-    room(frontNo,"Прихожая",left,right,divider,-.90);
-    room(frontNo,"Кухня",Math.min(edge,lane),Math.max(edge,lane),-.90,1.45);
-    room(frontNo,"Санузел",Math.min(innerX,lane),Math.max(innerX,lane),-.90,1.45);
-    if(side<0){
-      // The left-front 1k has ONE residential room, not a cut-up maze.
-      room(1,"Жилая комната",left,right,1.45,front);
+      const split=at(4.32);
+      wallX("rear-two-bedrooms-divider",split,back,rearBedroomFront);
+      const c1=(left+split)/2,c2=(split+right)/2;
+      wallZ("rear-bedrooms-entry-"+side,rearBedroomFront,left,right,[
+        {x:c1,width:.95},{x:c2,width:.95}
+      ]);
+      room(2,"Жилая комната 1",left,split,back,rearBedroomFront);
+      room(2,"Жилая комната 2",split,right,back,rearBedroomFront);
     }else{
-      // Three genuinely separate living rooms on the right-front 3k.
-      const split=at(4.03),splitZ=3.82;
-      wallX("three-room-living-divider",split,1.45,front,
-        {z:2.38,width:.95});
-      const midX=(split+edge)/2;
-      wallZ("three-room-third-bedroom",splitZ,Math.min(split,edge),
-        Math.max(split,edge),{x:midX,width:.95});
-      room(3,"Жилая комната 1",Math.min(innerX,split),Math.max(innerX,split),1.45,front);
-      room(3,"Жилая комната 2",Math.min(split,edge),Math.max(split,edge),1.45,splitZ);
-      room(3,"Жилая комната 3",Math.min(split,edge),Math.max(split,edge),splitZ,front);
+      wallZ("rear-bedroom-entry-"+side,rearBedroomFront,left,right,[
+        {x:(left+right)/2,width:1.03}
+      ]);
+      room(4,"Жилая комната",left,right,back,rearBedroomFront);
     }
-    for(const section of ["front","rear"])
-      unitAreas.push({number:section==="front"?frontNo:rearNo,side,
-        minX:left,maxX:right,
-        minZ:section==="front"?divider:back,
-        maxZ:section==="front"?front:divider});
+    unit(rearNo,side,"rear",left,right,back,divider);
+
+    // SOUTH FRONT APARTMENT: own z=-2.42 doorway. The long hall lies
+    // next to the stair. Kitchen and bathroom each open DIRECTLY off
+    // that hall; a transverse corridor serves all living rooms.
+    const frontCrossBack=.95,frontBedrooms=2.40;
+    const frontWetSplit=-.62;
+    wallX("front-private-hall-"+side,near,divider,frontCrossBack,[
+      {z:-1.80,width:.88},{z:.25,width:.88}
+    ]);
+    wallZ("front-kitchen-bath-"+side,frontWetSplit,wet0,wet1);
+    wallZ("front-cross-hall-wet-"+side,frontCrossBack,wet0,wet1,
+      [{x:(wet0+wet1)/2,width:.96}]);
+    room(frontNo,"Прихожая",corridor0,corridor1,divider,frontCrossBack);
+    room(frontNo,"Кухня",wet0,wet1,divider,frontWetSplit);
+    room(frontNo,"Санузел",wet0,wet1,frontWetSplit,frontCrossBack);
+    room(frontNo,"Коридор",left,right,frontCrossBack,frontBedrooms);
+    if(side>0){
+      // Each of three independent bedrooms sits under one of the
+      // existing THREE front windows (bays 4,5,6). The cross hall has
+      // three matching doorways so bedrooms cannot force passage
+      // through each other.
+      const third=(right-left)/3,s1=left+third,s2=left+third*2;
+      wallX("three-room-separation-A",s1,frontBedrooms,front);
+      wallX("three-room-separation-B",s2,frontBedrooms,front);
+      wallZ("three-bedrooms-access",frontBedrooms,left,right,[
+        {x:left+third*.5,width:.94},
+        {x:left+third*1.5,width:.94},
+        {x:left+third*2.5,width:.94}
+      ]);
+      room(3,"Жилая комната 1",left,s1,frontBedrooms,front);
+      room(3,"Жилая комната 2",s1,s2,frontBedrooms,front);
+      room(3,"Жилая комната 3",s2,right,frontBedrooms,front);
+    }else{
+      wallZ("front-one-bedroom-access",frontBedrooms,left,right,[
+        {x:at(1.62),width:1.04}
+      ]);
+      room(1,"Жилая комната",left,right,frontBedrooms,front);
+    }
+    unit(frontNo,side,"front",left,right,divider,front);
     if(left< -building.length/2||right>building.length/2||
        back<=building.backFacade||front>=building.frontFacade)
-      throw Error("First-floor room extends through exterior shell");
+      throw Error("Room extends outside actual masonry envelope");
   }
-  // A real collision boundary along the actual stairwell wall:
-  // two openings centered at -4.00/-2.42, exactly as building.js.
   const stairWallColliders=wings.flatMap(w=>{
-    const zs=[back,-4.52,-3.48,-2.94,-1.90,front];
-    return [[zs[0],zs[1]],[zs[2],zs[3]],[zs[4],zs[5]]]
-      .map(([a,b],i)=>rect("flat-side-wall-"+w.side+"-"+i,
-        w.innerX-.075,w.innerX+.075,a,b));
+    const spans=[[back,-4.52],[-3.48,-2.94],[-1.90,front]];
+    return spans.map(([a,b],i)=>rect("flat-side-wall-"+w.side+"-"+i,
+      w.innerX-.075,w.innerX+.075,a,b));
   });
   const doorBlockers=doors.map(d=>rect("flat-"+d.number+"-closed",
     d.x-.06,d.x+.06,d.z-.52,d.z+.52));
-  const data={floor:1,y,ceilingY,wall,x,wings,doors,rooms,unitAreas,
+  const data={
+    floor:1,y,ceilingY,wall,x,wings,doors,rooms,unitAreas,openings,
     segments,doorBlockers,back,front,divider,unfurnished:true,
-    template:"Khrushchevka-reference-2k-1k-1k-3k",
+    template:"Khrushchevka-reference-2k-1k-1k-3k", 
+    bounds:{back:building.backFacade,front:building.frontFacade},
     contains:(px,pz,py)=>Math.abs(py-y)<.24&&wings.some(w=>
       px>=w.minX-.11&&px<=w.maxX+.11&&pz>=back&&pz<=front),
     obstacles:[...segments,...stairWallColliders],
-    roomCount:(n)=>rooms.filter(r=>r.flat===n&&r.name.startsWith("Жилая комната")).length
+    roomCount:n=>rooms.filter(r=>r.flat===n&&r.name.startsWith("Жилая комната")).length
   };
-  for(const [number,living] of [[1,1],[2,2],[3,3],[4,1]])
-    if(data.roomCount(number)!==living)throw Error("Apartment room count "+number);
+  for(const [number,count] of [[1,1],[2,2],[3,3],[4,1]])
+    if(data.roomCount(number)!==count)
+      throw Error("Apartment "+number+" does not match reference");
   return data;
 }
 export function buildFirstFloor(THREE,plan){
