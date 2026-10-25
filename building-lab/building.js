@@ -919,7 +919,8 @@ export function buildApartmentHouse(THREE,config={}){
     if(isDoor)entranceDetail(hole,ENTRANCE_BAYS.indexOf(w.bay));
     else {
       windowDetail(hole,w.variation,balcony,false,
-        w.floor===4&&w.bay===1);
+        (w.floor===4&&w.bay===1)||
+        (w.floor===0&&[1,2,4,5].includes(w.bay)));
       if(balcony)balconyDetail(w);
       if(w.floor===0&&[1,2,4,5].includes(w.bay))
         audit.firstFloorWindowHoles.push(hole);
