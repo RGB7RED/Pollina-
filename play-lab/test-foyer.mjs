@@ -99,7 +99,7 @@ assert.equal(house.stats.doorHoles,4);
 assert.equal(audit.entryPads.length,4);
 assert.equal(audit.foyer.mailboxes,20);
 assert.equal(audit.foyer.tiles,80,"floor tiles cover the expanded foyer");
-assert.equal(audit.foyer.halfWidth,1.74);
+assert.equal(audit.foyer.halfWidth,1.62);
 assert.equal(audit.foyer.doorCount,1);
 assert.equal(audit.foyer.secondDoorRemoved,true);
 assert.equal(audit.foyer.mailboxLevel,3.30);
