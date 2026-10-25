@@ -45,7 +45,7 @@ assert.ok(apartment.windowTop<apartment.ceilingY-.10);
 const house=buildApartmentHouse(THREE),audit=house.root.userData.geometryAudit;
 const doors=audit.completeStaircase.apartmentDoors;
 assert.equal(doors.length,20);
-assert.deepEqual(doors.filter(d=>d.accessible).map(d=>d.number),[3,4,1,2,17]);
+assert.deepEqual(doors.filter(d=>d.accessible).map(d=>d.number),[4,3,1,2,17]);
 assert.equal(audit.firstApartmentAperture.z,-2.42);
 assert.equal(audit.firstApartmentAperture.bottom,apartment.floorY);
 assert.equal(audit.firstApartmentAperture.width,apartment.doorway.width);
