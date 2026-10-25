@@ -16,7 +16,10 @@ export function planFirstFloor(building,entrance){
     throw Error("Room doors would intersect next-floor slab");
   const wings=[-1,1].map(side=>({
     side,innerX:x+side*half,
-    minX:side<0?Math.max(-building.length/2+.40,x-wingDepth):x+half,
+    // The westmost prototype wing must meet the REAL end-panel inner
+    // face, rather than terminate 0.8m before the facade and leave a
+    // hidden dead corridor behind its actual windows.
+    minX:side<0?-building.length/2+.36:x+half,
     maxX:side<0?x-half:x+wingDepth
   }));
   const doorKinds=["grey","brown","blue","dark"];
