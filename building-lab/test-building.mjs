@@ -47,9 +47,9 @@ for(let i=0;i<entranceBays.length-1;i++){
 }
 assert.equal(stats.entrances,4);assert.equal(stats.doorHoles,4);
 assert.equal(stats.windows,312);assert.equal(stats.windowHoles,312);
-assert.equal(a.holes.length,300);
+assert.equal(a.holes.length,316);
 assert.equal(a.holes.filter(h=>h.axis==="end").length,20);
-assert.equal(a.holes.filter(h=>h.axis==="long").length,280);
+assert.equal(a.holes.filter(h=>h.axis==="long").length,296);
 assert.equal(stats.balconies,planFacade().filter(p=>p.balcony).length);
 for(const kind of ["A","B","C","D"])assert.ok(stats.balconyKinds[kind]>=4,"missing balcony "+kind);
 assert.equal(a.balconyPositions.length,stats.balconies);
