@@ -3,7 +3,7 @@
 // reproduction or redistribution of the commercial model pictured in it.
 // World units ~= metres. No dependencies other than a THREE namespace.
 export const BUILDING={
-  type:"Soviet brick apartment house",
+  type:"Soviet precast-panel Khrushchevka",
   floors:5,
   entrances:4,
   length:74,
@@ -13,9 +13,10 @@ export const BUILDING={
   plinth:.66,
   firstFloor:2.09,
   floorHeight:2.42,
-  roofRise:3.08,
-  roofOverhang:.46,
-  roofHip:6.45,
+  roofRise:.38, // parapet above level flat roofing
+  roofOverhang:.24,
+  roofClearance:.80, // extra fifth-floor headroom above existing glazing
+  roofHip:0, // retained for backwards-compatible configuration
   windowBays:28,
   entranceSide:"positive Z",
 };
@@ -34,9 +35,9 @@ export function planFacade({length=BUILDING.length,bays=BUILDING.windowBays,floo
     for(let bay=0;bay<bays;bay++){
       const x=-length/2+1.85+(bay+.5)*step;
       const entrance=side===1&&floor===0&&ENTRANCE_BAYS.includes(bay);
-      // Reference plan: ONLY TWO ordinary windows remain from the
-      // first/last entrance to the respective end of the house.
-      const blindBay=side===1&&(bay===0||bay===bays-1);
+      // Restore THREE ordinary windows on each side of the first
+      // and fourth entrance: outermost facade bays are real openings.
+      const blindBay=false;
       // A real-looking uneven residential rhythm, no fully random facade.
       const balcony=(side===1?[2,6,11,16,21,25]:[4,10,16,22]).includes(bay)
         &&floor>0 && !(bay===11&&floor===2) && !(bay===22&&floor===4);
@@ -69,30 +70,37 @@ function roofGeometry(THREE,width,length,eave,rise,overhang,hip,centreZ=0){
 export function buildApartmentHouse(THREE,config={}){
   const C={...BUILDING,...config}, root=new THREE.Group();
   root.name="3.2 | first apartment house | architectural facade";
-  const rand=deterministic(), shellTop=C.firstFloor+C.floors*C.floorHeight;
+  const rand=deterministic(), shellTop=C.firstFloor+C.floors*C.floorHeight+C.roofClearance;
   const roofTop=shellTop+C.roofRise, wallDepth=.32;
   const facadeZ=side=>side===1?C.frontFacade:C.backFacade;
   const centreZ=(C.frontFacade+C.backFacade)/2;
   const floorLevel=floor=>C.firstFloor+floor*C.floorHeight;
   const bandStart=floor=>floor===0?C.plinth:floorLevel(floor);
-  const bandEnd=floor=>floorLevel(floor+1);
+  // The fifth-floor top band rises all the way to the NEW raised
+  // flat roof; otherwise a continuous 0.80m opening sits above the
+  // top windows between the old eaves and the new slab.
+  const bandEnd=floor=>floor===C.floors-1?shellTop:floorLevel(floor+1);
   const sillOffset=.64,regularWindowHeight=1.46;
   const mats={
-    brick:new THREE.MeshStandardMaterial({color:0x977f78,roughness:.96}),
-    endBrick:new THREE.MeshStandardMaterial({color:0x92766e,roughness:.96}),
-    reveal:new THREE.MeshStandardMaterial({color:0x9f8880,roughness:.97}),
-    plinth:new THREE.MeshStandardMaterial({color:0x4d4140,roughness:.98}),
+    // Light pebble-grey concrete panels (not a brick texture).
+    brick:new THREE.MeshStandardMaterial({color:0xc7c5bd,roughness:.97}),
+    endBrick:new THREE.MeshStandardMaterial({color:0xc0beb5,roughness:.97}),
+    reveal:new THREE.MeshStandardMaterial({color:0xcac9c0,roughness:.97}),
+    panelJoint:new THREE.MeshStandardMaterial({color:0x858783,roughness:1}),
+    plinth:new THREE.MeshStandardMaterial({color:0x5a5e5e,roughness:.98}),
     roof:new THREE.MeshStandardMaterial({color:0x454c50,roughness:.91,side:THREE.DoubleSide}),
     roofEdge:new THREE.MeshStandardMaterial({color:0x55585a,roughness:.94}),
     frame:new THREE.MeshStandardMaterial({color:0xb9b6aa,roughness:.84}),
     frameWhite:new THREE.MeshStandardMaterial({color:0xd7d4c9,roughness:.84}),
     frameGrey:new THREE.MeshStandardMaterial({color:0x7f8989,roughness:.84}),
     sash:new THREE.MeshStandardMaterial({color:0x909895,roughness:.85}),
-    glass:new THREE.MeshStandardMaterial({color:0x384b57,roughness:.38,metalness:.14}),
+    glass:new THREE.MeshStandardMaterial({color:0xd4e6e8,roughness:.12,
+      transparent:true,opacity:.20,depthWrite:false,metalness:0,side:THREE.DoubleSide}),
     litGlass:new THREE.MeshStandardMaterial({color:0xc3a37b,roughness:.55,emissive:0xb57a43,emissiveIntensity:.38}),
     balcony:new THREE.MeshStandardMaterial({color:0x888889,roughness:.97}),
     balconyMetal:new THREE.MeshStandardMaterial({color:0x646f72,roughness:.86}),
-    balconyGlass:new THREE.MeshStandardMaterial({color:0x80989c,roughness:.43,metalness:.10}),
+    balconyGlass:new THREE.MeshStandardMaterial({color:0xcddfe2,roughness:.14,
+      transparent:true,opacity:.27,depthWrite:false,side:THREE.DoubleSide}),
     balconyPanel:new THREE.MeshStandardMaterial({color:0x898c83,roughness:.96}),
     balconyPanelBlue:new THREE.MeshStandardMaterial({color:0x74878a,roughness:.95}),
     balconyPanelTan:new THREE.MeshStandardMaterial({color:0x9d8a77,roughness:.96}),
@@ -184,11 +192,13 @@ export function buildApartmentHouse(THREE,config={}){
     const frameMat=[mats.frame,mats.frameWhite,mats.frameGrey][variation%3];
     // Apartment flats that can be entered have genuine transparent glass,
     // same physically clear material already used in the stairwell windows.
-    const glassMat=(isStairWindow||isApartmentWindow)?mats.foyerWindowGlass:
-      (variation%5===0||variation%7===3)?mats.litGlass:mats.glass;
+    // All 5 floors, both end walls and the staircase use clear
+    // physically transparent glass. Illuminated facades cannot be
+    // opaque decals in front of otherwise valid openings.
+    const glassMat=mats.foyerWindowGlass;
     const depth=frameZ;
     const innerW=width-.16,innerH=height-.17,centreY=(bottom+top)/2;
-    // A single opaque glazed surface is INSIDE the perforated wall, not on it.
+    // One transparent glazed surface inside a REAL hole, never over brick.
     wallBox(axis,innerW,innerH,.045,glassMat,centre,centreY,glassZ);
     for(const edge of [-1,1]){
       wallBox(axis,.075,height-.07,.11,frameMat,centre+edge*(width/2-.082),
@@ -215,6 +225,7 @@ export function buildApartmentHouse(THREE,config={}){
     stats.windows++;
     if(glassMat===mats.litGlass)stats.litWindows++;
     audit.windowGlazing.push({axis,side,opening:hole,variant,
+      transparent:glassMat.transparent===true,opacity:glassMat.opacity,
       frontDepth:facadeExtent-.17,glassDepth:facadeExtent-.235});
     if(isStairWindow)audit.stairwellWindows.push({
       floor:Math.round((bottom-(C.firstFloor+C.floorHeight/2+.80))/C.floorHeight)+1,
@@ -929,10 +940,8 @@ export function buildApartmentHouse(THREE,config={}){
     wallStrip("long",side,C.length/2-1.85,C.length/2,C.plinth,shellTop,mats.brick);
   }
   for(const w of plan){
-    // The outermost former window bay on EACH edge is now solid
-    // brick. Keep the footprint and all four entrances at their
-    // approved coordinates: from entry #1 to the west end there are
-    // bay 1 and 2; from entry #4 to the east end bay 25 and 26.
+    // All 3 bays 0/1/2 and 25/26/27 are actual windows again.
+    // No exterior entrance is moved and no bay is blanked.
     if(w.blindBay){
       wallStrip("long",w.side,w.x-step/2,w.x+step/2,
         bandStart(w.floor),bandEnd(w.floor),mats.brick);
@@ -1077,16 +1086,35 @@ export function buildApartmentHouse(THREE,config={}){
       }
     }
   }
+  // Series 1-464 inspired flat bituminous deck with raised light
+  // concrete parapet, NOT a hip roof. The last-storey facade extends
+  // 0.80 m above the former squeezed window lintels.
+  const roofDeckY=shellTop+.075;
   const roof=new THREE.Mesh(
-    roofGeometry(THREE,C.width,C.length,shellTop,C.roofRise,C.roofOverhang,C.roofHip,centreZ),
-    mats.roof);
-  roof.name="hipped pitched roof · 4 real sloped faces";
+    new THREE.BoxGeometry(C.length+C.roofOverhang*2,.15,
+      C.width+C.roofOverhang*2),mats.roof);
+  roof.name="flat five-storey roof · continuous deck";
+  roof.position.set(0,roofDeckY,centreZ);
   roof.castShadow=true;roof.receiveShadow=true;root.add(roof);
+  // Low four-sided parapet; keep the street/far walls and the two
+  // short end walls from intersecting windows or enclosing roof vents.
   for(const side of [-1,1]){
-    box(C.length+1.0,.12,.27,mats.roofEdge,0,shellTop-.08,
-      facadeZ(side)+side*(C.roofOverhang-.1));
-    box(C.length+1.0,.10,.19,mats.roofEdge,0,shellTop-.29,
-      facadeZ(side)+side*.14); // eave-to-wall flashing
+    box(C.length+C.roofOverhang*2,C.roofRise,.19,mats.reveal,
+      0,shellTop+C.roofRise/2,facadeZ(side)+side*.09);
+    box(C.length+C.roofOverhang*2,.065,.26,mats.roofEdge,
+      0,roofTop+.032,facadeZ(side)+side*.09);
+  }
+  for(const side of [-1,1]){
+    box(.19,C.roofRise,C.width+.25,mats.reveal,
+      side*(C.length/2+.075),shellTop+C.roofRise/2,centreZ);
+    box(.24,.065,C.width+.25,mats.roofEdge,
+      side*(C.length/2+.075),roofTop+.032,centreZ);
+  }
+  audit.roof={type:"flat",deckY:roofDeckY,wallTop:shellTop,
+    parapetTop:roofTop,parapetHeight:C.roofRise,
+    flat:true,chimneysPreserved:true,roofSlabDepth:.15};
+  // Existing drainpipes remain on both original facades.
+  for(const side of [-1,1]){
     // Place the three middle drains on actual masonry seams BETWEEN bays.
     // Boundaries 8/14/20 touch neither balcony bays nor entrances, on
     // either facade. Fixed metre offsets previously crossed windows/balconies.
@@ -1108,11 +1136,19 @@ export function buildApartmentHouse(THREE,config={}){
         box(.22,.055,.20,mats.balconyMetal,x,y,z);
       stats.downpipes++;
     }
-    // Expansion / masonry joints stay at spandrels below the glazed zones.
-    for(let floor=1;floor<C.floors;floor++){
-      box(C.length-.10,.025,.028,mats.reveal,0,
-        floorLevel(floor)+.055,facadeZ(side)+side*.017);
+    // Precast panel joints: straight horizontal seams at the FLOOR
+    // band, and vertical seams at actual module boundaries (never at
+    // window centres). Both batched with the rest of the facade.
+    const step=(C.length-3.7)/C.windowBays;
+    for(let floor=1;floor<=C.floors;floor++)
+      box(C.length-.10,.027,.032,mats.panelJoint,0,
+        floorLevel(floor)+.055,facadeZ(side)+side*.023);
+    for(let bay=0;bay<=C.windowBays;bay++){
+      const x=-C.length/2+1.85+bay*step;
+      box(.034,shellTop-C.plinth,.031,mats.panelJoint,x,
+        (shellTop+C.plinth)/2,facadeZ(side)+side*.023);
     }
+  
   }
   // AC units are positioned on masonry piers, not over cut-out windows.
   for(const side of [-1,1]){
@@ -1134,8 +1170,8 @@ export function buildApartmentHouse(THREE,config={}){
   // Roof ventilation stacks still reuse the accepted silhouette.
   for(const x of [-31.5,-22,-11.5,-1.5,11.5,22,31]){
     const z=(rand()-.5)*2.8, rise=1.15+rand()*.42;
-    box(.61,rise,.54,mats.chimney,x,shellTop+C.roofRise*.79+rise/2,z);
-    box(.78,.17,.69,mats.roofEdge,x,shellTop+C.roofRise*.79+rise+.075,z);
+    box(.61,rise,.54,mats.chimney,x,shellTop+.15+rise/2,z);
+    box(.78,.17,.69,mats.roofEdge,x,shellTop+.15+rise+.075,z);
     stats.chimneys++;
   }
   for(const [material,matrices] of batches){
@@ -1148,7 +1184,9 @@ export function buildApartmentHouse(THREE,config={}){
   audit.windowTypes=[...audit.windowTypes].sort();
   root.userData={
     stage:"3.2",config:C,counters:stats,roofTop,windowPlan:plan,
-    geometryAudit:audit,provisionalMaterials:true,facadeTextureReady:false
+    // Base panel materials are valid in Play Lab immediately; Building Lab
+    // may additionally install a lightweight world-aligned concrete atlas.
+    geometryAudit:audit,provisionalMaterials:false,facadeTextureReady:false
   };
   return {root,config:C,stats,roofTop,doorPivot:playableDoor,
     innerDoorPivot:foyerDoor};
