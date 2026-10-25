@@ -43,7 +43,7 @@ assert.ok(lastWindow.every(h=>audit.roof.wallTop-h.top>.5),
  "fifth-floor top windows have visible full precast spandrel beneath roof");
 const upperBandMin=BUILDING.firstFloor+BUILDING.floors*BUILDING.floorHeight;
 assert.ok(audit.wallPieces.some(p=>p.axis==="long"&&
- p.y0>=upperBandMin-.001&&p.y1>=audit.roof.wallTop-.001),
+ p.y0<=upperBandMin+.001&&p.y1>=audit.roof.wallTop-.001),
  "raised wall band reaches underside of flat roof, no external open seam");
 const batches=root.children.filter(x=>x instanceof InstancedMesh);
 assert.ok(batches.length<=35,"mobile geometry stays instanced/batched");
