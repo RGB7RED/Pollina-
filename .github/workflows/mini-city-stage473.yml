@@ -1,0 +1,55 @@
+name: MINI CITY 4.7.3 — Panel house geometry
+
+on:
+  push:
+    branches:
+      - fix/mini-city-stage473-flat-roof-panel-windows-room-alignment
+    paths:
+      - 'building-lab/**'
+      - 'play-lab/**'
+      - 'models/**'
+      - '.github/workflows/mini-city-stage473.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  panel-house:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Parse actual scene and physics modules
+        run: |
+          node --check building-lab/building.js
+          node --check play-lab/first-floor.js
+          node --check play-lab/entrance.js
+          node --check play-lab/controller.js
+          node --check play-lab/game.js
+          node --check play-lab/apartment.js
+      - name: Verify flat panel house and 296 real glazed apertures
+        run: node building-lab/test-building.mjs
+      - name: Verify new 4.7.3 panel-roof, rear walls and window-aligned rooms
+        run: node play-lab/test-architecture-473.mjs
+      - name: Verify first-floor flats and independently catalogued components
+        run: node play-lab/test-architecture-470.mjs
+      - name: Verify earlier apartment and full return route
+        run: node play-lab/test-apartment.mjs
+      - name: Verify continuous five-floor staircase
+        run: node play-lab/test-five-floors.mjs
+      - name: Verify controller collisions
+        run: node play-lab/test-controller.mjs
+      - name: Verify earlier architectural milestones
+        run: |
+          node play-lab/test-architecture-4543.mjs
+          node play-lab/test-architecture-4544.mjs
+          node play-lab/test-architecture-4545.mjs
+          node play-lab/test-architecture-4546.mjs
+          node play-lab/test-architecture-4547.mjs
+          node play-lab/test-architecture-4548.mjs
+          node play-lab/test-architecture-4549.mjs
+      - name: Verify independent free-camera lab
+        run: node play-lab/test-free-camera.mjs

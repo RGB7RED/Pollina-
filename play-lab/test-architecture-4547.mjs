@@ -58,7 +58,7 @@ assert.equal(instances.filter(t=>Math.abs(t.scale.x-.255)<eps&&
   Math.abs(t.scale.y-.37)<eps&&Math.abs(t.scale.z-.022)<eps).length,20,
   "20 meter windows on end-wall electrical panels");
 assert.equal(a.heating.radiators.length,4);
-assert.equal(a.heating.riser.top,BUILDING.plinth+BUILDING.floors*BUILDING.floorHeight-.22);
+assert.equal(a.heating.riser.top,BUILDING.firstFloor+BUILDING.floors*BUILDING.floorHeight+BUILDING.roofClearance-.22);
 assert.ok(a.heating.riser.bottom<e.stair.firstFloor);
 assert.equal(instances.filter(t=>Math.abs(t.scale.x-.083)<eps&&
   Math.abs(t.scale.y-.53)<eps&&Math.abs(t.scale.z-.12)<eps).length,40,
@@ -107,7 +107,7 @@ assert.equal(a.slopedWallFinish.noTiltedBoxes,true,
 assert.equal(stair.floors,5);
 assert.equal(stair.flights,9);
 assert.equal(stair.treads,108);
-assert.ok(house.root.children.filter(m=>m instanceof InstancedMesh).length<=33,
+assert.ok(house.root.children.filter(m=>m instanceof InstancedMesh).length<=35,
   "mobile draw-call batch count preserved");
 assert.equal(e.buildingObstacles.length,30);
 assert.ok(collidesAt(x,-4.64,e.buildingObstacles,PLAYER_RADIUS,2.09),

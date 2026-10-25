@@ -70,7 +70,7 @@ assert.ok(far.z>=BUILDING.frontFacade+PLAYER_RADIUS);
 const bounds=resolveStep({x:55,z:25},20,20,obstacles);
 assert.ok(bounds.x<=56-PLAYER_RADIUS && bounds.z<=32-PLAYER_RADIUS);
 // Third-person camera is shortened when the house is behind the player.
-const shortened=cameraObstacleDistance({x:0,z:7.2},{x:0,z:-4},obstacles);
+const shortened=cameraObstacleDistance({x:0,z:BUILDING.frontFacade+.8},{x:0,z:-4},obstacles);
 assert.ok(shortened<3,"camera must not clip behind walls");
 const clear=cameraObstacleDistance({x:0,z:13.2},{x:0,z:20},obstacles);
 assert.ok(clear>6,"camera has normal space away from walls");

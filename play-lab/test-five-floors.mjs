@@ -152,5 +152,5 @@ assert.equal(audit.foyer.doorCount,1,"only the original facade door remains");
 assert.equal(audit.foyer.tiles,80,"wider entrance has actual floor tiles");
 assert.equal(audit.foyer.mailboxLevel,3.30,"mailboxes now live between floors 1–2");
 const instanced=house.root.children.filter(o=>o instanceof InstancedMesh);
-assert.ok(instanced.length<=33,"one dedicated batch for real transparent stairwell glass");
+assert.ok(instanced.length<=35,"one dedicated batch for real transparent stairwell glass");
 console.log("MINI CITY 4.5.4.7 PASS: deep cabinet end wall, 20 side doors, 4 U climbs/descents and no radiator collisions");

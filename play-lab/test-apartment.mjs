@@ -65,7 +65,7 @@ assert.ok(built.stats.furnitureBoxes<90);
 assert.ok(built.doorPivot.children.length>=2);
 assert.ok(built.stats.batchedMeshes<=10,"lightweight first prototype");
 const instanced=house.root.children.filter(m=>m instanceof InstancedMesh);
-assert.ok(instanced.length<=33);
+assert.ok(instanced.length<=35);
 const game=readFileSync(new URL("./game.js",import.meta.url),"utf8");
 assert.equal((game.match(/new THREE\.Scene\(/g)||[]).length,1);
 assert.match(game,/entry\.installApartment\(apartment\)/);

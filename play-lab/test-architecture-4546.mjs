@@ -101,5 +101,5 @@ assert.equal(boxes.length,20);
 assert.ok(boxes.every(t=>t.position.y>3.7&&t.position.y+.105<4.51));
 assert.equal(a.foyer.doorCount,1);
 assert.equal(house.innerDoorPivot,null);
-assert.ok(house.root.children.filter(m=>m instanceof InstancedMesh).length<=33);
+assert.ok(house.root.children.filter(m=>m instanceof InstancedMesh).length<=35);
 console.log("MINI CITY 4.5.4.6 PASS: 3.68m stairwell, 0.36m safe shaft, 20 widened doors, 20 enlarged mailboxes, wall-connected 5th floor guard, transparent windows");

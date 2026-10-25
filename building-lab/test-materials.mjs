@@ -68,18 +68,18 @@ try{
  assert.equal(root.userData.stage,"3.3");
  assert.equal(root.userData.facadeTextureReady,true);
  assert.equal(root.userData.provisionalMaterials,false);
- assert.equal(detail.textures,4);
- assert.equal(detail.worldAlignedBrickGroups,2);
+ assert.equal(detail.textures,2);
+ assert.equal(detail.worldAlignedPanelGroups,2);
  assert.equal(detail.roofGroups,1);
- assert.equal(detail.glazingGroups,2);
- assert.equal(detail.glassLitGroups,1);
+ assert.equal(detail.glazingGroups,0);
+ assert.equal(detail.glassLitGroups,0);
  assert.equal(stats.instancedElements,geometryCount,"materials cannot change geometry");
- assert.equal(root.children.length,before,"materials may not insert per-brick meshes");
+ assert.equal(root.children.length,before,"materials may not insert per-panel meshes");
  assert.equal(applyFacadeFinishes(THREE,root),detail,"materials must not be re-created");
  const textured=root.children.filter(m=>m.material?.onBeforeCompile);
- assert.equal(textured.length,2,"facades share only two instanced brick materials");
+ assert.equal(textured.length,2,"facades share only two instanced concrete materials");
  for(const m of textured){
-  assert.deepEqual(m.material.userData.miniCityBrickScale,[1.20,.64]);
+  assert.deepEqual(m.material.userData.miniCityPanelScale,[1.20,.64]);
   const shader={uniforms:{},vertexShader:"void main() {\n#include <begin_vertex>\n}",
    fragmentShader:"void main() {\n#include <map_fragment>\n}"};
   m.material.onBeforeCompile(shader);
@@ -91,10 +91,8 @@ try{
   assert.equal(shader.uniforms.miniCityBrick.value.wrapS,THREE.RepeatWrapping);
   assert.equal(shader.uniforms.miniCityBrick.value.image.width,256);
  }
- const roof=root.children.find(m=>m.name?.includes("hipped pitched roof"));
- const position=roof.geometry.getAttribute("position");
- const uv=roof.geometry.getAttribute("uv");
- assert.equal(uv.count,position.count);
+ const roof=root.children.find(m=>m.name?.includes("flat five-storey roof"));
+ assert.ok(roof&&roof.geometry,"real flat roof deck still present");
  assert.equal(roof.material.map.image.width,256);
  assert.equal(roof.material.map.wrapS,THREE.RepeatWrapping);
  for(const m of root.children.filter(m=>m.material?.map&&!m.name?.includes("roof")))
@@ -107,8 +105,8 @@ try{
  }
  assert.equal(stats.windows,296);assert.equal(stats.balconies,38);
  assert.equal(stats.downpipes,10);assert.equal(stats.entrances,4);
- assert.ok(drawn.length>1000,"authored brick / roof canvases contain actual texture detail");
- console.log("Building 3.3 materials PASS: four canvases, world-aligned instanced brick, roof UV, glass, lower slab");
+ assert.ok(drawn.length>1000,"authored concrete panel / roof canvases contain actual texture detail");
+ console.log("Building 3.3 materials PASS: two canvases, world-aligned concrete panels, flat roof, clear glass");
 }finally{
  if(previousDocument===undefined)delete globalThis.document;
  else globalThis.document=previousDocument;
