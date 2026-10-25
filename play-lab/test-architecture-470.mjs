@@ -67,7 +67,7 @@ function go(dx,dz,count){
   maxLift=Math.max(maxLift,Math.abs(p.position.y-old.y));
  }
 }
-go(0,1,90);go(1,0,18);go(0,1,100);
+go(0,1,90);go(1,0,16);go(0,1,100);
 assert.equal(p.position.y,plan.y);
 go(0,-1,6);
 assert.equal(p.nearestDoor()?.number,1);
