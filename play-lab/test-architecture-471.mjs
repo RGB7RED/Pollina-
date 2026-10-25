@@ -31,9 +31,9 @@ const THREE={Group:O,Object3D:O,Mesh,InstancedMesh:IM,
  MeshStandardMaterial:Mat,DoubleSide:2};
 const near=(a,b,e=.000001)=>Math.abs(a-b)<e;
 assert.equal(BUILDING.length,74);
-assert.equal(BUILDING.width,16);
+assert.equal(BUILDING.width,19);
 assert.equal(BUILDING.frontFacade,6.4); // street/entrances unchanged
-assert.equal(BUILDING.backFacade,-9.6); // deeper ONLY into courtyard
+assert.equal(BUILDING.backFacade,-12.6); // deeper ONLY into courtyard
 assert.equal(BUILDING.firstFloor,2.09);
 assert.equal(BUILDING.floorHeight,2.42);
 const {root,roofTop,stats}=buildApartmentHouse(THREE);
@@ -61,7 +61,7 @@ for(const floor of [0,1,2,3,4]){
  }
 }
 assert.equal(roofTop,BUILDING.firstFloor+5*BUILDING.floorHeight+BUILDING.roofRise);
-assert.deepEqual(audit.facadeEnds,{front:6.4,back:-9.6});
+assert.deepEqual(audit.facadeEnds,{front:6.4,back:-12.6});
 const roof=root.children.find(c=>c.name?.includes("hipped pitched roof"));
 assert.ok(roof);
 const roofZ=Array.from(roof.geometry.position.array).filter((_,i)=>i%3===2);
@@ -77,7 +77,7 @@ entry.installApartment(prototype);
 assert.ok(near(prototype.windowBottom,entry.floorHeight(4)+.64));
 assert.ok(prototype.windowTop<prototype.ceilingY-.10);
 assert.ok(prototype.bounds.minZ>BUILDING.backFacade);
-assert.equal(layout.back,-9.33);
+assert.equal(layout.back,-12.33);
 assert.equal(layout.front,6.12);
 assert.equal(layout.divider,-3.21);
 assert.deepEqual(layout.doors.map(d=>d.variant),["grey","brown","blue","dark"]);
@@ -97,7 +97,7 @@ const rearPath=street.surfaces.find(p=>p.kind==="rear-service-path");
 assert.ok(rearPath.z+rearPath.depth/2<BUILDING.backFacade);
 assert.ok(street.benches.every(b=>b.z<BUILDING.backFacade-1.3));
 const outside=facadeObstacles(BUILDING,audit.entryPads).find(b=>b.name==="building");
-assert.equal(outside.minZ,-9.6);assert.equal(outside.maxZ,6.4);
+assert.equal(outside.minZ,-12.6);assert.equal(outside.maxZ,6.4);
 const player=new PlayerController({building:BUILDING,pads:audit.entryPads,
  entry,extras:street.obstacles,spawn:{x:entry.x,z:10.85}});
 assert.ok(player.setEntryDoorOpen(true));
