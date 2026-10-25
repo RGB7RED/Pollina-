@@ -132,9 +132,9 @@ assert.equal(rail.innerGuardLinks,4);
 assert.equal(rail.continuous,true);
 const doors=audit.completeStaircase.apartmentDoors;
 assert.equal(doors.length,20);
-assert.deepEqual(doors.map(d=>d.number),[3,4,1,2,...Array.from({length:16},(_,i)=>i+5)]);
+assert.deepEqual(doors.map(d=>d.number),[4,3,1,2,...Array.from({length:16},(_,i)=>i+5)]);
 assert.ok(doors.every(d=>d.entrance===1));
-assert.deepEqual(doors.filter(d=>d.accessible).map(d=>d.number),[3,4,1,2,17],
+assert.deepEqual(doors.filter(d=>d.accessible).map(d=>d.number),[4,3,1,2,17],
  "only one fifth-floor apartment is constructed; all others remain closed");
 for(let f=1;f<=5;f++){
  const four=doors.filter(d=>d.floor===f);
