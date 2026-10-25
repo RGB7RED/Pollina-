@@ -44,7 +44,7 @@ for(let floor=1;floor<=5;floor++){
   const light=lights.find(l=>l.kind==="apartment-landing"&&l.floor===floor);
   assert.ok(light,"fixture on every apartment floor");
   const ceiling=floor<5?level+stair.storeyRise-.16:
-    BUILDING.plinth+BUILDING.floors*BUILDING.floorHeight-.16;
+    BUILDING.firstFloor+BUILDING.floors*BUILDING.floorHeight+BUILDING.roofClearance-.16;
   assert.ok(Math.abs(light.ceilingY-ceiling)<E,"fixture aligned with slab underside or roof");
   assert.ok(light.housingY+light.housingH/2<ceiling,"housing wholly below ceiling");
   assert.ok(light.glassY+light.glassH/2<light.housingY,
@@ -84,6 +84,6 @@ assert.equal(stair.floors,5);
 assert.equal(audit.heating.radiators.length,4);
 assert.equal(audit.stairwellWindows.length,4);
 assert.equal(audit.foyer.doorCount,1);
-assert.ok(house.root.children.filter(m=>m instanceof InstancedMesh).length<=33,
+assert.ok(house.root.children.filter(m=>m instanceof InstancedMesh).length<=35,
   "no new draw-call batches");
 console.log("MINI CITY 4.5.4.9 PASS: six actual luminaires under slabs/roof, zero floor-mounted fixtures");

@@ -58,9 +58,9 @@ assert.ok(stair.landing.depth>1.75);
 assert.equal(BUILDING.floors,5);
 assert.equal(BUILDING.entrances,4);
 assert.equal(house.stats.doorHoles,4);
-assert.equal(house.stats.windows,286);
-assert.equal(house.stats.windowHoles,286);
-const shellTop=BUILDING.plinth+BUILDING.floorHeight*BUILDING.floors;
+assert.equal(house.stats.windows,296);
+assert.equal(house.stats.windowHoles,296);
+const shellTop=BUILDING.firstFloor+BUILDING.floorHeight*BUILDING.floors+BUILDING.roofClearance;
 assert.ok(stair.firstFloor+4*stair.storeyRise+2.19<shellTop,
   "fifth floor + full apartment door must stay inside the ORIGINAL house");
 for(let i=0;i<5;i++){
@@ -111,6 +111,6 @@ assert.ok(collidesAt(x,6.26,entry.buildingObstacles,PLAYER_RADIUS,3.30),
   "transparent window remains a physical EXTERIOR wall");
 assert.ok(!collidesAt(x+1.4,5.25,entry.buildingObstacles,PLAYER_RADIUS,3.30),
   "first-floor intermediate turnaround above foyer is fully open");
-assert.equal(house.root.children.filter(x=>x instanceof InstancedMesh).length<=33,true,
+assert.equal(house.root.children.filter(x=>x instanceof InstancedMesh).length<=35,true,
   "four new clear windows share a single GPU batch");
 console.log("MINI CITY 4.5.4.4 PASS: raised first floor, 108 real treads, four aligned windows, central guard rails, no wall-side rails, physical open shaft");

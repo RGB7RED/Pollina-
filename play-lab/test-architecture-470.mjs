@@ -26,11 +26,11 @@ assert.deepEqual(audit.completeStaircase.apartmentDoors.filter(x=>x.accessible).
 assert.equal(audit.firstFloorApertures.length,4);
 assert.equal(BUILDING.length,74);
 assert.equal(BUILDING.entrances,4);
-assert.equal(house.stats.windows,286);
+assert.equal(house.stats.windows,296);
 for(const floor of [0,1,2,3,4]){
  const p=planFacade().filter(p=>p.floor===floor&&p.side===1);
- assert.deepEqual(p.filter(w=>w.bay<3&&!w.blindBay).map(w=>w.bay),[1,2]);
- assert.deepEqual(p.filter(w=>w.bay>24&&!w.blindBay).map(w=>w.bay),[25,26]);
+ assert.deepEqual(p.filter(w=>w.bay<3&&!w.blindBay).map(w=>w.bay),[0,1,2]);
+ assert.deepEqual(p.filter(w=>w.bay>24&&!w.blindBay).map(w=>w.bay),[25,26,27]);
  assert.equal(p.filter(w=>w.entrance).length,floor===0?4:0);
 }
 const pairs=audit.firstFloorWindowHoles;
@@ -119,11 +119,11 @@ for(const family of ["door","window","heating","lighting","utility"]){
   assert.ok(part.root.children.length>=1);
   assert.equal(item.quantity,
     item.id.startsWith("facade_window")?
-      [94,63,63,62][Number(item.modelNumber)-1]:item.quantity);
+      [96,65,67,64][Number(item.modelNumber)-1]:item.quantity);
  }
 }
 const source=readFileSync(new URL("./game.js",import.meta.url),"utf8");
 assert.equal((source.match(/new THREE\.Scene\(/g)||[]).length,1);
 assert.match(source,/entry\.installFirstFloor\(firstFloor\)/);
 assert.match(source,/firstFloorDoorPivots/);
-console.log("MINI CITY 4.7 PASS: four unfurnished 1F flats, doors, 2 end windows per side, 15 inspectable components");
+console.log("MINI CITY 4.7 PASS: four unfurnished 1F flats, doors, 3 end windows per side, 15 inspectable components");

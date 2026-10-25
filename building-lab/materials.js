@@ -56,24 +56,31 @@ export function makeBrickTexture(THREE){
   }
   return texture(THREE,canvas,{repeat:true});
 }
+// Low-cost concrete aggregate texture for a precast 1-464-style panel.
+// Actual large panel joints are real instanced strips in building.js.
+// The atlas has NO staggered masonry rows and does not fake bricks.
+export function makePanelTexture(THREE){
+  const {canvas,ctx}=makeCanvas(),rng=random(464);
+  ctx.fillStyle="#c5c4bd";
+  ctx.fillRect(0,0,256,256);
+  for(let i=0;i<2600;i++){
+    const x=rng()*256,y=rng()*256,size=.45+rng()*1.4;
+    ctx.fillStyle=rng()>.44?"rgba(255,255,255,.12)":"rgba(56,65,63,.10)";
+    ctx.fillRect(x,y,size,size);
+  }
+  for(let i=0;i<12;i++){
+    ctx.fillStyle="rgba(91,97,94,.028)";
+    ctx.fillRect(rng()*256,rng()*256,1+rng()*6,15+rng()*28);
+  }
+  return texture(THREE,canvas,{repeat:true});
+}
+// Flat rolled-bitumen roof: fine granular noise, no pitched shingles.
 export function makeRoofTexture(THREE){
   const {canvas,ctx}=makeCanvas(),rng=random(901);
-  ctx.fillStyle="#383f43";
+  ctx.fillStyle="#3c4143";
   ctx.fillRect(0,0,256,256);
-  for(let row=0;row<8;row++){
-    for(let col=-1;col<6;col++){
-      const x=col*55+(row%2)*27.5,y=row*32;
-      const c=Math.floor(57+rng()*20);
-      ctx.fillStyle=`rgb(${c},${c+5},${c+8})`;
-      ctx.fillRect(x+1,y+2,53,29);
-      ctx.fillStyle="rgba(14,19,22,.35)";
-      ctx.fillRect(x,y+30,55,2);
-      ctx.fillStyle="rgba(178,175,163,.075)";
-      ctx.fillRect(x+2,y+3,51,2);
-    }
-  }
-  for(let i=0;i<900;i++){
-    ctx.fillStyle=rng()>.5?"rgba(0,0,0,.08)":"rgba(213,214,201,.07)";
+  for(let i=0;i<1700;i++){
+    ctx.fillStyle=rng()>.52?"rgba(216,216,208,.06)":"rgba(4,6,8,.08)";
     ctx.fillRect(rng()*256,rng()*256,1+rng()*2,1+rng()*2);
   }
   return texture(THREE,canvas,{repeat:true});
@@ -140,55 +147,41 @@ export function installWorldBrickMapping(material,brickMap){
   material.needsUpdate=true;
   material.userData.miniCityBrickScale=[1.20,.64];
 }
+// Reuse the validated world-position UV shader with a light aggregate
+// atlas rather than the historic brick atlas. Panels/roof keep GPU
+// draw-call count fixed; all clear window materials remain untouched.
+export function installWorldPanelMapping(material,panelMap){
+  installWorldBrickMapping(material,panelMap);
+  material.customProgramCacheKey=()=>"mini-city-world-panel-v1";
+  material.userData.miniCityPanelScale=[1.20,.64];
+}
 export function applyFacadeFinishes(THREE,root){
-  if(root.userData?.facadeTextureReady)return root.userData.finishes;
-  const brick=makeBrickTexture(THREE);
-  const roofMap=makeRoofTexture(THREE);
-  const coolGlass=makeGlassTexture(THREE);
-  const warmGlass=makeGlassTexture(THREE,{lit:true});
-  const counts={worldAlignedBrickGroups:0,roofGroups:0,glazingGroups:0,
-    textures:4,glassLitGroups:0};
+  if(root.userData?.facadeTextureReady&&root.userData.finishes)
+    return root.userData.finishes;
+  const panel=makePanelTexture(THREE),roofMap=makeRoofTexture(THREE);
+  const counts={worldAlignedPanelGroups:0,worldAlignedBrickGroups:0,
+    roofGroups:0,glazingGroups:0,textures:2,glassLitGroups:0};
   for(const mesh of root.children){
     const mat=mesh.material;
     if(!mat?.color)continue;
     const original=mat.color.getHex();
-    if(original===0x977f78||original===0x92766e){
-      installWorldBrickMapping(mat,brick);
-      if(original===0x92766e)mat.color.setHex(0xe4dcda);
-      counts.worldAlignedBrickGroups++;
-    }else if(original===0x384b57||original===0xc3a37b){
-      const lit=original===0xc3a37b;
-      mat.map=lit?warmGlass:coolGlass;
-      mat.color.setHex(0xffffff);
-      mat.roughness=lit?.32:.19;
-      mat.metalness=lit?.05:.23;
-      if(lit){
-        mat.emissive.setHex(0xc5864d);
-        mat.emissiveIntensity=.80;
-        counts.glassLitGroups++;
-      }
-      mat.needsUpdate=true;
-      counts.glazingGroups++;
-    }else if(mesh.geometry?.getAttribute&&mesh.name?.includes("hipped pitched roof")){
-      const pos=mesh.geometry.getAttribute("position");
-      const uv=[];
-      for(let i=0;i<pos.count;i++){
-        // Top projection gives consistent tile size across four roof slopes.
-        uv.push(pos.getX(i)*.6,pos.getZ(i)*.7);
-      }
-      mesh.geometry.setAttribute("uv",new THREE.Float32BufferAttribute(uv,2));
+    if(original===0xc7c5bd||original===0xc0beb5){
+      installWorldPanelMapping(mat,panel);
+      counts.worldAlignedPanelGroups++;
+    }else if(mesh.name?.includes("flat five-storey roof")){
+      // BoxGeometry already carries ordinary UVs. Roof decking is a
+      // simple planar slab with a granular rolled-bitumen appearance.
       mat.map=roofMap;
       mat.color.setHex(0xffffff);
-      mat.roughness=.94;
-      mat.needsUpdate=true;
+      mat.roughness=.96;mat.needsUpdate=true;
       counts.roofGroups++;
     }
+    // Glass remains physically transparent; don't restore any older
+    // opaque black/amber window decal textures in Building Lab.
   }
   root.userData.facadeTextureReady=true;
   root.userData.provisionalMaterials=false;
   root.userData.stage="3.3";
   root.userData.finishes=counts;
-  // The canopy, balcony and sill materials remain lightweight, physically
-  // shaded solids. They are not falsely advertised as individually textured.
   return counts;
 }
