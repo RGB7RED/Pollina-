@@ -29,14 +29,14 @@ const entryPads=[-26.3625,-8.7875,8.7875,26.3625].map(x=>
 const entry=planPlayableEntrance(BUILDING,entryPads),x=entry.x,eps=1e-5;
 assert.equal(stair.floors,5);
 assert.equal(stair.firstFloor,2.09,"apartments one flight above vestibule");
-assert.equal(stair.foyerFloor,.70);
+assert.equal(stair.foyerFloor,0);
 assert.equal(stair.storeyRise,2.42);
 assert.equal(stair.flights,9,"1 entrance + 8 between five storeys");
 assert.equal(stair.treads,108);
 assert.equal(first.entryFlight.steps,12);
-assert.equal(first.entryFlight.bottom,.70);
+assert.equal(first.entryFlight.bottom,0);
 assert.equal(first.entryFlight.top,2.09);
-assert.ok(Math.abs(first.entryFlight.centreX-(entry.x+.90))<1e-8);
+assert.ok(Math.abs(first.entryFlight.centreX-(entry.x+.84))<1e-8);
 assert.ok(first.entryFlight.centreX>x);
 assert.ok(first.entryFlight.centreX+first.entryFlight.width/2<=x+1.72);
 assert.equal(audit.foyer.doorCount,1);
@@ -44,7 +44,7 @@ assert.equal(audit.foyer.mailboxLevel,3.30);
 assert.equal(first.entryFlight.minZ,entry.stair.bottomZ);
 assert.equal(first.entryFlight.maxZ,entry.stair.entryStartZ);
 assert.equal(first.stairwellWidth,3.44);
-assert.equal(stair.railing.flightWidth,1.46);
+assert.equal(stair.railing.flightWidth,1.52);
 assert.equal(stair.railing.frontGuardLinks,4);
 assert.equal(stair.railing.wallSideRails,0);
 assert.equal(stair.railing.innerGuardLinks,4);
@@ -74,11 +74,11 @@ const instances=meshes.flatMap(m=>m.matrices.map(t=>({
   transparent:m.material.transparent===true
 })));
 const entranceTreadLength=(entry.stair.entryStartZ-entry.stair.bottomZ)/12-.014;
-const treads=instances.filter(t=>Math.abs(t.scale.x-1.46)<eps&&
+const treads=instances.filter(t=>Math.abs(t.scale.x-1.52)<eps&&
   Math.abs(t.scale.z-entranceTreadLength)<eps);
 assert.equal(treads.length,24,"12 genuine two-layer entrance steps");
 assert.equal(new Set(treads.map(t=>t.position.y.toFixed(4))).size,24);
-const transverse=instances.filter(t=>Math.abs(t.scale.x-.34)<eps&&
+const transverse=instances.filter(t=>Math.abs(t.scale.x-.16)<eps&&
   Math.abs(t.scale.y-.08)<eps&&Math.abs(t.scale.z-.075)<eps&&
   Math.abs(t.position.x-x)<eps);
 assert.equal(transverse.length,3,"three full-floor inner shaft connectors; fifth has longer wall rail");
@@ -95,16 +95,16 @@ assert.deepEqual(audit.stairwellWindows.map(w=>w.floor),[1,1,2,2,3,3,4,4]);
 for(let i=0;i<8;i++){
   const w=audit.stairwellWindows[i];
   const turn=stair.firstFloor+(Math.floor(i/2)+.5)*stair.storeyRise;
-  assert.ok(Math.abs(w.bottom-turn-.72)<eps,"window sill just above its landing");
-  assert.ok(Math.abs(w.top-w.bottom-1.12)<eps,"full-size window");
+  assert.ok(Math.abs(w.bottom-turn-.68)<eps,"window sill just above its landing");
+  assert.ok(Math.abs(w.top-w.bottom-.91)<eps,"full-size window");
   assert.ok(w.transparent&&w.through,"real transparent pane");
   const mid=(w.top+w.bottom)/2;
   assert.ok(!audit.wallPieces.some(p=>p.axis==="long"&&p.side===1&&
     p.u0<w.centreX&&p.u1>w.centreX&&p.y0<mid&&p.y1>mid),
     "no opaque brick behind the transparent glazing");
 }
-assert.equal(entry.buildingObstacles.length,30);
-assert.equal(entry.groundHeight(x,5.25,.70),.70,"foyer remains at grade");
+assert.equal(entry.buildingObstacles.length,25);
+assert.equal(entry.groundHeight(x,5.25,0),0,"foyer remains at grade");
 assert.equal(entry.groundHeight(x,0,stair.firstFloor+stair.storeyRise),null,
   "upper central shaft cannot be walked on as an invisible floor");
 assert.ok(collidesAt(x,6.26,entry.buildingObstacles,PLAYER_RADIUS,3.30),
