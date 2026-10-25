@@ -76,7 +76,10 @@ export function buildApartmentHouse(THREE,config={}){
   const centreZ=(C.frontFacade+C.backFacade)/2;
   const floorLevel=floor=>C.firstFloor+floor*C.floorHeight;
   const bandStart=floor=>floor===0?C.plinth:floorLevel(floor);
-  const bandEnd=floor=>floorLevel(floor+1);
+  // The fifth-floor top band rises all the way to the NEW raised
+  // flat roof; otherwise a continuous 0.80m opening sits above the
+  // top windows between the old eaves and the new slab.
+  const bandEnd=floor=>floor===C.floors-1?shellTop:floorLevel(floor+1);
   const sillOffset=.64,regularWindowHeight=1.46;
   const mats={
     // Light pebble-grey concrete panels (not a brick texture).
