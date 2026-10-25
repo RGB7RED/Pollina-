@@ -43,7 +43,7 @@ assert.equal(stair.landing.endDoorsPerFloor,0);
 assert.deepEqual(stair.landing.sideDoorPositions,[-2.42,-4.0]);
 assert.equal(stair.apartmentDoors.length,20);
 assert.deepEqual(stair.apartmentDoors.map(d=>d.number),
-  Array.from({length:20},(_,i)=>i+1));
+  [3,4,1,2,...Array.from({length:16},(_,i)=>i+5)]);
 for(let f=1;f<=5;f++){
   const doors=stair.apartmentDoors.filter(d=>d.floor===f);
   assert.deepEqual(doors.map(d=>d.orientation),["left","left","right","right"]);
