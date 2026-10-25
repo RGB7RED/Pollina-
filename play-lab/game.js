@@ -2,7 +2,7 @@ import * as THREE from "three";
 import {GLTFLoader} from "three/addons/loaders/GLTFLoader.js";
 import {buildApartmentHouse} from "../building-lab/building.js";
 import {planFirstApartment,buildFirstApartment} from "./apartment.js";
-import {planFirstFloor,buildFirstFloor} from "./first-floor.js";
+import {planFirstFloor,buildFirstFloor} from "./first-floor.js?v=474";
 import {applyFacadeFinishes} from "../building-lab/materials.js";
 import {ActorAnimator} from "./animation.js";
 import {planStreet,buildStreet} from "./street.js";
