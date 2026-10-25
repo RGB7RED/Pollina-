@@ -704,8 +704,10 @@ export function buildApartmentHouse(THREE,config={}){
         }
         radiators.push({floorFrom:i+1,floorTo:i+2,
           landingY,x,y:radY,z:radZ,width:1.32,height:.59,
-          windowSillY:landingY+ENTRY_GLAZING.sillOffset,
-          clearance:ENTRY_GLAZING.sillOffset-.595});
+          // Sill metadata must follow the *actual* raised window opening,
+          // while the radiator stays safely mounted at landing level.
+          windowSillY:landingY+rise+ENTRY_GLAZING.sillOffset,
+          clearance:rise+ENTRY_GLAZING.sillOffset-.595});
       }
       audit.heating={riser:radiatorRiser,radiators,
         windowWallZ:facadeInnerZ,instanced:true};
