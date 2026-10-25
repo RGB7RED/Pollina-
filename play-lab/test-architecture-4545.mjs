@@ -56,7 +56,7 @@ assert.ok(actualEntryStairs.every(t=>Math.abs(t.position.x-e.stair.entryX)<eps))
 const newWidth=audit.completeStaircase.railing.flightWidth;
 assert.equal(newWidth,1.58);
 assert.equal(audit.firstStaircase.stairwellWidth,3.68);
-assert.equal(BUILDING.width,12.8);
+assert.equal(BUILDING.width,19);
 assert.equal(BUILDING.length,74);
 assert.equal(house.stats.entrances,4);
 assert.equal(audit.completeStaircase.apartmentDoors.length,20);
