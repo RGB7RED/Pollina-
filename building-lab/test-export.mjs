@@ -97,7 +97,7 @@ class InstancedMesh extends Mesh{
 const THREE={Group:Obj,Object3D:Obj,Mesh,InstancedMesh,MeshStandardMaterial:Material,
  BoxGeometry,BufferGeometry,BufferAttribute:Attribute,Float32BufferAttribute:Attribute,
  Matrix4,Matrix3,Vector3:V3,DoubleSide:2};
-const brickTexture={name:"brick atlas"};
+const panelTexture={name:"precast concrete atlas"};
 const exporterClass=class{
  async parseAsync(root,options){
   assert.equal(options.binary,true);
@@ -111,25 +111,25 @@ const exporterClass=class{
  }
 };
 const {makePortableHouse,encodeHouseGLB}=new Function(
- "GLTFExporter","makeBrickTexture",exportCode.replace(/^import[^\n]*\n/gm,"")
+ "GLTFExporter","makePanelTexture",exportCode.replace(/^import[^\n]*\n/gm,"")
   .replace(/^export /gm,"")+"\nreturn {makePortableHouse,encodeHouseGLB};"
-)(exporterClass,()=>brickTexture);
+)(exporterClass,()=>panelTexture);
 const {root,stats}=buildApartmentHouse(THREE);
 const masonry=root.children.filter(m=>m.isInstancedMesh &&
- (m.material.color.getHex()===0x977f78||m.material.color.getHex()===0x92766e));
+ (m.material.color.getHex()===0xc7c5bd||m.material.color.getHex()===0xc0beb5));
 assert.equal(masonry.length,2);
 for(const m of masonry){
- m.material.customProgramCacheKey=()=>"mini-city-world-brick-v1";
- m.material.userData.miniCityBrickScale=[1.2,.64];
+ m.material.customProgramCacheKey=()=>"mini-city-world-panel-v1";
+ m.material.userData.miniCityPanelScale=[1.2,.64];
 }
 const sourceNodes=root.children.length;
-const out=makePortableHouse(THREE,root,{brickTexture});
+const out=makePortableHouse(THREE,root,{panelTexture});
 assert.equal(out.stats.bakedWallParts,root.userData.geometryAudit.wallPieces.length);
 assert.equal(out.stats.roofs,1);
 assert.equal(out.root.children.length,sourceNodes);
 assert.equal(out.root.children.filter(m=>m.name==="masonry_world_baked").length,2);
 assert.equal(out.root.children.filter(m=>m.isInstancedMesh).length,
- sourceNodes-5,"brick replaced, roof and both hinged-door groups preserved");
+ sourceNodes-5,"panel batches baked, roof and both hinged-door groups preserved");
 for(const m of out.root.children.filter(m=>m.name==="masonry_world_baked")){
  const uv=m.geometry.getAttribute("uv");
  const pos=m.geometry.getAttribute("position");
@@ -137,7 +137,7 @@ for(const m of out.root.children.filter(m=>m.name==="masonry_world_baked")){
  assert.equal(pos.count,masonry.find(a=>a.material.color.getHex()===m.material.color.getHex())?.count*36||pos.count);
  assert.equal(uv.count,pos.count);
  assert.equal(nor.count,pos.count);
- assert.equal(m.material.map,brickTexture);
+ assert.equal(m.material.map,panelTexture);
  const zFacing=Math.abs(nor.getZ(0))>=.9;
  if(zFacing){
   assert.ok(Math.abs(uv.getX(0)-pos.getX(0)/1.2)<.00002);
@@ -150,4 +150,4 @@ assert.equal(stats.downpipes,10);
 assert.equal(root.userData.stage,"3.2","export cannot mutate source geometry");
 const {buffer}=await encodeHouseGLB(THREE,root);
 assert.ok(buffer.byteLength>2048);
-console.log("GLB stage 3.4 export PASS: source intact; masonry baked to world-metre UV; instanced details kept; valid mock GLB header");
+console.log("GLB stage 3.4 export PASS: source intact; concrete panels baked to world-metre UV; instanced details kept; valid mock GLB header");
