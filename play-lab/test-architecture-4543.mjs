@@ -33,7 +33,7 @@ assert.equal(a.completeStaircase.flights,9);
 assert.equal(a.completeStaircase.apartmentDoors.length,20);
 assert.deepEqual(a.completeStaircase.apartmentDoors.map(d=>d.number),
   Array.from({length:20},(_,i)=>i+1));
-assert.equal(opposite.facadeOuterZ,BUILDING.width/2);
+assert.equal(opposite.facadeOuterZ,BUILDING.frontFacade);
 assert.ok(opposite.upperTurnEndZ>5.8);
 assert.ok(opposite.upperTurnEndZ<opposite.facadeInnerZ);
 assert.ok(opposite.facadeInnerZ<opposite.facadeOuterZ);
@@ -52,7 +52,7 @@ assert.deepEqual(a.stairwellWindows.map(w=>w.floor),[1,2,3,4]);
 assert.ok(a.stairwellWindows.every(w=>w.transparent&&w.through&&
   Math.abs(w.centreX-x)<.001));
 assert.ok(a.stairwellWindows.every(w=>w.top>w.bottom&&
-  w.wallZ<BUILDING.width/2));
+  w.wallZ<BUILDING.frontFacade));
 // Brick strips must NOT cross the middle of any clear window opening.
 for(const w of a.stairwellWindows){
   const midY=(w.bottom+w.top)/2;
