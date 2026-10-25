@@ -7,7 +7,7 @@ import {applyFacadeFinishes} from "../building-lab/materials.js";
 import {ActorAnimator} from "./animation.js";
 import {planStreet,buildStreet} from "./street.js";
 import {planPlayableEntrance} from "./entrance.js?v=476";
-import {DeveloperStudio} from "./studio.js";
+import {DeveloperStudio} from "./studio.js?v=477";
 import {FreeSceneCamera} from "./free-camera.js";
 import {PlayerController,joystickValue,PLAYER_HEIGHT} from "./controller.js";
 
@@ -70,14 +70,6 @@ const studio=new DeveloperStudio({
 const freeCamera=new FreeSceneCamera();
 let modeBefore=studio.mode,actorLoadStarted=false;
 actorPivot.visible=studio.mode==="game";
-$("hud-toggle").addEventListener("click",()=>{
-  const collapsed=document.querySelector(".brand").classList.toggle("collapsed");
-  $("hud-toggle").setAttribute("aria-expanded",String(!collapsed));
-  $("hud-toggle").textContent=collapsed?"▾ Показать описание":"▴ Свернуть описание";
-});
-$("world-info").textContent="4.5.4: 5 этажей без лифта · 20 дверей квартир в подъезде №1 · "+streetPlan.info.trees+
-  " деревьев · "+streetPlan.info.lamps+" фонарей · "+
-  streetPlan.info.benches+" скамейки";
 actorPivot.position.set(controller.position.x,0,controller.position.z);
 let actor=null,animator=null,ready=false,activeRequest=0;
 const loader=new GLTFLoader();
