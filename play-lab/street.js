@@ -58,6 +58,12 @@ export function planStreet(building,pads=[],options={}){
   if(!Number.isFinite(building?.length)||!Number.isFinite(building?.width))
     throw Error("House dimensions are required to plan a street");
   const c=STREET_LAYOUT;
+  // Rear facade is allowed to move, but the street-facing Z=+6.4
+  // and sidewalks stay exactly where the player expects them.
+  // Use relative setbacks so deepening the house never buries the
+  // rear courtyard pavement, benches, or trees under its new wall.
+  const rear=building.backFacade??-building.width/2;
+  const rearPath=[rear-6.15,rear-1.65];
   const surfaces=[
     rect("grass",0,0,c.worldWidth,c.worldDepth,-.10),
     rect("front-sidewalk",0,(c.sidewalkNear[0]+c.sidewalkNear[1])/2,
@@ -66,8 +72,8 @@ export function planStreet(building,pads=[],options={}){
       c.length,c.roadFar-c.roadNear,-.065),
     rect("opposite-sidewalk",0,(c.sidewalkFar[0]+c.sidewalkFar[1])/2,
       c.length,c.sidewalkFar[1]-c.sidewalkFar[0],-.055),
-    rect("rear-service-path",0,(c.rearPath[0]+c.rearPath[1])/2,
-      c.length-16,c.rearPath[1]-c.rearPath[0],-.065),
+    rect("rear-service-path",0,(rearPath[0]+rearPath[1])/2,
+      c.length-16,rearPath[1]-rearPath[0],-.065),
     // Small footpaths connect the rear courtyard to both street ends.
     rect("side-path-left",-42,-1.1,3.1,24,-.065),
     rect("side-path-right",42,-1.1,3.1,24,-.065)
@@ -84,13 +90,13 @@ export function planStreet(building,pads=[],options={}){
   const trees=options.furniture===false?[]:[
     ...[-41,-29,-16,16,29,41].map(x=>({x,z:14.40,row:"front"})),
     ...[-44,-32,-20,-8,8,20,32,44].map(x=>({x,z:28.55,row:"opposite"})),
-    ...[-42,-30,-18,-6,6,18,30,42].map(x=>({x,z:-20.1,row:"courtyard"}))
+    ...[-42,-30,-18,-6,6,18,30,42].map(x=>({x,z:rear-10.5,row:"courtyard"}))
   ];
   const lamps=options.furniture===false?[]:[
     ...[-35,-10,10,35].map(x=>({x,z:15.27,row:"front"})),
     ...[-35,35].map(x=>({x,z:26.15,row:"opposite"}))
   ];
-  const benches=options.furniture===false?[]:[-30,-12,12,30].map(x=>({x,z:-16.50}));
+  const benches=options.furniture===false?[]:[-30,-12,12,30].map(x=>({x,z:rear-6.90}));
   const obstacles=[
     ...trees.map((t,i)=>obstruction("tree-"+i,t.x,t.z,.35,.35)),
     ...lamps.map((t,i)=>obstruction("lamp-"+i,t.x,t.z,.25,.25)),
@@ -98,7 +104,6 @@ export function planStreet(building,pads=[],options={}){
   ];
   // Stop accidental scene changes from placing scenery into walls, door
   // slabs or on the initial player spawn. Collision and art share this plan.
-  const rear=building.backFacade??-building.width/2;
   const front=building.frontFacade??building.width/2;
   const house=obstruction("house",0,(front+rear)/2,
     building.length/2,(front-rear)/2);
@@ -117,6 +122,7 @@ export function planStreet(building,pads=[],options={}){
     buildingPresent:options.buildingPresent!==false
   });
   return {surfaces,markings,trees,lamps,benches,obstacles,grassTufts,
+    facadeSetbacks:{back:rear,front,rearPath,treeLine:rear-10.5,benchLine:rear-6.9},
     curbs:[rect("curb",0,c.roadNear,c.length,.18,.025),
       rect("curb",0,c.roadFar,c.length,.18,.025)],
     info:{trees:trees.length,lamps:lamps.length,benches:benches.length,
