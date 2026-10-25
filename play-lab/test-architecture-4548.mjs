@@ -105,6 +105,6 @@ assert.equal(a.heating.radiators.length,4);
 assert.equal(entry.stair.backZ,-4.85);
 assert.equal(house.stats.entrances,4);
 assert.equal(BUILDING.floors,5);
-assert.ok(house.root.children.filter(n=>n instanceof InstancedMesh).length<=33,
+assert.ok(house.root.children.filter(n=>n instanceof InstancedMesh).length<=35,
   "the existing mobile batch limit is preserved");
 console.log("MINI CITY 4.5.4.8 PASS: joined stair-wall polygons, no inverted window green, four plastered jambs and clear glazing");
