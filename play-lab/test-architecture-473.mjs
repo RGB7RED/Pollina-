@@ -113,6 +113,39 @@ for(const z of [(BUILDING.backFacade+mid)/2,
   s.minX<=x&&s.maxX>=x&&s.minZ<=z&&s.maxZ>=z&&
   s.minY<=y&&s.maxY>=y),"end sash not plastered over");
 }
+// Check the COMPLETE fifth-storey-free first-floor glass aperture, not
+// just its middle. A real panel end window used to be sliced by the
+// rear bedroom boundary, despite the old centre-point assertion passing.
+const glassOverlap=(a,b,c,d)=>Math.min(b,d)-Math.max(a,c)>.001;
+const west=plan.wings.find(w=>w.side===-1);
+const endSill=plan.y+.64,endHead=endSill+1.46;
+for(const z of [(BUILDING.backFacade+mid)/2,
+ (mid+BUILDING.frontFacade)/2]){
+  const blocking=plan.segments.filter(s=>
+    glassOverlap(s.minX,s.maxX,west.minX-.07,west.minX+.07)&&
+    glassOverlap(s.minZ,s.maxZ,z-.695,z+.695)&&
+    glassOverlap(s.minY,s.maxY,endSill,endHead));
+  assert.deepEqual(blocking.map(s=>s.name),[],
+    "whole end-window sash must be clear, z="+z);
+}
+// Also audit the ENTIRE first-floor width of each active front/rear
+// apartment window against newly generated interior wall geometry.
+for(const wing of plan.wings){
+ for(const g of audit.windowGlazing.filter(g=>g.opening.axis==="long"&&
+      g.opening.bottom>plan.y&&g.opening.bottom<plan.y+2.5&&
+      g.opening.centre>wing.minX+.70&&
+      g.opening.centre<wing.maxX-.70)){
+   const h=g.opening;
+   const z=g.opening.side===1?
+     BUILDING.frontFacade-.35:BUILDING.backFacade+.35;
+   const covering=plan.segments.filter(s=>
+     glassOverlap(s.minX,s.maxX,h.centre-h.width/2,h.centre+h.width/2)&&
+     glassOverlap(s.minZ,s.maxZ,z-.05,z+.05)&&
+     glassOverlap(s.minY,s.maxY,h.bottom+.12,h.top-.12));
+   assert.deepEqual(covering.map(s=>s.name),[],
+     "interior partition covers a live glazed facade bay at x="+h.centre);
+ }
+}
 const player=new PlayerController({building:BUILDING,pads:audit.entryPads,entry,
  spawn:{x:entry.x,z:10.85}});
 assert.ok(player.setEntryDoorOpen(true));
