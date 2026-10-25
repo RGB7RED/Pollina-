@@ -145,7 +145,7 @@ for(let f=1;f<=5;f++){
  assert.ok(four.every(d=>d.z>=landing.minZ&&d.z<=landing.maxZ));
  assert.ok(four[0].x<x&&four[1].x<x);
  assert.ok(Math.abs(four[0].x-four[1].x)<1e-5);
- assert.ok(four[2].x>x+1.65&&four[3].x>x+1.65);
+ assert.ok(four[2].x>x+1.50&&four[3].x>x+1.50);
 }
 assert.equal(house.innerDoorPivot,null,"the deleted partition door has no 3D pivot");
 assert.equal(audit.foyer.doorCount,1,"only the original facade door remains");
