@@ -65,7 +65,7 @@ assert.equal(instances.filter(t=>Math.abs(t.scale.x-.083)<eps&&
   "four 10-rib radiators near real windows");
 for(let i=0;i<4;i++){
   const w=a.stairwellWindows[i*2],rad=a.heating.radiators[i];
-  assert.ok(Math.abs(w.bottom-(rad.windowSillY-.08))<eps);
+  assert.ok(Math.abs(w.bottom-rad.windowSillY)<eps);
   assert.ok(w.transparent&&w.through);
   assert.ok(rad.y+rad.height/2<w.bottom-.07);
   assert.ok(collidesAt(x,BUILDING.frontFacade-.50,e.buildingObstacles,
