@@ -47,10 +47,10 @@ assert.equal(a.completeStaircase.landing.maxZ,-1.58);
 assert.equal(a.completeStaircase.landing.doorsPerFloor,4);
 // Glazing is physically in FOUR relocated apertures of the original +Z
 // masonry, one per intermediate landing, with no half-window occlusion.
-assert.equal(a.stairwellWindows.length,4);
-assert.deepEqual(a.stairwellWindows.map(w=>w.floor),[1,2,3,4]);
+assert.equal(a.stairwellWindows.length,8);
+assert.deepEqual(a.stairwellWindows.map(w=>w.floor),[1,1,2,2,3,3,4,4]);
 assert.ok(a.stairwellWindows.every(w=>w.transparent&&w.through&&
-  Math.abs(w.centreX-x)<.001));
+  Math.abs(Math.abs(w.centreX-x)-.56)<.001));
 assert.ok(a.stairwellWindows.every(w=>w.top>w.bottom&&
   w.wallZ<BUILDING.frontFacade));
 // Brick strips must NOT cross the middle of any clear window opening.
