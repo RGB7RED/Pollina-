@@ -1184,7 +1184,9 @@ export function buildApartmentHouse(THREE,config={}){
   audit.windowTypes=[...audit.windowTypes].sort();
   root.userData={
     stage:"3.2",config:C,counters:stats,roofTop,windowPlan:plan,
-    geometryAudit:audit,provisionalMaterials:false,facadeTextureReady:true
+    // Base panel materials are valid in Play Lab immediately; Building Lab
+    // may additionally install a lightweight world-aligned concrete atlas.
+    geometryAudit:audit,provisionalMaterials:false,facadeTextureReady:false
   };
   return {root,config:C,stats,roofTop,doorPivot:playableDoor,
     innerDoorPivot:foyerDoor};
