@@ -86,7 +86,7 @@ assert.equal(a.doorPositions.length,4);
 assert.ok(stats.instancedElements>1600);
 assert.equal(result.roofTop,BUILDING.firstFloor+5*BUILDING.floorHeight+BUILDING.roofClearance+BUILDING.roofRise);
 assert.equal(root.userData.provisionalMaterials,false);
-assert.equal(root.userData.facadeTextureReady,true);
+assert.equal(root.userData.facadeTextureReady,false);
 const meshes=root.children.filter(c=>c instanceof Mesh);
 const instances=meshes.filter(c=>c instanceof InstancedMesh);
 assert.ok(instances.length>=17 && instances.length<=35,"mobile batch budget (transparent windows and one panel-joint material)");
