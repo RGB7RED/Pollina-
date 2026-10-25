@@ -693,7 +693,7 @@ export function buildApartmentHouse(THREE,config={}){
       const radiators=[];
       for(let i=0;i<C.floors-1;i++){
         const landingY=baseFloor+i*storeyRise+rise;
-        const radY=landingY+.40;
+        const radY=landingY+.30; // lowered 10cm for shorter paired landing windows
         const radZ=facadeInnerZ-.17;
         // Backplate, two horizontal manifolds, 10 heat-dissipating ribs.
         box(1.24,.56,.055,mats.frameWhite,x,radY,radZ+.038);
@@ -712,7 +712,7 @@ export function buildApartmentHouse(THREE,config={}){
         }
         radiators.push({floorFrom:i+1,floorTo:i+2,
           landingY,x,y:radY,z:radZ,width:1.32,height:.59,
-          windowSillY:landingY+.80,clearance:.80-.695});
+          windowSillY:landingY+.72,clearance:.72-.595});
       }
       audit.heating={riser:radiatorRiser,radiators,
         windowWallZ:facadeInnerZ,instanced:true};
