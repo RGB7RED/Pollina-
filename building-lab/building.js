@@ -232,7 +232,7 @@ export function buildApartmentHouse(THREE,config={}){
       transparent:glassMat.transparent===true,opacity:glassMat.opacity,
       frontDepth:facadeExtent-.17,glassDepth:facadeExtent-.235});
     if(isStairWindow)audit.stairwellWindows.push({
-      floor:Math.round((bottom-(C.firstFloor+C.floorHeight/2+.80))/C.floorHeight)+1,
+      floor:Math.round((bottom-(C.firstFloor+C.floorHeight+ENTRY_GLAZING.sillOffset))/C.floorHeight)+1,
       centreX:centre,bottom,top,width,wallZ:axis==="long"?facadeZ(side)-side*.16:side*(facadeExtent-.16),
       through:true,transparent:glassMat.transparent===true,type:"facade-bay"
     });
@@ -953,6 +953,9 @@ export function buildApartmentHouse(THREE,config={}){
   audit.decksReachRearFacade=deckAudit.every(d=>
     d.z0>C.backFacade&&d.z0<C.backFacade+.40);
   const plan=planFacade(C);
+  // Stage 4.7.8 alignment fix: first stairwell paired sashes must have
+  // EXACTLY the same sill levels as entrances 2–4 (residential floors 2–5).
+  const stairWindowBaseY=floorLevel(1)+ENTRY_GLAZING.sillOffset;
   audit.firstFloorWindowHoles=[];
   const step=(C.length-3.7)/C.windowBays;
   for(const side of [-1,1]){
@@ -970,8 +973,8 @@ export function buildApartmentHouse(THREE,config={}){
     }
     // All window bays now use the same common, aligned residential levels.
     // Bay over the FIRST doorway is one continuous 5-storey stairwell.
-    // Its four windows are cut separately below, at stair LANDING heights
-    // instead of regular apartment-window heights, to avoid half windows.
+    // Its four paired windows are cut below at the SAME heights as bays
+    // 10/17/24, not half a storey lower above the first canopy.
     if(w.side===1&&w.bay===ENTRANCE_BAYS[0]&&w.floor>0)continue;
     const y0=bandStart(w.floor),y1=bandEnd(w.floor);
     // At every other entrance use TWO distinct small stair windows,
@@ -992,9 +995,8 @@ export function buildApartmentHouse(THREE,config={}){
     const openingWidth=isDoor?1.71:balcony?1.44:1.40;
     const low=isDoor?FOYER_GROUND:floorLevel(w.floor)+(balcony?.15:sillOffset);
     const height=isDoor?2.42:balcony?2.20:regularWindowHeight;
-    // The first entrance window sits below the old 2F boundary; trim
-    // the entry-door masonry at the FIRST actual stair-window sill.
-    const entryColumnTop=C.firstFloor+C.floorHeight/2+ENTRY_GLAZING.sillOffset-.035;
+    // Door masonry stops just under the first aligned stairwell windows.
+    const entryColumnTop=stairWindowBaseY-.035;
     const moduleTop=isDoor&&w.bay===ENTRANCE_BAYS[0]?entryColumnTop:y1;
     const hole=punch("long",side,centre-step/2,centre+step/2,
       isDoor?0:y0,moduleTop,
@@ -1009,20 +1011,20 @@ export function buildApartmentHouse(THREE,config={}){
         audit.firstFloorWindowHoles.push(hole);
     }
   }
-  // Actual TWO short glazing apertures beside the stair-panel joint.
-  // Each is .84m wide and 1.12m high; center pier remains solid.
+  // Actual TWO large horizontal glazed apertures on either side of
+  // the stair-panel seam, now aligned with every other entrance bay.
   const entryBay=plan.find(w=>w.entrance&&w.bay===ENTRANCE_BAYS[0]);
   const wx=entryBay.x,spanLeft=wx-step/2,spanRight=wx+step/2;
   const pairOffset=ENTRY_GLAZING.offset,paneWidth=ENTRY_GLAZING.width,paneHalf=paneWidth/2;
   const outerEdge=pairOffset+paneHalf,innerEdge=pairOffset-paneHalf;
-  const columnStart=C.firstFloor+C.floorHeight/2+ENTRY_GLAZING.sillOffset-.035;
+  const columnStart=stairWindowBaseY-.035;
   wallStrip("long",1,spanLeft,wx-outerEdge,columnStart,shellTop,mats.brick);
   wallStrip("long",1,wx+outerEdge,spanRight,columnStart,shellTop,mats.brick);
   let priorTop=columnStart;
   const stairPairApertures=[];
   for(let i=0;i<C.floors-1;i++){
-    const midY=C.firstFloor+(i+.5)*C.floorHeight;
-    const bottom=midY+ENTRY_GLAZING.sillOffset,height=ENTRY_GLAZING.height,
+    const bottom=stairWindowBaseY+i*C.floorHeight,
+      height=ENTRY_GLAZING.height,
       top=bottom+height;
     if(bottom<priorTop||top>=shellTop)
       throw Error("Paired stair glazing intersects another window or roof");
@@ -1050,18 +1052,15 @@ export function buildApartmentHouse(THREE,config={}){
   const innerHalfWidth=STAIR_PROFILE.halfWidth-.085; // inside staircase finish, no intrusion into flats
   const firstMid=C.firstFloor+C.floorHeight/2;
   const windowIntervals=Array.from({length:C.floors-1},(_,i)=>{
-    const lo=firstMid+i*C.floorHeight+ENTRY_GLAZING.sillOffset;
+    const lo=stairWindowBaseY+i*C.floorHeight;
     return {bottom:lo,top:lo+ENTRY_GLAZING.height};
   });
   // Preserve the ORIGINAL operable entrance opening as well.
   const entryDoorVoid={bottom:FOYER_GROUND,top:FOYER_GROUND+2.42,
     halfWidth:1.71/2};
-  // Paint the GREEN DADO up to the SAME 1.18m height as both side
-  // walls. The green zone surrounds only the BOTTOM of each window,
-  // leaving its upper sash against cream plaster. In 4.5.4.7 a band
-  // restarted near the window top because it followed an apartment
-  // floor modulo and restarted halfway through each window, producing
-  // an inverted green strip across the top of the real glass.
+  // Keep existing landing-level green dado bands unchanged, but finish
+  // EVERY raised window aperture in cream: green must not jump across
+  // the top of glazing when an upper landing paint band overlaps it.
   const greenBands=Array.from({length:C.floors-1},(_,i)=>{
     const landingY=firstMid+i*C.floorHeight;
     return {bottom:landingY-.12,top:landingY+1.18};
@@ -1078,10 +1077,10 @@ export function buildApartmentHouse(THREE,config={}){
     const midY=(y0+y1)/2;
     // Never restart green near the TOP of an opening. The lower green
     // dado is aligned across the side/front wall corner at +1.18m.
-    const lower=midY<1.20||
-      greenBands.some(b=>midY>=b.bottom&&midY<b.top);
-    const mat=lower?mats.foyerLower:mats.foyerPaint;
     const windowOpen=windowIntervals.some(w=>midY>w.bottom&&midY<w.top);
+    const lower=!windowOpen&&(midY<1.20||
+      greenBands.some(b=>midY>=b.bottom&&midY<b.top));
+    const mat=lower?mats.foyerLower:mats.foyerPaint;
     const doorwayOpen=midY>entryDoorVoid.bottom&&midY<entryDoorVoid.top;
     const ranges=windowOpen
       ?[[-innerHalfWidth,-outerEdge],[-innerEdge,innerEdge],[outerEdge,innerHalfWidth]]
