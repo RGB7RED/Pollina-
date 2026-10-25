@@ -64,8 +64,8 @@ assert.equal(instances.filter(t=>Math.abs(t.scale.x-.083)<eps&&
   Math.abs(t.scale.y-.53)<eps&&Math.abs(t.scale.z-.12)<eps).length,40,
   "four 10-rib radiators near real windows");
 for(let i=0;i<4;i++){
-  const w=a.stairwellWindows[i],rad=a.heating.radiators[i];
-  assert.ok(Math.abs(w.bottom-rad.windowSillY)<eps);
+  const w=a.stairwellWindows[i*2],rad=a.heating.radiators[i];
+  assert.ok(Math.abs(w.bottom-(rad.windowSillY-.08))<eps);
   assert.ok(w.transparent&&w.through);
   assert.ok(rad.y+rad.height/2<w.bottom-.07);
   assert.ok(collidesAt(x,BUILDING.frontFacade-.50,e.buildingObstacles,
@@ -78,14 +78,14 @@ assert.ok(a.stairwellInterior.plasterPanels>=20);
 assert.equal(a.stairwellInterior.windowApertures.length,4);
 // Crucial: no pale/green panel can cover any window aperture.
 // Compare ACTUAL batched transforms instead of relying on audit claims.
-for(const pane of a.stairwellInterior.windowApertures){
+for(const pane of a.stairwellPairedApertures){
   const crossing=instances.filter(t=>Math.abs(t.position.z-
        a.stairwellInterior.wallZ)<eps&&Math.abs(t.scale.z-.025)<eps&&
     (t.materialColor===0x76978d||t.materialColor===0xd0c9b1)&&
     t.position.y-t.scale.y/2<pane.top-eps&&
     t.position.y+t.scale.y/2>pane.bottom+eps&&
-    t.position.x-t.scale.x/2<x+.70-eps&&
-    t.position.x+t.scale.x/2>x-.70+eps);
+    t.position.x-t.scale.x/2<pane.centre+pane.width/2-eps&&
+    t.position.x+t.scale.x/2>pane.centre-pane.width/2+eps);
   assert.equal(crossing.length,0,
     "paint may only cover the SOLID portion of the facade beside windows");
 }
@@ -100,8 +100,8 @@ const doorCover=instances.filter(t=>Math.abs(t.position.z-
     t.position.x-t.scale.x/2<x+doorHole.halfWidth-eps&&
     t.position.x+t.scale.x/2>x-doorHole.halfWidth+eps);
 assert.equal(doorCover.length,0,"the only real street door is not plastered over");
-assert.equal(a.slopedWallFinish.bands,8,
-  "eight accurately joined green paint bands along four double flights");
+assert.equal(a.slopedWallFinish.bands,9,
+  "entry flight plus eight accurate U-flight paint bands");
 assert.equal(a.slopedWallFinish.noTiltedBoxes,true,
   "the old tilted stair-wall paint cubes must not return");
 assert.equal(stair.floors,5);
