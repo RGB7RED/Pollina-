@@ -59,18 +59,18 @@ assert.ok(plan.segments.every(w=>w.maxX<=right.maxX+plan.wall/2+.001),
 assert.equal(plan.contains(centre(7),0,plan.y),false,
   "next apartment area must not be claimed by the first entrance");
 assert.deepEqual(plan.doors.map(d=>({number:d.number,side:d.side,z:d.z})),[
-  {number:3,side:-1,z:-2.42},{number:4,side:-1,z:-4},
+  {number:4,side:-1,z:-2.42},{number:3,side:-1,z:-4},
   {number:1,side:1,z:-2.42},{number:2,side:1,z:-4}
 ]);
 assert.deepEqual(audit.completeStaircase.apartmentDoors.slice(0,4)
-  .map(d=>d.number),[3,4,1,2],
+  .map(d=>d.number),[4,3,1,2],
   "real stairwell registry and rendered doors use the same numbers");
-assert.deepEqual([1,2,3,4].map(n=>plan.roomCount(n)),[3,1,1,2]);
+assert.deepEqual([1,2,3,4].map(n=>plan.roomCount(n)),[3,2,2,1]);
 assert.deepEqual(plan.doors.map(d=>d.variant),["grey","brown","blue","dark"],
   "all original door materials remain at their previous physical locations");
 assert.deepEqual(plan.windowConflicts,[]);
 const built=buildFirstFloor(THREE,plan);
-assert.deepEqual([...built.doorPivots.keys()],[3,4,1,2]);
+assert.deepEqual([...built.doorPivots.keys()],[4,3,1,2]);
 assert.deepEqual(plan.doorBlockers.map(d=>d.name),[
-  "flat-3-closed","flat-4-closed","flat-1-closed","flat-2-closed"]);
+  "flat-4-closed","flat-3-closed","flat-1-closed","flat-2-closed"]);
 console.log("MINI CITY 4.7.4 PASS: three entire windows, zero next-bay overlap, corrected 1–4 numbering");
