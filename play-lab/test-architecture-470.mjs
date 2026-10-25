@@ -119,7 +119,7 @@ for(const family of ["door","window","heating","lighting","utility"]){
   assert.ok(part.root.children.length>=1);
   assert.equal(item.quantity,
     item.id.startsWith("facade_window")?
-      [94,63,63,62][Number(item.modelNumber)-1]:item.quantity);
+      [96,65,67,64][Number(item.modelNumber)-1]:item.quantity);
  }
 }
 const source=readFileSync(new URL("./game.js",import.meta.url),"utf8");
