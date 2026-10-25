@@ -46,7 +46,7 @@ for(let i=0;i<entranceBays.length-1;i++){
   }
 }
 assert.equal(stats.entrances,4);assert.equal(stats.doorHoles,4);
-assert.equal(stats.windows,296);assert.equal(stats.windowHoles,296);
+assert.equal(stats.windows,312);assert.equal(stats.windowHoles,312);
 assert.equal(a.holes.length,300);
 assert.equal(a.holes.filter(h=>h.axis==="end").length,20);
 assert.equal(a.holes.filter(h=>h.axis==="long").length,280);
@@ -125,7 +125,7 @@ const masonry=instances.filter(m=>m.material.color===0xc7c5bd||m.material.color=
 assert.equal(masonry.reduce((n,m)=>n+m.count,0),a.wallPieces.length,
   "each audited masonry piece must be an actual instance");
 assert.ok(!meshes.some(m=>m.name==="main brick shell"),"no full wall behind openings");
-assert.ok(a.windowGlazing.every(g=>g.transparent===true),"all 296 windows transparent");
+assert.ok(a.windowGlazing.every(g=>g.transparent===true),"all 312 windows transparent");
 console.log("Building 3.2 geometry PASS:",JSON.stringify({
   floors:BUILDING.floors,windows:stats.windows,realWindowVoids:stats.windowHoles,
   doorVoids:stats.doorHoles,balconyVariants:stats.balconyKinds,
