@@ -73,10 +73,11 @@ for(let i=0;i<4;i++){
   const band=a.stairwellInterior.greenBands[i];
   assert.ok(Math.abs(band.top-(landing+1.18))<eps);
   assert.ok(band.bottom<opening.bottom);
-  assert.ok(band.top>opening.bottom&&band.top<opening.top-.30,
-    "green only surrounds LOWER side of the window");
-  assert.ok(i===3||a.stairwellInterior.greenBands[i+1].bottom>
-    opening.top,"the next green band cannot cross the top sash");
+  assert.ok(band.top<opening.bottom,
+    "original lower landing green paint stops before raised window");
+  if(i>0)assert.ok(Math.abs(opening.bottom-
+    a.stairwellInterior.windowApertures[i-1].bottom-2.42)<eps,
+    "aligned window rows are exactly one storey apart");
   const faceAt=(shade,y)=>cubes.filter(t=>t.color===shade&&
     Math.abs(t.position.z-plasterZ)<eps&&
     Math.abs(t.scale.z-.025)<eps&&
@@ -85,8 +86,10 @@ for(let i=0;i<4;i++){
     t.position.x+t.scale.x/2>x+1.27&&
     t.position.y-t.scale.y/2<y-eps&&
     t.position.y+t.scale.y/2>y+eps);
-  assert.ok(faceAt(green,opening.bottom+.12).length>0,
-    "green remains at the bottom side of the window");
+  assert.equal(faceAt(green,opening.bottom+.12).length,0,
+    "no green dado at lower edge of raised window");
+  assert.ok(faceAt(cream,opening.bottom+.12).length>0,
+    "cream lining around the lower part of raised window");
   assert.equal(faceAt(green,opening.top-.12).length,0,
     "no inverted green block above the window");
   assert.ok(faceAt(cream,opening.top-.12).length>0,
