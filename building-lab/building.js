@@ -1097,7 +1097,7 @@ export function buildApartmentHouse(THREE,config={}){
         cx,edge<0?hole.bottom+.025:hole.top-.025,revealMidZ);
     finishedWindowReveals++;
   }
-  audit.stairwellInterior={plasterPanels,wallZ:innerWindowZ,
+  audit.stairwellInterior={plasterPanels,wallZ:innerWindowZ,innerHalfWidth,
     windowApertures:windowIntervals,entranceAperture:entryDoorVoid,
     greenBands,finishedWindowReveals,
     painted:true,noBrickFacing:true,
