@@ -26,7 +26,7 @@ assert.equal(result.state,"walk");
 assert.ok(c.position.z<13.2,"forward moves toward front wall");
 let startingZ=c.position.z;
 for(let i=0;i<250;i++)c.update(.05);
-assert.ok(c.position.z>=BUILDING.width/2+PLAYER_RADIUS-1e-6,
+assert.ok(c.position.z>=BUILDING.frontFacade+PLAYER_RADIUS-1e-6,
  "collisions block house wall even after long movement");
 assert.ok(c.position.z<startingZ);
 assert.equal(c.update(.05).state,"idle","walking against wall must not animate a run");
@@ -66,7 +66,7 @@ assert.equal(c.position.z,13.2);
 assert.throws(()=>c.setView("bird"),/Unknown camera/);
 // A large frame step cannot walk through a building or teleport beyond bounds.
 const far=resolveStep({x:0,z:15},0,-20,obstacles);
-assert.ok(far.z>=BUILDING.width/2+PLAYER_RADIUS);
+assert.ok(far.z>=BUILDING.frontFacade+PLAYER_RADIUS);
 const bounds=resolveStep({x:55,z:25},20,20,obstacles);
 assert.ok(bounds.x<=56-PLAYER_RADIUS && bounds.z<=32-PLAYER_RADIUS);
 // Third-person camera is shortened when the house is behind the player.

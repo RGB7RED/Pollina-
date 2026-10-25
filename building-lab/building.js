@@ -21,6 +21,10 @@ export const BUILDING={
 };
 // Six ordinary window bays between adjacent entrances, including 1 → 2.
 export const ENTRANCE_BAYS=Object.freeze([3,10,17,24]);
+export function residentialLevels(config=BUILDING){
+  return Array.from({length:config.floors},
+    (_,floor)=>Number((config.firstFloor+floor*config.floorHeight).toFixed(5)));
+}
 export const STAGES=["3.1 Форма","3.2 Фасад","3.3 Материалы","3.4 Оптимизация"];
 function deterministic(seed=7331){return ()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296};}
 export function planFacade({length=BUILDING.length,bays=BUILDING.windowBays,floors=BUILDING.floors}={}){
@@ -122,7 +126,7 @@ export function buildApartmentHouse(THREE,config={}){
     balconyKinds:{A:0,B:0,C:0,D:0}};
   const audit={holes:[],wallPieces:[],windowGlazing:[],windowTypes:new Set(),doorPositions:[],
     entryPads:[],downpipePositions:[],balconyPositions:[],stairwellWindows:[],
-    alignedFloors:Array.from({length:C.floors},(_,i)=>floorLevel(i)),
+    alignedFloors:residentialLevels(C),
     facadeEnds:{front:C.frontFacade,back:C.backFacade},
     originalFootprint:{length:C.length,width:C.width}};
   function box(w,h,d,material,x,y,z,rx=0,ry=0,rz=0){
@@ -213,7 +217,7 @@ export function buildApartmentHouse(THREE,config={}){
     audit.windowGlazing.push({axis,side,opening:hole,variant,
       frontDepth:facadeExtent-.17,glassDepth:facadeExtent-.235});
     if(isStairWindow)audit.stairwellWindows.push({
-      floor:Math.round((bottom-(.70+1.39+2.42/2+.80))/2.42)+1,
+      floor:Math.round((bottom-(C.firstFloor+C.floorHeight/2+.80))/C.floorHeight)+1,
       centreX:centre,bottom,top,width,wallZ:axis==="long"?facadeZ(side)-side*.16:side*(facadeExtent-.16),
       through:true,transparent:glassMat.transparent===true,type:"facade-bay"
     });
@@ -294,8 +298,8 @@ export function buildApartmentHouse(THREE,config={}){
       // First residential landing rises one real 12-step flight above foyer.
       // Remaining four storeys are 2.42m apart to preserve the existing
       // building roof and full-sized 2.15m apartment doors.
-      const foyerFloor=.70,entryRise=1.39,baseFloor=foyerFloor+entryRise;
-      const storeyRise=2.42,rise=storeyRise/2,stepsPerFlight=12;
+      const foyerFloor=.70,entryRise=C.firstFloor-foyerFloor,baseFloor=C.firstFloor;
+      const storeyRise=C.floorHeight,rise=storeyRise/2,stepsPerFlight=12;
       const halfLandingZ=2.05;
       const facadeInnerZ=C.frontFacade-wallDepth,frontZ=facadeInnerZ-.12;
       const entranceStartZ=3.35,entranceRun=entranceStartZ-rearLandingEndZ;
@@ -881,6 +885,41 @@ export function buildApartmentHouse(THREE,config={}){
     box(C.length+.05,.10,.19,mats.foundation,0,C.plinth+.018,
       facadeZ(side)+side*.025);
   }
+  // Continuous structural residential decks across the ENTIRE new
+  // 19-metre depth, rather than slabs still ending at the old rear wall.
+  // Leave every entrance shaft unobstructed. Flat 17 supplies its own
+  // top-floor slab, so subtract exactly that overlap on 5F.
+  const windowStep=(C.length-3.7)/C.windowBays;
+  const entranceCentres=ENTRANCE_BAYS.map(bay=>
+    -C.length/2+1.85+(bay+.5)*windowStep);
+  const deckSpans=[];
+  let cursor=-C.length/2+.32;
+  for(const ex of entranceCentres){
+    deckSpans.push([cursor,ex-1.84]);
+    cursor=ex+1.84;
+  }
+  deckSpans.push([cursor,C.length/2-.32]);
+  const deckBack=C.backFacade+.32,deckFront=C.frontFacade-.32;
+  const deckDepth=deckFront-deckBack;
+  if(deckDepth<12||Math.abs(C.width-(C.frontFacade-C.backFacade))>.001)
+    throw Error("Building depth must match its explicit front/rear facades");
+  const deckAudit=[];
+  for(let floor=1;floor<C.floors;floor++){
+    const y=floorLevel(floor);
+    for(let span=0;span<deckSpans.length;span++){
+      let [from,to]=deckSpans[span];
+      if(floor===4&&span===0)
+        to=Math.min(to,entranceCentres[0]-6.30);
+      if(to-from<=.01)continue;
+      box(to-from,.14,deckDepth,mats.foundation,
+        (from+to)/2,y-.075,(deckBack+deckFront)/2);
+      deckAudit.push({floor:floor+1,x0:from,x1:to,
+        z0:deckBack,z1:deckFront,y});
+    }
+  }
+  audit.residentialDecks=deckAudit;
+  audit.decksReachRearFacade=deckAudit.every(d=>
+    d.z0>C.backFacade&&d.z0<C.backFacade+.40);
   const plan=planFacade(C);
   audit.firstFloorWindowHoles=[];
   const step=(C.length-3.7)/C.windowBays;
@@ -939,7 +978,7 @@ export function buildApartmentHouse(THREE,config={}){
   wallStrip("long",1,windowRight,spanRight,columnStart,shellTop,mats.brick);
   let priorTop=columnStart;
   for(let i=0;i<C.floors-1;i++){
-    const midY=.70+1.39+(i+.5)*2.42;
+    const midY=C.firstFloor+(i+.5)*C.floorHeight;
     const bottom=midY+.80,height=1.42,top=bottom+height;
     if(bottom<priorTop||top>=shellTop)
       throw Error("Stairwell opening overlaps previous window/roof");
@@ -957,9 +996,9 @@ export function buildApartmentHouse(THREE,config={}){
   // glazing with a coloured rectangle. Existing outside brick remains.
   const innerWindowZ=C.frontFacade-wallDepth-.018;
   const innerHalfWidth=1.84;
-  const firstMid=.70+1.39+2.42/2;
+  const firstMid=C.firstFloor+C.floorHeight/2;
   const windowIntervals=Array.from({length:C.floors-1},(_,i)=>{
-    const lo=firstMid+i*2.42+.80;
+    const lo=firstMid+i*C.floorHeight+.80;
     return {bottom:lo,top:lo+1.42};
   });
   // Preserve the ORIGINAL operable entrance opening as well.
@@ -972,7 +1011,7 @@ export function buildApartmentHouse(THREE,config={}){
   // floor modulo and restarted halfway through each window, producing
   // an inverted green strip across the top of the real glass.
   const greenBands=Array.from({length:C.floors-1},(_,i)=>{
-    const landingY=firstMid+i*2.42;
+    const landingY=firstMid+i*C.floorHeight;
     return {bottom:landingY-.12,top:landingY+1.18};
   });
   const cuts=[.70,shellTop,entryDoorVoid.top,

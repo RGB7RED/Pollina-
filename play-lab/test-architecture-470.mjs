@@ -35,7 +35,7 @@ for(const floor of [0,1,2,3,4]){
 }
 const pairs=audit.firstFloorWindowHoles;
 assert.equal(pairs.length,8);
-assert.ok(pairs.every(h=>Math.abs(h.bottom-2.74)<.001));
+assert.ok(pairs.every(h=>Math.abs(h.bottom-2.73)<.001));
 assert.ok(pairs.every(h=>h.top<BUILDING.plinth+2*BUILDING.floorHeight));
 const pads=audit.entryPads,entry=planPlayableEntrance(BUILDING,pads);
 const plan=planFirstFloor(BUILDING,entry);

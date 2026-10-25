@@ -30,7 +30,7 @@ const stair=a.completeStaircase,first=a.firstStaircase,top=stair.fifthFloorRail;
 const instances=house.root.children.filter(m=>m instanceof InstancedMesh)
   .flatMap(mesh=>mesh.matrices.map(t=>({...t,color:mesh.material.color})));
 assert.equal(BUILDING.length,74);
-assert.equal(BUILDING.width,12.8);
+assert.equal(BUILDING.width,19);
 assert.equal(BUILDING.floors,5);
 assert.equal(house.stats.entrances,4);
 assert.equal(stair.floors,5);

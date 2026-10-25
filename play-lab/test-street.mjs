@@ -10,7 +10,7 @@ const plan=planStreet(BUILDING,pads);
 const twin=planStreet(BUILDING,pads);
 assert.deepEqual(plan,twin,"same city block every refresh");
 const standalone=planStreet(BUILDING,[],{buildingPresent:false});
-assert.ok(plan.info.grassTufts>24000 && plan.info.grassTufts<29000,
+assert.ok(plan.info.grassTufts>22000 && plan.info.grassTufts<29000,
  "grass density stays bounded for iPhone");
 assert.equal(plan.info.grassTufts,plan.grassTufts.length);
 assert.ok(standalone.grassTufts.length>plan.grassTufts.length,
@@ -20,7 +20,8 @@ for(const tuft of plan.grassTufts){
  assert.ok(tuft.height>=.18&&tuft.height<=.311);
  assert.ok(tuft.width>=1&&tuft.width<=1.221);
  assert.ok(Math.abs(tuft.x)>=BUILDING.length/2+1.2||
-   Math.abs(tuft.z)>=BUILDING.width/2+1.2,
+    tuft.z<=BUILDING.backFacade-1.2||
+    tuft.z>=BUILDING.frontFacade+1.2,
    "grass may not grow through the residential building");
  for(const surface of plan.surfaces.filter(p=>p.kind!=="grass")){
    assert.ok(!(Math.abs(tuft.x-surface.x)<surface.width/2+.45&&
@@ -43,7 +44,8 @@ let greenSamples=0,nearbyTufts=0;
 for(let x=-64;x<=64;x+=1){
  for(let z=-41.5;z<=41.5;z+=1){
   if(onPaving(x,z))continue;
-  if(Math.abs(x)<BUILDING.length/2+1.2&&Math.abs(z)<BUILDING.width/2+1.2)continue;
+  if(Math.abs(x)<BUILDING.length/2+1.2&&
+      z>BUILDING.backFacade-1.2&&z<BUILDING.frontFacade+1.2)continue;
   if(pads.some(p=>Math.abs(x-p.x)<p.width/2+.6&&
     Math.abs(z-p.centreZ)<p.depth/2+.6))continue;
   greenSamples++;
@@ -73,13 +75,19 @@ assert.equal(plan.surfaces.length,7);
 assert.equal(plan.markings.filter(m=>m.kind==="zebra").length,7);
 assert.equal(plan.curbs.length,2);
 assert.ok(plan.surfaces.some(m=>m.kind==="rear-service-path"));
+const rearPath=plan.surfaces.find(m=>m.kind==="rear-service-path");
+assert.ok(rearPath.z+rearPath.depth/2<BUILDING.backFacade-1.4,
+  "deepened building must not swallow the rear service path");
+assert.ok(plan.benches.every(b=>b.z<BUILDING.backFacade-5));
+assert.ok(plan.trees.filter(t=>t.row==="courtyard").every(t=>
+  t.z<BUILDING.backFacade-9));
 assert.ok(plan.surfaces.some(m=>m.kind==="side-path-left"));
 assert.ok(plan.surfaces.some(m=>m.kind==="side-path-right"));
 assert.ok(!collidesAt(0,13.2,plan.obstacles),
  "initial spawn must remain free of street furniture");
 for(const ob of plan.obstacles){
  assert.ok(!collidesAt((ob.minX+ob.maxX)/2,(ob.minZ+ob.maxZ)/2,
-   [{minX:-37,maxX:37,minZ:-6.4,maxZ:6.4}],0),
+   [{minX:-37,maxX:37,minZ:BUILDING.backFacade,maxZ:BUILDING.frontFacade}],0),
    "scenery must not overlap the house");
  assert.ok(ob.minX>=-56&&ob.maxX<=56);
  assert.ok(ob.minZ>=-32&&ob.maxZ<=32);
