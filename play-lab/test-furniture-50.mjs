@@ -45,7 +45,7 @@ assert.equal(layout.placements.filter(p=>p.id==="interior_door").length,
 for(const p of layout.placements){
   assert.ok(INTERIOR_ASSET_BY_ID[p.id],"unknown asset "+p.id);
   assert.ok(Number.isFinite(p.x)&&Number.isFinite(p.y)&&Number.isFinite(p.z));
-  assert.equal(p.y,plan.y);
+  assert.ok(p.y>=plan.y&&p.y<=plan.y+1.46,"valid furniture-mounted elevation");
   if(p.flat>0)assert.ok(p.flat<=4);
 }
 for(let i=0;i<layout.solidBounds.length;i++){
