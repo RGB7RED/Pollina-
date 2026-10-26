@@ -114,8 +114,7 @@ export function planFirstFloorFurniture(plan){
           if(dist<score){found={x:xx,z:zz};score=dist;}
         }
         if(found){x=found.x;z=found.z;}
-        else throw Error("Cannot fit "+id+" safely in flat "+
-          room.flat+", room "+room.name);
+        else return null; // Keep full navigation; omit an oversized duplicate in a narrow room.
       }
     }
     const record={id,x,z,y:plan.y,yaw,flat:room.flat,room:room.name,
