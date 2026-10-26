@@ -72,15 +72,16 @@ const api=new Function("document","window","fetch","console","URL",
  validateCatalog,filterCatalog,catalogCounts,catalogFolders,folderObjects,modelLabel);
 await new Promise(resolve=>setTimeout(resolve,0));
 assert.equal(requestCount,1);
-assert.equal(nodes["metric-total"].textContent,28);
-assert.equal(nodes["folder-list"].children.length,10);
+assert.equal(nodes["metric-total"].textContent,80);
+assert.equal(nodes["folder-list"].children.length,16);
 assert.equal(nodes["folder-section"].hidden,false);
 assert.equal(nodes["object-section"].hidden,true,
  "catalog first displays folders, not flat model cards");
 assert.equal(nodes["catalog-list"].children.length,0);
 const categories=nodes["folder-list"].children.map(c=>c.dataset.category);
 assert.deepEqual(categories,["building","character","environment","nature","street_furniture",
- "door","window","heating","lighting","utility"]);
+ "door","window","heating","lighting","utility",
+ "interior_furniture","kitchen","bathroom","hallway","decor","interior_fixture"]);
 const characters=nodes["folder-list"].children.find(c=>c.dataset.category==="character");
 assert.match(characters.children[1].children[1].textContent,/2 модели/);
 characters.fire("click");
