@@ -83,7 +83,8 @@ for(let i=0;i<4;i++){
   const faceAt=(shade,y)=>cubes.filter(t=>t.color===shade&&
     Math.abs(t.position.z-plasterZ)<eps&&
     Math.abs(t.scale.z-.025)<eps&&
-    Math.abs(t.position.x-(x+1.27))<1&&
+    // Full-width cream wall sections also cover the sampling point;
+    // do not discard them merely because their mesh CENTRE is far away.
     t.position.x-t.scale.x/2<x+1.27&&
     t.position.x+t.scale.x/2>x+1.27&&
     t.position.y-t.scale.y/2<y-eps&&
