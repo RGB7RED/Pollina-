@@ -57,45 +57,43 @@ assert.ok(stair.electricPanels.every(p=>p.meters===4&&p.z<e.stair.bottomZ));
 assert.equal(instances.filter(t=>Math.abs(t.scale.x-.255)<eps&&
   Math.abs(t.scale.y-.37)<eps&&Math.abs(t.scale.z-.022)<eps).length,20,
   "20 meter windows on end-wall electrical panels");
-assert.equal(a.heating.radiators.length,4);
-assert.ok(a.heating.visibleWindowRiser,
-  "visible vertical heating pipe restored beside the window");
+assert.equal(a.heating.radiators.length,2);
+assert.deepEqual(a.heating.radiators.map(r=>r.floorFrom),[2,4]);
 const visibleRiser=a.heating.visibleWindowRiser;
+assert.ok(visibleRiser&&a.heating.riser===visibleRiser);
 assert.ok(visibleRiser.top-visibleRiser.bottom>10);
-assert.ok(visibleRiser.x>x+.61+1.10/2+.20,
-  "pipe is on a solid pier, never across either glass sash");
-assert.ok(visibleRiser.x<x+e.stairHalf-.12);
+assert.ok(visibleRiser.x>x+.61+1.10/2+.20);
 assert.ok(instances.some(t=>Math.abs(t.scale.x-.064)<eps&&
   Math.abs(t.scale.z-.064)<eps&&
   Math.abs(t.scale.y-(visibleRiser.top-visibleRiser.bottom))<eps&&
   Math.abs(t.position.x-visibleRiser.x)<eps&&
   Math.abs(t.position.z-visibleRiser.z)<eps),
-  "restored pipe must be a real rendered mesh");
-assert.equal(a.heating.riser.top,BUILDING.firstFloor+BUILDING.floors*BUILDING.floorHeight+BUILDING.roofClearance-.22);
-assert.ok(a.heating.riser.bottom<e.stair.firstFloor);
-assert.equal(instances.filter(t=>Math.abs(t.scale.x-.12)<eps&&
-  Math.abs(t.scale.y-.53)<eps&&Math.abs(t.scale.z-.035)<eps).length,40,
-  "four 10-rib radiators near real windows");
-for(let i=0;i<4;i++){
-  const w=a.stairwellWindows[i*2],rad=a.heating.radiators[i];
-  assert.ok(Math.abs(w.bottom-rad.windowSillY)<eps);
-  assert.ok(w.transparent&&w.through);
-  assert.equal(rad.mountedOn,"left-side-wall");
-  assert.ok(rad.x+0.20<w.centreX-w.width/2,
-    "side radiator stays entirely clear of the glass");
-  assert.ok(collidesAt(rad.x+.10,rad.z,e.buildingObstacles,
-    PLAYER_RADIUS,rad.landingY),
-    "side-wall radiator keeps physical landing-height collision");
-  assert.ok(!e.buildingObstacles.filter(o=>o.name.startsWith("radiator-side-"))
-    .some(o=>o.minX<x+PLAYER_RADIUS&&o.maxX>x-PLAYER_RADIUS&&
-      o.minZ<BUILDING.frontFacade-.50+PLAYER_RADIUS&&
-      o.maxZ>BUILDING.frontFacade-.50-PLAYER_RADIUS),
-    "window-facing area has no radiator obstruction; exterior wall still collides");
+  "visible heating riser must remain physically present");
+assert.equal(instances.filter(t=>Math.abs(t.scale.x-.083)<eps&&
+  Math.abs(t.scale.y-.53)<eps&&Math.abs(t.scale.z-.12)<eps).length,20,
+  "two radiators, ten vertical ribs each");
+for(const rad of a.heating.radiators){
+  assert.equal(rad.mountedOn,"window-riser");
+  assert.ok(Math.abs(rad.connectedRiserX-visibleRiser.x)<eps);
+  assert.ok(Math.abs(rad.connectedRiserZ-visibleRiser.z)<eps);
+  assert.ok(rad.z+.18<a.heating.windowWallZ,
+    "radiator is INSIDE, not embedded in the concrete facade");
+  assert.ok(rad.x+rad.width/2<visibleRiser.x);
+  assert.ok(a.stairwellWindows.some(w=>Math.abs(w.bottom-rad.windowSillY)<eps));
+  assert.ok(collidesAt(rad.x,rad.z,e.buildingObstacles,
+    PLAYER_RADIUS,rad.landingY+.37),
+    "real radiator has a physical collision");
+  assert.ok(instances.some(t=>Math.abs(t.scale.y-.055)<eps&&
+    Math.abs(t.position.x-(rad.x+.64))<eps&&
+    Math.abs(t.scale.z-(visibleRiser.z-(rad.z-.05)))<eps),
+    "real water pipes join radiator to full-height vertical riser");
 }
+assert.equal(e.buildingObstacles.filter(o=>
+  o.name.startsWith("radiator-window-")).length,2);
 assert.ok(a.stairwellInterior.painted);
 assert.ok(a.stairwellInterior.noBrickFacing);
 assert.ok(a.stairwellInterior.plasterPanels>=20);
-assert.equal(a.stairwellInterior.windowApertures.length,4);
+assert.equal(a.stairwellInterior.windowApertures.length,5);
 // Crucial: no pale/green panel can cover any window aperture.
 // Compare ACTUAL batched transforms instead of relying on audit claims.
 for(const pane of a.stairwellPairedApertures){
