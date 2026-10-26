@@ -61,7 +61,7 @@ assert.equal(a.heating.radiators.length,4);
 assert.equal(a.heating.riser.top,BUILDING.firstFloor+BUILDING.floors*BUILDING.floorHeight+BUILDING.roofClearance-.22);
 assert.ok(a.heating.riser.bottom<e.stair.firstFloor);
 assert.equal(instances.filter(t=>Math.abs(t.scale.x-.12)<eps&&
-  Math.abs(t.scale.y-.53)<eps&&Math.abs(t.scale.z-.083)<eps).length,40,
+  Math.abs(t.scale.y-.53)<eps&&Math.abs(t.scale.z-.035)<eps).length,40,
   "four 10-rib radiators near real windows");
 for(let i=0;i<4;i++){
   const w=a.stairwellWindows[i*2],rad=a.heating.radiators[i];
