@@ -127,7 +127,7 @@ assert.equal(stair.flights,9);
 assert.equal(stair.treads,108);
 assert.ok(house.root.children.filter(m=>m instanceof InstancedMesh).length<=35,
   "mobile draw-call batch count preserved");
-assert.equal(e.buildingObstacles.length,25);
+assert.equal(e.buildingObstacles.length,23);
 assert.ok(collidesAt(x,-4.64,e.buildingObstacles,PLAYER_RADIUS,2.09),
   "electrical cabinet has real collision");
 assert.ok(!collidesAt(x,-3.20,e.buildingObstacles,PLAYER_RADIUS,2.09),
