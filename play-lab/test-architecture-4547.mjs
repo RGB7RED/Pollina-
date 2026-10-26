@@ -57,25 +57,43 @@ assert.ok(stair.electricPanels.every(p=>p.meters===4&&p.z<e.stair.bottomZ));
 assert.equal(instances.filter(t=>Math.abs(t.scale.x-.255)<eps&&
   Math.abs(t.scale.y-.37)<eps&&Math.abs(t.scale.z-.022)<eps).length,20,
   "20 meter windows on end-wall electrical panels");
-assert.equal(a.heating.radiators.length,4);
-assert.equal(a.heating.riser.top,BUILDING.firstFloor+BUILDING.floors*BUILDING.floorHeight+BUILDING.roofClearance-.22);
-assert.ok(a.heating.riser.bottom<e.stair.firstFloor);
+assert.equal(a.heating.radiators.length,2);
+assert.deepEqual(a.heating.radiators.map(r=>r.floorFrom),[2,4]);
+const visibleRiser=a.heating.visibleWindowRiser;
+assert.ok(visibleRiser&&a.heating.riser===visibleRiser);
+assert.ok(visibleRiser.top-visibleRiser.bottom>10);
+assert.ok(visibleRiser.x>x+.61+1.10/2+.20);
+assert.ok(instances.some(t=>Math.abs(t.scale.x-.064)<eps&&
+  Math.abs(t.scale.z-.064)<eps&&
+  Math.abs(t.scale.y-(visibleRiser.top-visibleRiser.bottom))<eps&&
+  Math.abs(t.position.x-visibleRiser.x)<eps&&
+  Math.abs(t.position.z-visibleRiser.z)<eps),
+  "visible heating riser must remain physically present");
 assert.equal(instances.filter(t=>Math.abs(t.scale.x-.083)<eps&&
-  Math.abs(t.scale.y-.53)<eps&&Math.abs(t.scale.z-.12)<eps).length,40,
-  "four 10-rib radiators near real windows");
-for(let i=0;i<4;i++){
-  const w=a.stairwellWindows[i*2],rad=a.heating.radiators[i];
-  assert.ok(Math.abs(w.bottom-rad.windowSillY)<eps);
-  assert.ok(w.transparent&&w.through);
-  assert.ok(rad.y+rad.height/2<w.bottom-.07);
-  assert.ok(collidesAt(x,BUILDING.frontFacade-.50,e.buildingObstacles,
-    PLAYER_RADIUS,rad.landingY),
-    "the radiator is a real obstacle at this landing only");
+  Math.abs(t.scale.y-.53)<eps&&Math.abs(t.scale.z-.12)<eps).length,20,
+  "two radiators, ten vertical ribs each");
+for(const rad of a.heating.radiators){
+  assert.equal(rad.mountedOn,"window-riser");
+  assert.ok(Math.abs(rad.connectedRiserX-visibleRiser.x)<eps);
+  assert.ok(Math.abs(rad.connectedRiserZ-visibleRiser.z)<eps);
+  assert.ok(rad.z+.18<a.heating.windowWallZ,
+    "radiator is INSIDE, not embedded in the concrete facade");
+  assert.ok(rad.x+rad.width/2<visibleRiser.x);
+  assert.ok(a.stairwellWindows.some(w=>Math.abs(w.bottom-rad.windowSillY)<eps));
+  assert.ok(collidesAt(rad.x,rad.z,e.buildingObstacles,
+    PLAYER_RADIUS,rad.landingY+.37),
+    "real radiator has a physical collision");
+  assert.ok(instances.some(t=>Math.abs(t.scale.y-.055)<eps&&
+    Math.abs(t.position.x-(rad.x+.64))<eps&&
+    Math.abs(t.scale.z-(visibleRiser.z-(rad.z-.05)))<eps),
+    "real water pipes join radiator to full-height vertical riser");
 }
+assert.equal(e.buildingObstacles.filter(o=>
+  o.name.startsWith("radiator-window-")).length,2);
 assert.ok(a.stairwellInterior.painted);
 assert.ok(a.stairwellInterior.noBrickFacing);
 assert.ok(a.stairwellInterior.plasterPanels>=20);
-assert.equal(a.stairwellInterior.windowApertures.length,4);
+assert.equal(a.stairwellInterior.windowApertures.length,5);
 // Crucial: no pale/green panel can cover any window aperture.
 // Compare ACTUAL batched transforms instead of relying on audit claims.
 for(const pane of a.stairwellPairedApertures){
@@ -91,7 +109,7 @@ for(const pane of a.stairwellPairedApertures){
 }
 // Entry must NOT be sealed off by the same interior wall plaster.
 const doorHole=a.stairwellInterior.entranceAperture;
-assert.ok(doorHole.top>2.90&&Math.abs(doorHole.halfWidth-.855)<eps);
+assert.ok(doorHole.top>2.35&&Math.abs(doorHole.halfWidth-.855)<eps);
 const doorCover=instances.filter(t=>Math.abs(t.position.z-
     a.stairwellInterior.wallZ)<eps&&Math.abs(t.scale.z-.025)<eps&&
     (t.materialColor===0x76978d||t.materialColor===0xd0c9b1)&&
@@ -109,7 +127,7 @@ assert.equal(stair.flights,9);
 assert.equal(stair.treads,108);
 assert.ok(house.root.children.filter(m=>m instanceof InstancedMesh).length<=35,
   "mobile draw-call batch count preserved");
-assert.equal(e.buildingObstacles.length,30);
+assert.equal(e.buildingObstacles.length,23);
 assert.ok(collidesAt(x,-4.64,e.buildingObstacles,PLAYER_RADIUS,2.09),
   "electrical cabinet has real collision");
 assert.ok(!collidesAt(x,-3.20,e.buildingObstacles,PLAYER_RADIUS,2.09),

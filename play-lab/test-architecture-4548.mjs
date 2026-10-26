@@ -50,7 +50,7 @@ assert.equal(a.slopedWallFinish.entryFlightPainted,true);
 const entryVertices=positions.slice(0,18);
 assert.ok(Math.abs(entryVertices[2]-3.35)<eps);
 assert.ok(Math.abs(entryVertices[8]+1.58)<eps);
-assert.ok(Math.abs(entryVertices[1]-(.70-.15))<eps);
+assert.ok(Math.abs(entryVertices[1]-(0-.15))<eps);
 for(let i=0;i<8;i++){
   const v=positions.slice((i+1)*18,(i+2)*18);
   const z0=v[2],z1=v[8],foot0=v[1],foot1=v[7]-1.33;
@@ -63,9 +63,9 @@ for(let i=0;i<8;i++){
     2.09+Math.floor(i/2)*2.42+1.21-.15:
     2.09+Math.floor(i/2)*2.42+1.21-.15))<eps);
 }
-assert.equal(a.stairwellInterior.finishedWindowReveals,8);
-assert.equal(a.stairwellInterior.windowApertures.length,4);
-assert.equal(a.stairwellWindows.length,8);
+assert.equal(a.stairwellInterior.finishedWindowReveals,10);
+assert.equal(a.stairwellInterior.windowApertures.length,5);
+assert.equal(a.stairwellWindows.length,10);
 const plasterZ=a.stairwellInterior.wallZ;
 for(let i=0;i<4;i++){
   const opening=a.stairwellInterior.windowApertures[i];
@@ -73,26 +73,32 @@ for(let i=0;i<4;i++){
   const band=a.stairwellInterior.greenBands[i];
   assert.ok(Math.abs(band.top-(landing+1.18))<eps);
   assert.ok(band.bottom<opening.bottom);
-  assert.ok(band.top>opening.bottom&&band.top<opening.top-.55,
-    "green only surrounds LOWER side of the window");
-  assert.ok(i===3||a.stairwellInterior.greenBands[i+1].bottom>
-    opening.top,"the next green band cannot cross the top sash");
+  assert.ok(Math.abs(opening.bottom-landing)<eps,
+    "window lower sill flush with the visible walking landing");
+  assert.ok(band.top>opening.top,
+    "green paint bands are cut away wherever real glazing starts");
+  if(i>0)assert.ok(Math.abs(opening.bottom-
+    a.stairwellInterior.windowApertures[i-1].bottom-2.42)<eps,
+    "aligned window rows are exactly one storey apart");
   const faceAt=(shade,y)=>cubes.filter(t=>t.color===shade&&
     Math.abs(t.position.z-plasterZ)<eps&&
     Math.abs(t.scale.z-.025)<eps&&
-    Math.abs(t.position.x-(x+1.08))<1&&
-    t.position.x-t.scale.x/2<x+1.08&&
-    t.position.x+t.scale.x/2>x+1.08&&
+    // Full-width cream wall sections also cover the sampling point;
+    // do not discard them merely because their mesh CENTRE is far away.
+    t.position.x-t.scale.x/2<x+1.27&&
+    t.position.x+t.scale.x/2>x+1.27&&
     t.position.y-t.scale.y/2<y-eps&&
     t.position.y+t.scale.y/2>y+eps);
   assert.ok(faceAt(green,opening.bottom+.12).length>0,
-    "green remains at the bottom side of the window");
-  assert.equal(faceAt(green,opening.top-.12).length,0,
-    "no inverted green block above the window");
-  assert.ok(faceAt(cream,opening.top-.12).length>0,
-    "upper window wall must be cream");
+    "green dado must remain on solid wall beside the lower sash");
+  assert.ok(faceAt(green,opening.top-.12).length>0,
+    "solid wall keeps green paint around both sashes");
+  assert.equal(faceAt(green,band.top+.12).length,0,
+    "green dado must not extend above its 1.18m band");
+  assert.ok(faceAt(cream,band.top+.12).length>0,
+    "cream plaster continues above restored green dado");
   const jamb=6.062+.165/2;
-  for(const off of [-.56,.56])for(const dx of [-.395,.395]){
+  for(const off of [-.61,.61])for(const dx of [-.525,.525]){
     const sides=cubes.filter(t=>t.color===cream&&
       Math.abs(t.position.x-(x+off+dx))<eps&&
       Math.abs(t.position.z-jamb)<eps&&
@@ -103,15 +109,15 @@ for(let i=0;i<4;i++){
   }
   for(const pane of a.stairwellWindows.slice(i*2,i*2+2))
     assert.ok(pane.transparent&&pane.through&&
-      Math.abs(pane.top-pane.bottom-1.12)<eps);
+      Math.abs(pane.top-pane.bottom-.91)<eps);
 }
 assert.ok(a.stairwellInterior.innerHalfWidth<=entry.stairHalf-.08,
   "stairwell plaster stays inside the structural wall");
-assert.ok(a.stairwellWindows.slice(0,2).every(w=>Math.abs(Math.abs(w.centreX-x)-.56)<eps));
+assert.ok(a.stairwellWindows.slice(0,2).every(w=>Math.abs(Math.abs(w.centreX-x)-.61)<eps));
 assert.equal(a.completeStaircase.landing.depth,3.2699999999999996);
 assert.equal(a.completeStaircase.apartmentDoors.length,20);
 assert.equal(a.completeStaircase.electricPanels.length,5);
-assert.equal(a.heating.radiators.length,4);
+assert.equal(a.heating.radiators.length,2);
 assert.equal(entry.stair.backZ,-4.85);
 assert.equal(house.stats.entrances,4);
 assert.equal(BUILDING.floors,5);

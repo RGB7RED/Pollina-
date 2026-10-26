@@ -44,11 +44,12 @@ assert.equal(stats.windows,286);
 assert.equal(audit.firstFloorWindowHoles.length,8);
 assert.ok(audit.firstFloorWindowHoles.every(h=>near(h.bottom,2.73)));
 assert.ok(audit.firstFloorWindowHoles.every(h=>near(h.height,1.46)));
-assert.equal(audit.stairwellWindows.length,4);
+assert.equal(audit.stairwellWindows.length,8);
 for(const h of audit.holes){
  const top=BUILDING.firstFloor+BUILDING.floors*BUILDING.floorHeight;
  assert.ok(h.top<top,"no facade window crosses roofline");
- assert.ok(h.bottom>=BUILDING.plinth-.01,"no facade opening below plinth");
+ assert.ok(h.kind==="door" ? h.bottom===0 : h.bottom>=BUILDING.plinth-.01,
+    "only ground-level door cuts may be below the plinth top");
 }
 for(const floor of [0,1,2,3,4]){
  const level=BUILDING.firstFloor+floor*BUILDING.floorHeight;

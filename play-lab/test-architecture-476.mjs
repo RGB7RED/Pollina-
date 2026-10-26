@@ -1,6 +1,6 @@
 // Stage 4.7.6 — paired real stair glazing; facade seams; solid apartment/stair and annex joints.
 import assert from "node:assert/strict";
-import {BUILDING,ENTRANCE_BAYS,planFacade,buildApartmentHouse} from "../building-lab/building.js";
+import {BUILDING,ENTRANCE_BAYS,ENTRY_GLAZING,STAIR_PROFILE,planFacade,buildApartmentHouse} from "../building-lab/building.js";
 import {planPlayableEntrance} from "./entrance.js";
 import {planFirstFloor,buildFirstFloor} from "./first-floor.js";
 import {collidesAt,PLAYER_RADIUS} from "./controller.js";
@@ -77,7 +77,7 @@ assert.deepEqual(plan.doorBlockers.map(d=>d.name),[
 
 assert.equal(entry.stairHalf,1.72);
 assert.equal(entry.corridorHalf,1.62);
-assert.equal(entry.stair.flightWidth,1.46);
+assert.equal(entry.stair.flightWidth,STAIR_PROFILE.flightWidth);
 assert.equal(audit.firstStaircase.stairwellWidth,3.44);
 // Not just window CENTRES: the complete first adjoining sashes must be
 // outside the actual staircase side masonry, including its wall thickness.
@@ -129,22 +129,29 @@ assert.ok(!queue.some(([i,j])=>atX(i)<leftWing.maxX-.5),
 console.log("MINI CITY 4.7.5 PASS: rear second room reachable, neighbour flat sealed, stair windows fully clear, numbers 4-3-1-2");
 
 
-// Regression 4.7.6: four real short DOUBLE sash pairs above the first canopy.
-assert.equal(house.stats.windows,312);
-assert.equal(house.stats.windowHoles,312);
-assert.equal(audit.stairwellWindows.length,8);
-assert.equal(audit.stairwellPairedApertures.length,8);
-assert.equal(audit.stairwellInterior.finishedWindowReveals,8);
+// Stage 4.7.8: first-entrance double sashes align exactly with all three other entrances.
+assert.equal(house.stats.windows,320);
+assert.equal(house.stats.windowHoles,320);
+assert.equal(audit.stairwellWindows.length,10);
+assert.equal(audit.stairwellPairedApertures.length,10);
+assert.equal(audit.stairwellInterior.finishedWindowReveals,10);
 assert.equal(audit.stairwellInterior.innerHalfWidth,1.635);
 assert.ok(audit.stairwellInterior.innerHalfWidth<entry.stairHalf);
-for(let floor=0;floor<4;floor++){
+for(let floor=0;floor<5;floor++){
   const pair=audit.stairwellPairedApertures.slice(floor*2,floor*2+2);
   const midY=BUILDING.firstFloor+(floor+.5)*BUILDING.floorHeight;
-  assert.deepEqual(pair.map(h=>Number((h.centre-entry.x).toFixed(2))),[-.56,.56]);
+  assert.deepEqual(pair.map(h=>Number((h.centre-entry.x).toFixed(2))),[-ENTRY_GLAZING.offset,ENTRY_GLAZING.offset]);
+  const secondX=centre(ENTRANCE_BAYS[1]);
+  const reference=audit.holes.filter(h=>h.axis==="long"&&h.side===1&&
+    Math.abs(h.bottom-midY)<1e-6&&
+    Math.abs(h.centre-secondX)<1.25);
+  assert.equal(reference.length,2,"reference second entrance has two real openings");
+  assert.deepEqual(pair.map(h=>h.bottom),reference.map(h=>h.bottom));
+  assert.deepEqual(pair.map(h=>h.top),reference.map(h=>h.top));
   for(const hole of pair){
-    assert.equal(hole.width,.84);
-    assert.ok(Math.abs(hole.bottom-(midY+.72))<1e-6);
-    assert.ok(Math.abs(hole.height-1.12)<1e-6);
+    assert.equal(hole.width,ENTRY_GLAZING.width);
+    assert.ok(Math.abs(hole.bottom-midY)<1e-6);
+    assert.ok(Math.abs(hole.height-ENTRY_GLAZING.height)<1e-6);
     assert.ok(audit.windowGlazing.some(g=>g.opening===hole&&g.transparent));
     assert.ok(!audit.wallPieces.some(w=>w.axis==="long"&&w.side===1&&
       w.u0<hole.centre&&w.u1>hole.centre&&w.y0<(hole.bottom+hole.top)/2&&
@@ -155,13 +162,13 @@ for(let floor=0;floor<4;floor++){
 // residential storey as well, NOT two decorative glass meshes.
 for(const bay of ENTRANCE_BAYS.slice(1)){
   const cx=centre(bay);
-  for(let f=1;f<BUILDING.floors;f++){
-    const bottom=BUILDING.firstFloor+f*BUILDING.floorHeight+.70;
+  for(let f=1;f<=BUILDING.floors;f++){
+    const bottom=BUILDING.firstFloor+(f-.5)*BUILDING.floorHeight;
     const pair=audit.holes.filter(h=>h.axis==="long"&&h.side===1&&
-      Math.abs(h.bottom-bottom)<1e-6&&h.width===.84&&
-      Math.abs(h.centre-cx)<1.02);
+      Math.abs(h.bottom-bottom)<1e-6&&h.width===ENTRY_GLAZING.width&&
+      Math.abs(h.centre-cx)<1.25);
     assert.equal(pair.length,2,"two cut-out windows, not decorative panes");
-    assert.deepEqual(pair.map(h=>Number((h.centre-cx).toFixed(2))).sort((a,b)=>a-b),[-.56,.56]);
+    assert.deepEqual(pair.map(h=>Number((h.centre-cx).toFixed(2))).sort((a,b)=>a-b),[-ENTRY_GLAZING.offset,ENTRY_GLAZING.offset]);
   }
 }
 const pairPaint=house.root.children.filter(o=>o instanceof InstancedMesh&&

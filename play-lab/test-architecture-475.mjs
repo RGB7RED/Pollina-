@@ -77,7 +77,7 @@ assert.deepEqual(plan.doorBlockers.map(d=>d.name),[
 
 assert.equal(entry.stairHalf,1.72);
 assert.equal(entry.corridorHalf,1.62);
-assert.equal(entry.stair.flightWidth,1.46);
+assert.equal(entry.stair.flightWidth,1.52);
 assert.equal(audit.firstStaircase.stairwellWidth,3.44);
 // Not just window CENTRES: the complete first adjoining sashes must be
 // outside the actual staircase side masonry, including its wall thickness.

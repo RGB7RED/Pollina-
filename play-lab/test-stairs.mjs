@@ -21,8 +21,8 @@ assert.equal(e.stair.turnZ,2.05);
 assert.equal(e.stair.backZ,-4.85);
 assert.equal(e.stair.firstFrontZ,e.stair.frontZ);
 assert.ok(e.stair.frontZ>5.8);
-assert.ok(Math.abs(e.stair.entryX-(x+.97))<1e-8);
-assert.equal(e.stair.entryWidth,1.58);
+assert.ok(Math.abs(e.stair.entryX-(x+.84))<1e-8);
+assert.equal(e.stair.entryWidth,1.52);
 assert.ok(!collidesAt(x+1.3,5.2,e.buildingObstacles,PLAYER_RADIUS),
   "expanded room is traversable toward the RIGHT entry stair");
 assert.ok(collidesAt(x+1.3,6.3,e.buildingObstacles,PLAYER_RADIUS),
@@ -40,7 +40,7 @@ function go(ax,az,n){
  }
 }
 go(0,1,90); // single open foyer
-assert.equal(p.position.y,.70);
+assert.equal(p.position.y,0);
 go(1,0,18); // RIGHT wall stair
 assert.ok(Math.abs(p.position.x-e.stair.entryX)<e.stair.entryWidth/2-.05);
 go(0,1,100);
@@ -89,7 +89,7 @@ const audit=house.root.userData.geometryAudit;
 const stairs=audit.firstStaircase;
 assert.equal(stairs.stairFlights,2);
 assert.equal(stairs.stepsPerFlight,12);
-assert.equal(stairs.stairwellWidth,3.68);
+assert.equal(stairs.stairwellWidth,3.44);
 assert.equal(stairs.bottomZ,e.stair.bottomZ);
 assert.equal(stairs.turnZ,e.stair.turnZ);
 assert.equal(stairs.backZ,e.stair.backZ);
@@ -103,8 +103,8 @@ assert.equal(audit.foyer.mailboxLevel,3.30);
 assert.equal(audit.foyer.doorCount,1);
 assert.equal(house.innerDoorPivot,null);
 assert.equal(house.doorPivot.name,"entrance-1-hinged-door");
-assert.ok(Math.abs(audit.firstStaircase.entryFlight.centreX-(x+.97))<1e-8);
-assert.equal(audit.completeStaircase.railing.flightWidth,1.58);
+assert.ok(Math.abs(audit.firstStaircase.entryFlight.centreX-(x+.84))<1e-8);
+assert.equal(audit.completeStaircase.railing.flightWidth,1.52);
 assert.equal(audit.completeStaircase.railing.frontGuardLinks,4);
 const instanced=house.root.children.filter(m=>m instanceof InstancedMesh);
 assert.ok(instanced.length<=33,"mobile instancing budget for extra stair glass");

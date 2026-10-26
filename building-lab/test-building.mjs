@@ -46,20 +46,22 @@ for(let i=0;i<entranceBays.length-1;i++){
   }
 }
 assert.equal(stats.entrances,4);assert.equal(stats.doorHoles,4);
-assert.equal(stats.windows,312);assert.equal(stats.windowHoles,312);
-assert.equal(a.holes.length,316);
+assert.equal(stats.windows,320);assert.equal(stats.windowHoles,320);
+assert.equal(a.holes.length,324);
 assert.equal(a.holes.filter(h=>h.axis==="end").length,20);
-assert.equal(a.holes.filter(h=>h.axis==="long").length,296);
+assert.equal(a.holes.filter(h=>h.axis==="long").length,304);
 assert.equal(stats.balconies,planFacade().filter(p=>p.balcony).length);
 for(const kind of ["A","B","C","D"])assert.ok(stats.balconyKinds[kind]>=4,"missing balcony "+kind);
 assert.equal(a.balconyPositions.length,stats.balconies);
-assert.equal(a.entryPads.length,4,"one landing slab per entrance");
+assert.equal(a.entryPads.length,4,"four ground-level entrance footprints");
 assert.equal(a.downpipePositions.length,10,"five pipes per long facade");
 for(const pad of a.entryPads){
   assert.ok(a.doorPositions.includes(pad.x),"pad must be centered on a real doorway");
   assert.ok(pad.width>=5.3&&pad.depth>=3.1,"pad fits a passenger car parked along the wall");
   assert.equal(pad.bottom,0,"pad must meet the ground");
-  assert.ok(Math.abs(pad.top-(pad.doorBottom-.20))<.001,"platform top lowered 20cm below doorstep");
+  assert.equal(pad.top,0,"no raised entry platform");
+  assert.equal(pad.doorBottom,0,"ground-level threshold");
+  assert.equal(pad.raised,false);
 }
 for(const side of [-1,1]){
   const drains=a.downpipePositions.filter(p=>p.side===side).sort((l,r)=>l.x-r.x);
@@ -91,13 +93,9 @@ const meshes=root.children.filter(c=>c instanceof Mesh);
 const instances=meshes.filter(c=>c instanceof InstancedMesh);
 assert.ok(instances.length>=17 && instances.length<=35,"mobile batch budget (transparent windows and one panel-joint material)");
 assert.ok(instances.every(m=>m.sphereDone&&m.count===m.matrices.length));
-const landingMeshes=instances.filter(m=>m.material.color===0x898780);
-assert.equal(landingMeshes.length,1,"landing uses a single instanced material batch");
-assert.equal(landingMeshes[0].count,4,"exactly one box per entrance, no stairs");
-for(const m of landingMeshes[0].matrices){
-  assert.ok(Math.abs(m.scale.x-5.5)<1e-5&&Math.abs(m.scale.z-3.15)<1e-5,
-    "landing footprint stays car-sized");
-}
+assert.ok(!instances.some(m=>m.material.color===0x898780),"no rendered pads");
+assert.equal(a.plinth.frontSegments.length,5);
+assert.equal(a.plinth.entryGaps.length,4);
 const roof=meshes.find(c=>c.name?.includes("flat five-storey roof"));
 assert.ok(roof&&roof.geometry);
 assert.equal(a.roof.type,"flat");
@@ -125,7 +123,7 @@ const masonry=instances.filter(m=>m.material.color===0xc7c5bd||m.material.color=
 assert.equal(masonry.reduce((n,m)=>n+m.count,0),a.wallPieces.length,
   "each audited masonry piece must be an actual instance");
 assert.ok(!meshes.some(m=>m.name==="main brick shell"),"no full wall behind openings");
-assert.ok(a.windowGlazing.every(g=>g.transparent===true),"all 312 windows transparent");
+assert.ok(a.windowGlazing.every(g=>g.transparent===true),"all 320 windows transparent");
 console.log("Building 3.2 geometry PASS:",JSON.stringify({
   floors:BUILDING.floors,windows:stats.windows,realWindowVoids:stats.windowHoles,
   doorVoids:stats.doorHoles,balconyVariants:stats.balconyKinds,

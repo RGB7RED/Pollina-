@@ -9,7 +9,7 @@ const game=read("./game.js"),view=read("./index.html");
 assert.equal((game.match(/new THREE\.Scene\(/g)||[]).length,1);
 assert.match(game,/function updateEntryAction\(/);
 assert.match(game,/controller\.nearestDoor\(/);
-assert.match(game,/controller\.setEntryDoorOpen\(/);
+assert.match(game,/controller\.toggleNearestDoor\(/);
 assert.doesNotMatch(game,/innerDoorPivot|setInnerDoorOpen|innerDoorOpen/,
   "game must have no removed inner-door runtime");
 assert.match(view,/id="entry-action"/);
@@ -18,7 +18,7 @@ const pads=[-26.3625,-8.7875,8.7875,26.3625].map(x=>
 const e=planPlayableEntrance(BUILDING,pads);
 assert.equal(e.innerDoor,undefined);
 assert.equal(e.innerDoorZ,undefined);
-assert.equal(e.corridorHalf,1.74);
+assert.equal(e.corridorHalf,1.62);
 assert.ok(!collidesAt(e.x+1.35,5.25,e.buildingObstacles,PLAYER_RADIUS),
   "the room is walkable far outside its old 1.62m corridor");
 assert.ok(collidesAt(e.x+1.5,6.3,e.buildingObstacles,PLAYER_RADIUS),
@@ -41,7 +41,7 @@ assert.ok(c.toggleNearestDoor());
 assert.equal(c.entryDoorOpen,true);
 assert.ok(!c.obstacles.includes(e.door));
 walk(0,1,35);
-assert.equal(c.position.y,.70);
+assert.equal(c.position.y,0);
 assert.ok(c.isInsideEntrance());
 assert.equal(e.zone(c.position.x,c.position.z),"просторный тамбур");
 walk(1,0,18);
@@ -52,7 +52,7 @@ assert.equal(c.position.y,e.stair.firstFloor,
   "first apartment floor is reached by a genuine RIGHT-hand stair");
 assert.ok(c.position.z<e.stair.bottomZ);
 walk(0,-1,135);
-assert.equal(c.position.y,.70,"descent returns to the same wide foyer");
+assert.equal(c.position.y,0,"descent returns to the same wide foyer");
 walk(-1,0,18);
 assert.ok(Math.abs(c.position.x-e.x)<.2);
 walk(0,-1,160);
@@ -99,11 +99,11 @@ assert.equal(house.stats.doorHoles,4);
 assert.equal(audit.entryPads.length,4);
 assert.equal(audit.foyer.mailboxes,20);
 assert.equal(audit.foyer.tiles,80,"floor tiles cover the expanded foyer");
-assert.equal(audit.foyer.halfWidth,1.74);
+assert.equal(audit.foyer.halfWidth,1.62);
 assert.equal(audit.foyer.doorCount,1);
 assert.equal(audit.foyer.secondDoorRemoved,true);
 assert.equal(audit.foyer.mailboxLevel,3.30);
-assert.equal(audit.foyer.floorLevel,.70);
+assert.equal(audit.foyer.floorLevel,0);
 assert.ok(Math.abs(audit.foyer.x-e.x)<.001);
 assert.equal(house.doorPivot.name,"entrance-1-hinged-door");
 assert.equal(house.innerDoorPivot,null);

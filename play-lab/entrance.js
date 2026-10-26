@@ -1,4 +1,5 @@
-// MINI CITY 4.5.1 — same-world playable entrance 1, no scene transition.
+// MINI CITY 4.7.8 — level entrance + stair render/collision parity.
+import {STAIR_PROFILE,FOYER_GROUND} from "../building-lab/building.js?v=478-radiator24-upper";
 // Collision geometry matches the first REAL facade opening and existing porch.
 export function planPlayableEntrance(building,pads){
   if(!building||!pads?.length)throw Error("Entrance requires real building and porch");
@@ -10,15 +11,17 @@ export function planPlayableEntrance(building,pads){
   // The first floor and every complete-floor landing are at the BACK,
   // opposite the former door wall. Ascend forward on LEFT, then return
   // toward the BACK along RIGHT to the following complete-floor landing.
-  const foyerFloor=.70,firstFloor=building.firstFloor??2.09,
+  const foyerFloor=FOYER_GROUND,firstFloor=building.firstFloor??2.09,
     storeyHeight=building.floorHeight??2.42;
   const stair={bottomZ:-1.58,turnZ:2.05,backZ:-4.85,
     frontZ:facade-.44,firstFrontZ:facade-.44,
-    entryStartZ:3.35,entryRise:1.39,halfRise:storeyHeight/2,
+    entryStartZ:3.35,entryRise:firstFloor-foyerFloor,halfRise:storeyHeight/2,
     steps:12,entrySteps:12,firstFloor,foyerFloor,storeyHeight,
-    firstX:x-.90,secondX:x+.90,entryX:x+.90,
-    entryWidth:1.46,flightWidth:1.46};
-  const stairHalf=1.72,aisleHalf=.16,upperTurnY=firstFloor+stair.halfRise;
+    firstX:x-STAIR_PROFILE.centreOffset,
+    secondX:x+STAIR_PROFILE.centreOffset,entryX:x+STAIR_PROFILE.centreOffset,
+    entryWidth:STAIR_PROFILE.flightWidth,flightWidth:STAIR_PROFILE.flightWidth};
+  const stairHalf=STAIR_PROFILE.halfWidth,
+    aisleHalf=STAIR_PROFILE.centreOffset-STAIR_PROFILE.flightWidth/2,upperTurnY=firstFloor+stair.halfRise;
   if(p.width<2||insideEnd>=facade||foyerHalf>=p.width/2)
     throw Error("Entrance dimensions invalid");
   const rect=(name,minX,maxX,minZ,maxZ,minY=-Infinity,maxY=Infinity)=>
@@ -40,11 +43,11 @@ export function planPlayableEntrance(building,pads){
     rect("facade-right-jamb",x+doorHalf,x+stairHalf,facade-.30,facade+.02,
       -Infinity,upperTurnY-.10),
     // Flight guards are on the open INNER sides only, never on walls.
-    rect("left-inner-flight-guard",x-.22,x-.14,
+    rect("left-inner-flight-guard",x-aisleHalf-.05,x-aisleHalf+.03,
       stair.bottomZ+.10,stair.turnZ-.10,firstFloor),
-    rect("right-inner-flight-guard",x+.14,x+.22,
+    rect("right-inner-flight-guard",x+aisleHalf-.03,x+aisleHalf+.05,
       stair.bottomZ+.10,stair.turnZ-.10,firstFloor),
-    rect("entry-flight-inner-guard",x+.14,x+.22,
+    rect("entry-flight-inner-guard",x+aisleHalf-.03,x+aisleHalf+.05,
       stair.bottomZ+.10,stair.entryStartZ-.10,
       foyerFloor,firstFloor+.15),
     rect("exterior-window-wall",x-stairHalf,x+stairHalf,
@@ -65,16 +68,19 @@ export function planPlayableEntrance(building,pads){
       x-stairHalf+.12,x+.18,
       stair.bottomZ-.035,stair.bottomZ+.055,
       firstFloor+4*storeyHeight-.10,firstFloor+4*storeyHeight+1.02),
-    // All four radiators are on the real window-facing masonry. Their
-    // collision only occupies the corresponding HALF-landing height.
-    ...Array.from({length:totalFloors-1},(_,i)=>{
-      const halfY=firstFloor+i*storeyHeight+stair.halfRise;
-      return rect("radiator-window-"+(i+1),x-.69,x+.69,
-        facade-.68,facade-.31,halfY-.06,halfY+.79);
+    // Two window-parallel radiators ONLY on intermediate levels 2 and 4.
+    // Collision matches the 1.32m rendered units and pipe near the front
+    // wall, without blocking the U-turn (normally at z~5.0).
+    ...[2,4].map(floorFrom=>{
+      const y=firstFloor+(floorFrom-1)*storeyHeight+stair.halfRise;
+      return rect("radiator-window-"+floorFrom,
+        x+.70-.66,x+.70+.66,
+        facade-.32-.28-.17,facade-.32-.28+.18,
+        y+.05,y+.72);
     }),
-    rect("heating-riser",x+1.38,x+1.53,
-      facade-.70,facade-.33,foyerFloor,firstFloor+
-        totalFloors*storeyHeight),
+    rect("heating-riser-window",x+1.41,x+1.49,
+      facade-.32-.11,facade-.32-.04,
+      foyerFloor,firstFloor+totalFloors*storeyHeight),
     ...Array.from({length:totalFloors},(_,i)=>{
       const level=firstFloor+i*storeyHeight;
       return rect("electric-meter-cabinet-"+(i+1),
@@ -82,17 +88,8 @@ export function planPlayableEntrance(building,pads){
         level-.07,level+2.13);
     })
   ];
-  // Preserve blocking porch geometry for entrances 2–4. The first porch
-  // is walkable only through the central doorway approach.
-  const porch=[];
-  pads.forEach((pad,i)=>{
-    const l=pad.x-pad.width/2,r=pad.x+pad.width/2;
-    const front=pad.centreZ-pad.depth/2,back=pad.centreZ+pad.depth/2;
-    if(i===0){
-      porch.push(rect("entry-1-left-pad",l,x-doorHalf,front,back));
-      porch.push(rect("entry-1-right-pad",x+doorHalf,r,front,back));
-    }else porch.push(rect("entry-"+(i+1),l,r,front,back));
-  });
+  // Stage 4.7.8: no exterior pad colliders, including at entrances 2–4.
+  // The three inactive entry leaves are still visually closed in the model.
   const door=rect("entrance-1-closed-door",x-.72,x+.72,facade-.28,facade+.14);
   const inside={minX:x-foyerHalf,maxX:x+foyerHalf,
     minZ:insideEnd,maxZ:facade};
@@ -100,7 +97,7 @@ export function planPlayableEntrance(building,pads){
     index:0,x,facade,insideEnd,corridorHalf:foyerHalf,
     door,inside,stair,stairHalf,aisleHalf,totalFloors,
     floorHeight,
-    buildingObstacles:[...house,...porch],
+    buildingObstacles:house,
     apartment:null,firstFloorPlan:null,
     installFirstFloor(plan){
       if(this.firstFloorPlan)throw Error("First floor already installed");
@@ -188,9 +185,8 @@ export function planPlayableEntrance(building,pads){
       const width=z<insideEnd||upper?stairHalf:foyerHalf;
       if(Math.abs(px-x)>width-.03)return 0;
       if(z>=10.65)return 0;
-      if(z>=9.42)return (10.65-z)/(10.65-9.42)*.50;
-      if(z>=7.10)return .50;
-      if(z>=6.23)return .50+(7.10-z)/(7.10-6.23)*.20;
+      // Street, threshold and foyer share Y=0; no hidden height ramp.
+      if(z>=facade)return FOYER_GROUND;
       if(z>=insideEnd&&!upper)return foyerFloor;
       const candidates=[];
       // This is a genuinely walkable 12-step centre staircase, NOT a

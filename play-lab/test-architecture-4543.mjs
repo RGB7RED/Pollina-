@@ -50,7 +50,7 @@ assert.equal(a.completeStaircase.landing.doorsPerFloor,4);
 assert.equal(a.stairwellWindows.length,8);
 assert.deepEqual(a.stairwellWindows.map(w=>w.floor),[1,1,2,2,3,3,4,4]);
 assert.ok(a.stairwellWindows.every(w=>w.transparent&&w.through&&
-  Math.abs(Math.abs(w.centreX-x)-.56)<.001));
+  Math.abs(Math.abs(w.centreX-x)-.61)<.001));
 assert.ok(a.stairwellWindows.every(w=>w.top>w.bottom&&
   w.wallZ<BUILDING.frontFacade));
 // Brick strips must NOT cross the middle of any clear window opening.
@@ -77,7 +77,7 @@ assert.ok(!house.root.children.filter(m=>m instanceof InstancedMesh)
 const pads=[-26.3625,-8.7875,8.7875,26.3625]
   .map(px=>({x:px,width:5.5,depth:3.15,centreZ:7.875}));
 const entry=planPlayableEntrance(BUILDING,pads);
-assert.equal(entry.buildingObstacles.length,30);
+assert.equal(entry.buildingObstacles.length,25);
 assert.equal(entry.stair.firstFrontZ,opposite.firstTurnEndZ);
 assert.equal(entry.stair.frontZ,opposite.upperTurnEndZ);
 assert.ok(!collidesAt(x+1.25,5.25,entry.buildingObstacles,PLAYER_RADIUS,.70),
@@ -89,5 +89,5 @@ assert.ok(collidesAt(x,6.26,entry.buildingObstacles,PLAYER_RADIUS,4.87),
 assert.ok(!collidesAt(x,5.0,entry.buildingObstacles,PLAYER_RADIUS,.70),
   "entrance front remains accessible at ground level");
 assert.equal(entry.groundHeight(x+1.25,5.25,3.30),3.30);
-assert.equal(entry.groundHeight(x,5.25,.70),.70);
+assert.equal(entry.groundHeight(x,5.25,0),0);
 console.log("MINI CITY 4.5.4.3/4 regression: four clear facade apertures, raised landings, empty middle shaft, height-aware obstacles PASS");
