@@ -3,7 +3,7 @@ import {GLTFLoader} from "three/addons/loaders/GLTFLoader.js";
 import {buildApartmentHouse} from "../building-lab/building.js?v=478-radiator24-upper";
 import {planFirstApartment,buildFirstApartment} from "./apartment.js";
 import {planFirstFloor,buildFirstFloor} from "./first-floor.js?v=50";
-import {buildFurnishedFirstFloor} from "./furniture.js?v=50";
+import {buildFurnishedFirstFloor} from "./furniture.js?v=50b";
 import {applyFacadeFinishes} from "../building-lab/materials.js";
 import {ActorAnimator} from "./animation.js";
 import {planStreet,buildStreet} from "./street.js";
