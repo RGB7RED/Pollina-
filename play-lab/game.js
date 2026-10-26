@@ -2,7 +2,8 @@ import * as THREE from "three";
 import {GLTFLoader} from "three/addons/loaders/GLTFLoader.js";
 import {buildApartmentHouse} from "../building-lab/building.js?v=478-radiator24-upper";
 import {planFirstApartment,buildFirstApartment} from "./apartment.js";
-import {planFirstFloor,buildFirstFloor} from "./first-floor.js?v=478";
+import {planFirstFloor,buildFirstFloor} from "./first-floor.js?v=50";
+import {buildFurnishedFirstFloor} from "./furniture.js?v=50";
 import {applyFacadeFinishes} from "../building-lab/materials.js";
 import {ActorAnimator} from "./animation.js";
 import {planStreet,buildStreet} from "./street.js";
@@ -48,6 +49,12 @@ entry.installFirstFloor(firstFloor);
 const {root:firstFloorRoot,doorPivots:firstFloorDoorPivots}=
   buildFirstFloor(THREE,firstFloor);
 scene.add(firstFloorRoot);
+const furnished=buildFurnishedFirstFloor(THREE,firstFloor);
+scene.add(furnished.root);
+firstFloorRoot.userData.firstFloorAudit.emptyRooms=false;
+firstFloorRoot.userData.firstFloorAudit.furnishings=furnished.layout.placements.length;
+// Real obstacles are scoped to this floor; fifth-floor traversal unaffected.
+entry.buildingObstacles.push(...furnished.layout.solidBounds);
 const apartment=planFirstApartment(config,entry);
 entry.installApartment(apartment);
 const {root:flat,doorPivot:apartmentDoorPivot}=buildFirstApartment(THREE,apartment);

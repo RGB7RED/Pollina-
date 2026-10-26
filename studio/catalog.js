@@ -1,5 +1,5 @@
 import {CATEGORIES,STATUS,KIND,CATEGORY_ICON,validateCatalog,
-  catalogCounts,catalogFolders,folderObjects,modelLabel} from "../models/catalog-utils.js";
+  catalogCounts,catalogFolders,folderObjects,modelLabel} from "../models/catalog-utils.js?v=50";
 
 // Category -> numbered individual models. This is a read-only view of
 // models/catalog.json, not an editor or 22 copies of one tree mesh.
