@@ -670,26 +670,9 @@ export function buildApartmentHouse(THREE,config={}){
         electricPanels.push({floor:floor+1,centreX:x,
           y:panelY,z:panelZ,meters:4,width:1.43});
       }
-      // Landing-level glazing now starts at floor height. Relocate
-      // radiators to the left SIDE wall: nothing opaque covers either pane.
-      // The original four radiators/riser remain physically instanced.
-      // Mesh boxes form an octagonal-looking pipe, batched per material.
-      const radiatorMountX=x-stairHalfWidth+.20;
-      // Compact side-mounted radiator tucked into front-wall corner;
-      // the walking U-turn at Z≈5.0 remains unobstructed.
-      const radiatorMountZ=6.08;
-      const radiatorRiser={x:radiatorMountX,z:radiatorMountZ+.25,
-        bottom:.76,top:shellTop-.22};
-      const pipeY=(radiatorRiser.bottom+radiatorRiser.top)/2;
-      const pipeH=radiatorRiser.top-radiatorRiser.bottom;
-      box(.064,pipeH,.064,mats.frameGrey,
-        radiatorRiser.x,pipeY,radiatorRiser.z);
-      box(.047,pipeH,.076,mats.frameGrey,
-        radiatorRiser.x,pipeY,radiatorRiser.z,0,Math.PI/4);
-      // Restore the original window-side vertical heating pipe, visible
-      // on EVERY stair level, beside (never across) the paired panes.
-      // Keep the compact radiator circuit on the left wall, where it
-      // cannot obstruct the staircase turnaround or transparent glass.
+      // Two visible radiators only: on 2nd and 4th intermediate landings.
+      // They hang parallel to the window wall, entirely IN FRONT of plaster,
+      // and connect through elbows to the restored right-hand riser.
       const visibleWindowRiser={
         x:x+1.45,z:facadeInnerZ-.085,bottom:.76,top:shellTop-.22
       };
@@ -699,34 +682,43 @@ export function buildApartmentHouse(THREE,config={}){
         visibleWindowRiser.x,visiblePipeY,visibleWindowRiser.z);
       box(.047,visiblePipeHeight,.076,mats.frameGrey,
         visibleWindowRiser.x,visiblePipeY,visibleWindowRiser.z,0,Math.PI/4);
-      const radiators=[];
-      for(let i=0;i<C.floors-1;i++){
-        const landingY=baseFloor+i*storeyRise+rise;
-        const radY=landingY+.30;
-        const radX=radiatorMountX,radZ=radiatorMountZ;
-        // Side-wall placement: rotate the 1.32 m radiator footprint
-        // into Z so its backplate sits against the left concrete wall.
-        box(.055,.56,.46,mats.frameWhite,radX-.038,radY,radZ);
+      const radiators=[],windowRadiatorFloors=new Set([2,4]);
+      for(let floorFrom=1;floorFrom<C.floors;floorFrom++){
+        if(!windowRadiatorFloors.has(floorFrom))continue;
+        const landingY=baseFloor+(floorFrom-1)*storeyRise+rise;
+        const radY=landingY+.37;
+        const radX=visibleWindowRiser.x-.75;
+        const radZ=facadeInnerZ-.28;
+        // Width 1.32m in X, depth .21m in Z. Never embed in facade.
+        box(1.24,.56,.055,mats.frameWhite,radX,radY,radZ+.07);
         for(const dy of [-.23,.23])
-          box(.10,.065,.48,mats.frameGrey,radX+.055,radY+dy,radZ);
+          box(1.32,.065,.10,mats.frameGrey,radX,radY+dy,radZ-.045);
         for(let j=0;j<10;j++){
-          const rz=radZ+(j-4.5)*.043;
-          box(.12,.53,.035,mats.frameWhite,radX+.08,radY,rz);
-          box(.126,.41,.025,mats.foyerMailbox,radX+.115,radY,rz);
+          const rx=radX+(j-4.5)*.115;
+          box(.083,.53,.12,mats.frameWhite,rx,radY,radZ-.065);
+          box(.035,.41,.126,mats.foyerMailbox,rx,radY,radZ-.092);
         }
-        // Supply and return turn along the side wall, not across glass.
+        // Mounting brackets join the back of the radiator to the wall.
+        for(const off of [-.43,.43])
+          box(.07,.06,.20,mats.frameGrey,radX+off,radY,radZ+.17);
+        // Two 90-degree pipe elbows meet the full-height riser.
         for(const dy of [-.19,.19]){
-          const length=radiatorRiser.z-(radZ+.21);
-          box(.055,.055,length,mats.frameGrey,radX+.02,radY+dy,
-            radZ+.21+length/2);
+          const takeoffX=radX+.64,pipeX=visibleWindowRiser.x;
+          const takeoffZ=radZ-.05,pipeZ=visibleWindowRiser.z;
+          box(.055,.055,pipeZ-takeoffZ,mats.frameGrey,
+            takeoffX,radY+dy,(takeoffZ+pipeZ)/2);
+          box(pipeX-takeoffX,.055,.055,mats.frameGrey,
+            (takeoffX+pipeX)/2,radY+dy,pipeZ);
         }
-        radiators.push({floorFrom:i+1,floorTo:i+2,
-          landingY,x:radX,y:radY,z:radZ,width:1.32,height:.59,
-          mountedOn:"left-side-wall",windowSillY:landingY,
-          clearance:0});
+        radiators.push({floorFrom,floorTo:floorFrom+1,
+          landingY,x:radX,y:radY,z:radZ,width:1.32,depth:.21,
+          height:.59,mountedOn:"window-riser",
+          connectedRiserX:visibleWindowRiser.x,
+          connectedRiserZ:visibleWindowRiser.z,
+          windowSillY:landingY,clearance:0});
       }
-      audit.heating={riser:radiatorRiser,visibleWindowRiser,radiators,
-        windowWallZ:facadeInnerZ,instanced:true};
+      audit.heating={riser:visibleWindowRiser,visibleWindowRiser,
+        radiators,windowWallZ:facadeInnerZ,instanced:true};
       audit.firstStaircase={
         firstX,secondX,bottomZ:rearLandingEndZ,turnZ:halfLandingZ,
         backZ:rearWallZ,stepsPerFlight,stairwellWidth:stairHalfWidth*2,
@@ -1017,7 +1009,9 @@ export function buildApartmentHouse(THREE,config={}){
         audit.firstFloorWindowHoles.push(hole);
     }
   }
-  // Actual horizontal paired transparent apertures for entrance 1.
+  // Five horizontal paired window rows for entrance 1, including
+  // the last PRECAST PANEL above its original fifth-floor glazing.
+  // These are real punched holes, not decorative transparent overlays.
   // All their SILLS (not their centres) sit exactly at real landing Y.
   const entryBay=plan.find(w=>w.entrance&&w.bay===ENTRANCE_BAYS[0]);
   const wx=entryBay.x,spanLeft=wx-step/2,spanRight=wx+step/2;
@@ -1028,11 +1022,11 @@ export function buildApartmentHouse(THREE,config={}){
   wallStrip("long",1,wx+outerEdge,spanRight,columnStart,shellTop,mats.brick);
   let priorTop=columnStart;
   const stairPairApertures=[];
-  for(let i=0;i<C.floors-1;i++){
+  for(let i=0;i<C.floors;i++){
     const bottom=stairWindowBaseY+i*C.floorHeight,
       height=ENTRY_GLAZING.height,
       top=bottom+height;
-    if(bottom<priorTop||top>=shellTop)
+    if(bottom<priorTop||top>shellTop-.15)
       throw Error("Paired stair glazing intersects another window or roof");
     wallStrip("long",1,wx-outerEdge,wx+outerEdge,priorTop,bottom,mats.brick);
     wallStrip("long",1,wx-innerEdge,wx+innerEdge,bottom,top,mats.brick);
@@ -1058,7 +1052,7 @@ export function buildApartmentHouse(THREE,config={}){
     wallStrip("long",1,left,centre-outerEdge,columnStart,shellTop,mats.brick);
     wallStrip("long",1,centre+outerEdge,right,columnStart,shellTop,mats.brick);
     let previousTop=columnStart;
-    for(let i=0;i<C.floors-1;i++){
+    for(let i=0;i<C.floors;i++){
       const bottom=stairWindowBaseY+i*C.floorHeight,
         top=bottom+ENTRY_GLAZING.height;
       wallStrip("long",1,centre-outerEdge,centre+outerEdge,
@@ -1080,13 +1074,13 @@ export function buildApartmentHouse(THREE,config={}){
       (shellTop+columnStart)/2,C.frontFacade+.023);
   }
   // Inside the EXISTING brick wall, add a continuous cream/green
-  // plaster lining. All four window-shaped apertures are subtracted
+  // plaster lining. All five window-shaped apertures are subtracted
   // from the interior paint too — NEVER cover the real transparent
   // glazing with a coloured rectangle. Existing outside brick remains.
   const innerWindowZ=C.frontFacade-wallDepth-.018;
   const innerHalfWidth=STAIR_PROFILE.halfWidth-.085; // inside staircase finish, no intrusion into flats
   const firstMid=C.firstFloor+C.floorHeight/2;
-  const windowIntervals=Array.from({length:C.floors-1},(_,i)=>{
+  const windowIntervals=Array.from({length:C.floors},(_,i)=>{
     const lo=stairWindowBaseY+i*C.floorHeight;
     return {bottom:lo,top:lo+ENTRY_GLAZING.height};
   });
