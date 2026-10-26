@@ -88,14 +88,14 @@ for(let i=0;i<4;i++){
     t.position.x+t.scale.x/2>x+1.27&&
     t.position.y-t.scale.y/2<y-eps&&
     t.position.y+t.scale.y/2>y+eps);
-  assert.equal(faceAt(green,opening.bottom+.12).length,0,
-    "no green dado at lower edge of raised window");
-  assert.ok(faceAt(cream,opening.bottom+.12).length>0,
-    "cream lining around the lower part of raised window");
-  assert.equal(faceAt(green,opening.top-.12).length,0,
-    "no inverted green block above the window");
-  assert.ok(faceAt(cream,opening.top-.12).length>0,
-    "upper window wall must be cream");
+  assert.ok(faceAt(green,opening.bottom+.12).length>0,
+    "green dado must remain on solid wall beside the lower sash");
+  assert.ok(faceAt(green,opening.top-.12).length>0,
+    "solid wall keeps green paint around both sashes");
+  assert.equal(faceAt(green,band.top+.12).length,0,
+    "green dado must not extend above its 1.18m band");
+  assert.ok(faceAt(cream,band.top+.12).length>0,
+    "cream plaster continues above restored green dado");
   const jamb=6.062+.165/2;
   for(const off of [-.61,.61])for(const dx of [-.525,.525]){
     const sides=cubes.filter(t=>t.color===cream&&
