@@ -68,17 +68,19 @@ export function planPlayableEntrance(building,pads){
       x-stairHalf+.12,x+.18,
       stair.bottomZ-.035,stair.bottomZ+.055,
       firstFloor+4*storeyHeight-.10,firstFloor+4*storeyHeight+1.02),
-    // Radiators no longer cover the new floor-height glazing. All four
-    // are mounted to LEFT wall, preserving level-scoped collision.
-    ...Array.from({length:totalFloors-1},(_,i)=>{
-      const halfY=firstFloor+i*storeyHeight+stair.halfRise;
-      return rect("radiator-side-"+(i+1),
-        x-stairHalf+.04,x-stairHalf+.40,
-        6.08-.24,6.08+.24,halfY-.06,halfY+.79);
+    // Two window-parallel radiators ONLY on intermediate levels 2 and 4.
+    // Collision matches the 1.32m rendered units and pipe near the front
+    // wall, without blocking the U-turn (normally at z~5.0).
+    ...[2,4].map(floorFrom=>{
+      const y=firstFloor+(floorFrom-1)*storeyHeight+stair.halfRise;
+      return rect("radiator-window-"+floorFrom,
+        x+.70-.66,x+.70+.66,
+        facade-.32-.28-.17,facade-.32-.28+.18,
+        y+.05,y+.72);
     }),
-    rect("heating-riser",x-stairHalf+.12,x-stairHalf+.29,
-      6.08+.20,6.08+.31,foyerFloor,firstFloor+
-        totalFloors*storeyHeight),
+    rect("heating-riser-window",x+1.41,x+1.49,
+      facade-.32-.11,facade-.32-.04,
+      foyerFloor,firstFloor+totalFloors*storeyHeight),
     ...Array.from({length:totalFloors},(_,i)=>{
       const level=firstFloor+i*storeyHeight;
       return rect("electric-meter-cabinet-"+(i+1),
