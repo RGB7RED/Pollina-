@@ -127,7 +127,7 @@ export function planFirstFloorFurniture(plan){
       }
     }
     const record={id,x,z,y:plan.y,yaw,flat:room.flat,room:room.name,
-      role:assignedUse(room.flat,room.name),modelNumber:spec.ordinal,
+      role:assignedUse(room.flat,room.name),modelNumber:spec.modelNumber,
       mounted:mounted||MOUNTED.has(id)||RUGS.has(id),w:fw,d:fd};
     placements.push(record);countByFlat[room.flat]++;
     if(SOLIDS.has(id)&&!record.mounted)bounds.push({...record,
