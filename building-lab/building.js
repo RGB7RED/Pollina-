@@ -232,7 +232,7 @@ export function buildApartmentHouse(THREE,config={}){
       transparent:glassMat.transparent===true,opacity:glassMat.opacity,
       frontDepth:facadeExtent-.17,glassDepth:facadeExtent-.235});
     if(isStairWindow)audit.stairwellWindows.push({
-      floor:Math.round((bottom-(C.firstFloor+C.floorHeight+ENTRY_GLAZING.sillOffset))/C.floorHeight)+1,
+      floor:Math.round((bottom-(C.firstFloor+C.floorHeight/2))/C.floorHeight)+1,
       centreX:centre,bottom,top,width,wallZ:axis==="long"?facadeZ(side)-side*.16:side*(facadeExtent-.16),
       through:true,transparent:glassMat.transparent===true,type:"facade-bay"
     });
@@ -670,11 +670,15 @@ export function buildApartmentHouse(THREE,config={}){
         electricPanels.push({floor:floor+1,centreX:x,
           y:panelY,z:panelZ,meters:4,width:1.43});
       }
-      // A single continuous, low-poly heating RISER beside the +Z
-      // stairwell windows. The 4 real cast-iron radiators sit BELOW
-      // four intermediate landing windows; the riser runs the full cage.
+      // Landing-level glazing now starts at floor height. Relocate
+      // radiators to the left SIDE wall: nothing opaque covers either pane.
+      // The original four radiators/riser remain physically instanced.
       // Mesh boxes form an octagonal-looking pipe, batched per material.
-      const radiatorRiser={x:x+1.45,z:facadeInnerZ-.19,
+      const radiatorMountX=x-stairHalfWidth+.20;
+      // Compact side-mounted radiator tucked into front-wall corner;
+      // the walking U-turn at Z≈5.0 remains unobstructed.
+      const radiatorMountZ=6.08;
+      const radiatorRiser={x:radiatorMountX,z:radiatorMountZ+.25,
         bottom:.76,top:shellTop-.22};
       const pipeY=(radiatorRiser.bottom+radiatorRiser.top)/2;
       const pipeH=radiatorRiser.top-radiatorRiser.bottom;
@@ -685,29 +689,28 @@ export function buildApartmentHouse(THREE,config={}){
       const radiators=[];
       for(let i=0;i<C.floors-1;i++){
         const landingY=baseFloor+i*storeyRise+rise;
-        const radY=landingY+.30; // window sill keeps clearance above radiators
-        const radZ=facadeInnerZ-.17;
-        // Backplate, two horizontal manifolds, 10 heat-dissipating ribs.
-        box(1.24,.56,.055,mats.frameWhite,x,radY,radZ+.038);
+        const radY=landingY+.30;
+        const radX=radiatorMountX,radZ=radiatorMountZ;
+        // Side-wall placement: rotate the 1.32 m radiator footprint
+        // into Z so its backplate sits against the left concrete wall.
+        box(.055,.56,.46,mats.frameWhite,radX-.038,radY,radZ);
         for(const dy of [-.23,.23])
-          box(1.32,.065,.10,mats.frameGrey,x,radY+dy,radZ-.055);
+          box(.10,.065,.48,mats.frameGrey,radX+.055,radY+dy,radZ);
         for(let j=0;j<10;j++){
-          const rx=x+(j-4.5)*.115;
-          box(.083,.53,.12,mats.frameWhite,rx,radY,radZ-.08);
-          box(.035,.41,.126,mats.foyerMailbox,rx,radY,radZ-.115);
+          const rz=radZ+(j-4.5)*.043;
+          box(.12,.53,.035,mats.frameWhite,radX+.08,radY,rz);
+          box(.126,.41,.025,mats.foyerMailbox,radX+.115,radY,rz);
         }
-        // Two small supply/return tubes to the vertical wall riser.
+        // Supply and return turn along the side wall, not across glass.
         for(const dy of [-.19,.19]){
-          const connectorLength=radiatorRiser.x-(x+.62);
-          box(connectorLength,.055,.055,mats.frameGrey,
-            x+.62+connectorLength/2,radY+dy,radZ-.13);
+          const length=radiatorRiser.z-(radZ+.21);
+          box(.055,.055,length,mats.frameGrey,radX+.02,radY+dy,
+            radZ+.21+length/2);
         }
         radiators.push({floorFrom:i+1,floorTo:i+2,
-          landingY,x,y:radY,z:radZ,width:1.32,height:.59,
-          // Sill metadata must follow the *actual* raised window opening,
-          // while the radiator stays safely mounted at landing level.
-          windowSillY:landingY+rise+ENTRY_GLAZING.sillOffset,
-          clearance:rise+ENTRY_GLAZING.sillOffset-.595});
+          landingY,x:radX,y:radY,z:radZ,width:1.32,height:.59,
+          mountedOn:"left-side-wall",windowSillY:landingY,
+          clearance:0});
       }
       audit.heating={riser:radiatorRiser,radiators,
         windowWallZ:facadeInnerZ,instanced:true};
@@ -957,7 +960,9 @@ export function buildApartmentHouse(THREE,config={}){
   const plan=planFacade(C);
   // Stage 4.7.8 alignment fix: first stairwell paired sashes must have
   // EXACTLY the same sill levels as entrances 2–4 (residential floors 2–5).
-  const stairWindowBaseY=floorLevel(1)+ENTRY_GLAZING.sillOffset;
+  // All four entrance pairs share the height of the REAL intermediate
+  // stair return: the lower exterior sill is flush with its walkable deck.
+  const stairWindowBaseY=C.firstFloor+C.floorHeight/2;
   audit.firstFloorWindowHoles=[];
   const step=(C.length-3.7)/C.windowBays;
   for(const side of [-1,1]){
@@ -974,24 +979,10 @@ export function buildApartmentHouse(THREE,config={}){
       continue;
     }
     // All window bays now use the same common, aligned residential levels.
-    // Bay over the FIRST doorway is one continuous 5-storey stairwell.
-    // Its four paired windows are cut below at the SAME heights as bays
-    // 10/17/24, not half a storey lower above the first canopy.
-    if(w.side===1&&w.bay===ENTRANCE_BAYS[0]&&w.floor>0)continue;
+    // All four entrance shafts need continuous vertical wall sections,
+    // since their windows cross the normal apartment-floor module bands.
+    if(w.side===1&&ENTRANCE_BAYS.includes(w.bay)&&w.floor>0)continue;
     const y0=bandStart(w.floor),y1=bandEnd(w.floor);
-    // At every other entrance use TWO distinct small stair windows,
-    // each on its own side of the concrete-panel seam.
-    if(w.side===1&&w.floor>0&&ENTRANCE_BAYS.includes(w.bay)){
-      for(const sign of [-1,1]){
-        const u0=w.x+(sign<0?-step/2:0);
-        const u1=w.x+(sign<0?0:step/2);
-        const h=punch("long",1,u0,u1,y0,y1,w.x+sign*ENTRY_GLAZING.offset,
-          ENTRY_GLAZING.width,floorLevel(w.floor)+ENTRY_GLAZING.sillOffset,
-          ENTRY_GLAZING.height,mats.brick,"window");
-        windowDetail(h,w.variation,false,false);
-      }
-      continue;
-    }
     const centre=w.x,side=w.side;
     const isDoor=w.entrance,balcony=w.balcony&&!isDoor;
     const openingWidth=isDoor?1.71:balcony?1.44:1.40;
@@ -999,7 +990,7 @@ export function buildApartmentHouse(THREE,config={}){
     const height=isDoor?2.42:balcony?2.20:regularWindowHeight;
     // Door masonry stops just under the first aligned stairwell windows.
     const entryColumnTop=stairWindowBaseY-.035;
-    const moduleTop=isDoor&&w.bay===ENTRANCE_BAYS[0]?entryColumnTop:y1;
+    const moduleTop=isDoor?entryColumnTop:y1;
     const hole=punch("long",side,centre-step/2,centre+step/2,
       isDoor?0:y0,moduleTop,
       centre,openingWidth,low,height,mats.brick,isDoor?"door":"window");
@@ -1013,8 +1004,8 @@ export function buildApartmentHouse(THREE,config={}){
         audit.firstFloorWindowHoles.push(hole);
     }
   }
-  // Actual TWO large horizontal glazed apertures on either side of
-  // the stair-panel seam, now aligned with every other entrance bay.
+  // Actual horizontal paired transparent apertures for entrance 1.
+  // All their SILLS (not their centres) sit exactly at real landing Y.
   const entryBay=plan.find(w=>w.entrance&&w.bay===ENTRANCE_BAYS[0]);
   const wx=entryBay.x,spanLeft=wx-step/2,spanRight=wx+step/2;
   const pairOffset=ENTRY_GLAZING.offset,paneWidth=ENTRY_GLAZING.width,paneHalf=paneWidth/2;
@@ -1046,6 +1037,35 @@ export function buildApartmentHouse(THREE,config={}){
   box(.028,shellTop-columnStart,.032,mats.panelJoint,
     wx,(shellTop+columnStart)/2,C.frontFacade+.023);
   audit.stairwellPairedApertures=stairPairApertures;
+  // The other three entrance bays need the same true voids; ordinary
+  // apartment-band punching cannot cut below its bandStart.
+  for(const bay of ENTRANCE_BAYS.slice(1)){
+    const centre=plan.find(w=>w.entrance&&w.bay===bay).x;
+    const left=centre-step/2,right=centre+step/2;
+    wallStrip("long",1,left,centre-outerEdge,columnStart,shellTop,mats.brick);
+    wallStrip("long",1,centre+outerEdge,right,columnStart,shellTop,mats.brick);
+    let previousTop=columnStart;
+    for(let i=0;i<C.floors-1;i++){
+      const bottom=stairWindowBaseY+i*C.floorHeight,
+        top=bottom+ENTRY_GLAZING.height;
+      wallStrip("long",1,centre-outerEdge,centre+outerEdge,
+        previousTop,bottom,mats.brick);
+      wallStrip("long",1,centre-innerEdge,centre+innerEdge,
+        bottom,top,mats.brick);
+      for(const sign of [-1,1]){
+        const hole={axis:"long",side:1,centre:centre+sign*pairOffset,
+          width:paneWidth,bottom,top,height:ENTRY_GLAZING.height,
+          kind:"window",stairLanding:i+1};
+        audit.holes.push(hole);stats.windowHoles++;
+        windowDetail(hole,i,false,false);
+      }
+      previousTop=top;
+    }
+    wallStrip("long",1,centre-outerEdge,centre+outerEdge,
+      previousTop,shellTop,mats.brick);
+    box(.028,shellTop-columnStart,.032,mats.panelJoint,centre,
+      (shellTop+columnStart)/2,C.frontFacade+.023);
+  }
   // Inside the EXISTING brick wall, add a continuous cream/green
   // plaster lining. All four window-shaped apertures are subtracted
   // from the interior paint too — NEVER cover the real transparent
@@ -1060,9 +1080,8 @@ export function buildApartmentHouse(THREE,config={}){
   // Preserve the ORIGINAL operable entrance opening as well.
   const entryDoorVoid={bottom:FOYER_GROUND,top:FOYER_GROUND+2.42,
     halfWidth:1.71/2};
-  // Keep existing landing-level green dado bands unchanged, but finish
-  // EVERY raised window aperture in cream: green must not jump across
-  // the top of glazing when an upper landing paint band overlaps it.
+  // Window glass starts at the intermediate floor. The surrounding
+  // plaster is solid outside each cut, with painted opening reveals.
   const greenBands=Array.from({length:C.floors-1},(_,i)=>{
     const landingY=firstMid+i*C.floorHeight;
     return {bottom:landingY-.12,top:landingY+1.18};
@@ -1077,11 +1096,10 @@ export function buildApartmentHouse(THREE,config={}){
     const y0=sorted[j],y1=sorted[j+1];
     if(y1-y0<.005)continue;
     const midY=(y0+y1)/2;
-    // Never restart green near the TOP of an opening. The lower green
-    // dado is aligned across the side/front wall corner at +1.18m.
     const windowOpen=windowIntervals.some(w=>midY>w.bottom&&midY<w.top);
-    const lower=!windowOpen&&(midY<1.20||
-      greenBands.some(b=>midY>=b.bottom&&midY<b.top));
+    // Cream reveal surrounds each aperture; lower dado remains on solid wall.
+    const lower=!windowOpen&&
+      (midY<1.20||greenBands.some(b=>midY>=b.bottom&&midY<b.top));
     const mat=lower?mats.foyerLower:mats.foyerPaint;
     const doorwayOpen=midY>entryDoorVoid.bottom&&midY<entryDoorVoid.top;
     const ranges=windowOpen

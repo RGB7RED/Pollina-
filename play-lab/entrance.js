@@ -1,5 +1,5 @@
 // MINI CITY 4.7.8 — level entrance + stair render/collision parity.
-import {STAIR_PROFILE,FOYER_GROUND} from "../building-lab/building.js?v=478-align";
+import {STAIR_PROFILE,FOYER_GROUND} from "../building-lab/building.js?v=479-sill";
 // Collision geometry matches the first REAL facade opening and existing porch.
 export function planPlayableEntrance(building,pads){
   if(!building||!pads?.length)throw Error("Entrance requires real building and porch");
@@ -68,15 +68,16 @@ export function planPlayableEntrance(building,pads){
       x-stairHalf+.12,x+.18,
       stair.bottomZ-.035,stair.bottomZ+.055,
       firstFloor+4*storeyHeight-.10,firstFloor+4*storeyHeight+1.02),
-    // All four radiators are on the real window-facing masonry. Their
-    // collision only occupies the corresponding HALF-landing height.
+    // Radiators no longer cover the new floor-height glazing. All four
+    // are mounted to LEFT wall, preserving level-scoped collision.
     ...Array.from({length:totalFloors-1},(_,i)=>{
       const halfY=firstFloor+i*storeyHeight+stair.halfRise;
-      return rect("radiator-window-"+(i+1),x-.69,x+.69,
-        facade-.68,facade-.31,halfY-.06,halfY+.79);
+      return rect("radiator-side-"+(i+1),
+        x-stairHalf+.04,x-stairHalf+.40,
+        6.08-.24,6.08+.24,halfY-.06,halfY+.79);
     }),
-    rect("heating-riser",x+1.38,x+1.53,
-      facade-.70,facade-.33,foyerFloor,firstFloor+
+    rect("heating-riser",x-stairHalf+.12,x-stairHalf+.29,
+      6.08+.20,6.08+.31,foyerFloor,firstFloor+
         totalFloors*storeyHeight),
     ...Array.from({length:totalFloors},(_,i)=>{
       const level=firstFloor+i*storeyHeight;
