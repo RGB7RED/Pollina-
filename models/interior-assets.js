@@ -1,6 +1,7 @@
 // MINI CITY 5.0 — lightweight, original procedural household assets.
 // One SOURCE OF TRUTH for both furnished apartments and the isolated catalog.
 // Coordinates: +Y up, local origin on the floor, local X/Z are footprint axes.
+const FOLDER_NUMBERS=Object.create(null);
 export const INTERIOR_ASSETS=Object.freeze([
   ["sofa","Диван","interior_furniture",1.80,.78,.90],
   ["armchair","Кресло","interior_furniture",.78,.75,.85],
@@ -54,7 +55,11 @@ export const INTERIOR_ASSETS=Object.freeze([
   ["light_switch","Выключатель","interior_fixture",.09,.035,1.31],
   ["doorbell","Квартирный звонок","interior_fixture",.14,.06,1.66],
   ["floor_sign","Табличка этажа","interior_fixture",.25,.035,1.76]
-].map(([id,name,category,w,d,h],i)=>Object.freeze({id,name,category,w,d,h,ordinal:i+1})));
+].map(([id,name,category,w,d,h],i)=>{
+  FOLDER_NUMBERS[category]=(FOLDER_NUMBERS[category]||0)+1;
+  return Object.freeze({id,name,category,w,d,h,
+    ordinal:i+1,modelNumber:FOLDER_NUMBERS[category]});
+}));
 export const INTERIOR_ASSET_BY_ID=Object.freeze(Object.fromEntries(
   INTERIOR_ASSETS.map(a=>[a.id,a])));
 export const INTERIOR_PALETTE=Object.freeze({
