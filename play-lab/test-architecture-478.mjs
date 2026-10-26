@@ -129,7 +129,7 @@ assert.ok(!queue.some(([i,j])=>atX(i)<leftWing.maxX-.5),
 console.log("MINI CITY 4.7.5 PASS: rear second room reachable, neighbour flat sealed, stair windows fully clear, numbers 4-3-1-2");
 
 
-// Alignment regression: first entrance matches second entrance on every residential row.
+// Alignment regression: every entrance window bottom coincides with its actual intermediate landing, not the apartment-floor band.
 assert.equal(house.stats.windows,312);
 assert.equal(house.stats.windowHoles,312);
 assert.equal(audit.stairwellWindows.length,8);
@@ -139,18 +139,18 @@ assert.equal(audit.stairwellInterior.innerHalfWidth,1.635);
 assert.ok(audit.stairwellInterior.innerHalfWidth<entry.stairHalf);
 for(let floor=0;floor<4;floor++){
   const pair=audit.stairwellPairedApertures.slice(floor*2,floor*2+2);
-  const midY=BUILDING.firstFloor+(floor+1)*BUILDING.floorHeight;
+  const midY=BUILDING.firstFloor+(floor+.5)*BUILDING.floorHeight;
   assert.deepEqual(pair.map(h=>Number((h.centre-entry.x).toFixed(2))),[-ENTRY_GLAZING.offset,ENTRY_GLAZING.offset]);
   const secondX=centre(ENTRANCE_BAYS[1]);
   const reference=audit.holes.filter(h=>h.axis==="long"&&h.side===1&&
-    Math.abs(h.bottom-(midY+ENTRY_GLAZING.sillOffset))<1e-6&&
+    Math.abs(h.bottom-midY)<1e-6&&
     Math.abs(h.centre-secondX)<1.25);
   assert.equal(reference.length,2,"second entrance is height reference");
   assert.deepEqual(pair.map(h=>h.bottom),reference.map(h=>h.bottom));
   assert.deepEqual(pair.map(h=>h.top),reference.map(h=>h.top));
   for(const hole of pair){
     assert.equal(hole.width,ENTRY_GLAZING.width);
-    assert.ok(Math.abs(hole.bottom-(midY+ENTRY_GLAZING.sillOffset))<1e-6);
+    assert.ok(Math.abs(hole.bottom-midY)<1e-6);
     assert.ok(Math.abs(hole.height-ENTRY_GLAZING.height)<1e-6);
     assert.ok(audit.windowGlazing.some(g=>g.opening===hole&&g.transparent));
     assert.ok(!audit.wallPieces.some(w=>w.axis==="long"&&w.side===1&&
@@ -163,7 +163,7 @@ for(let floor=0;floor<4;floor++){
 for(const bay of ENTRANCE_BAYS.slice(1)){
   const cx=centre(bay);
   for(let f=1;f<BUILDING.floors;f++){
-    const bottom=BUILDING.firstFloor+f*BUILDING.floorHeight+ENTRY_GLAZING.sillOffset;
+    const bottom=BUILDING.firstFloor+(f-.5)*BUILDING.floorHeight;
     const pair=audit.holes.filter(h=>h.axis==="long"&&h.side===1&&
       Math.abs(h.bottom-bottom)<1e-6&&h.width===ENTRY_GLAZING.width&&
       Math.abs(h.centre-cx)<1.25);
