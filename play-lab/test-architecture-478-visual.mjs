@@ -43,21 +43,21 @@ const renders=house.root.children.filter(o=>o instanceof InstancedMesh)
 const centres=ENTRANCE_BAYS.map(bay=>
   planFacade().find(w=>w.side===1&&w.bay===bay&&w.floor===0).x);
 assert.equal(centres.length,4);
-assert.equal(house.stats.windows,312);
-assert.equal(house.stats.windowHoles,312);
-assert.equal(a.holes.length,316);
+assert.equal(house.stats.windows,320);
+assert.equal(house.stats.windowHoles,320);
+assert.equal(a.holes.length,324);
 const height=ENTRY_GLAZING.height,halfWidth=ENTRY_GLAZING.width/2;
-const expectedLandings=Array.from({length:4},(_,floor)=>
+const expectedLandings=Array.from({length:5},(_,floor)=>
   BUILDING.firstFloor+(floor+.5)*BUILDING.floorHeight);
 assert.deepEqual(expectedLandings.map(v=>Number(v.toFixed(2))),
-  [3.30,5.72,8.14,10.56]);
+  [3.30,5.72,8.14,10.56,12.98]);
 
-// All 32 real openings must exist, with fully transparent glass and visible
+// All 40 real openings must exist, with fully transparent glass and visible
 // wall strips around them. The 4-5F level is asserted separately on each bay.
 const allPairs=[];
 for(let entrance=0;entrance<centres.length;entrance++){
   const cx=centres[entrance];
-  for(let floor=0;floor<4;floor++){
+  for(let floor=0;floor<5;floor++){
     const bottom=expectedLandings[floor],top=bottom+height;
     const pair=a.holes.filter(h=>h.axis==="long"&&h.side===1&&
       h.kind==="window"&&near(h.bottom,bottom)&&near(h.top,top)&&
@@ -76,22 +76,22 @@ for(let entrance=0;entrance<centres.length;entrance++){
         w.u0<h.centre&&w.u1>h.centre&&w.y0<mid&&w.y1>mid),
         "opaque front masonry may not cover the glass");
     }
-    if(floor===3){
+    if(floor===4){
       const roofBottom=BUILDING.firstFloor+BUILDING.floors*BUILDING.floorHeight;
       assert.ok(pair.every(h=>h.top<roofBottom-.05),
-        "top 4-5F glazing fits below residential roof");
+        "extra top-panel glazing fits below the roof");
     }
     allPairs.push(pair);
   }
 }
-assert.equal(allPairs.length,16);
+assert.equal(allPairs.length,20);
 
 // At the PLAYABLE entrance the front painted wall must have green on each
 // level on its solid outer strips, but never inside the transparent windows.
 const wx=centres[0],wz=a.stairwellInterior.wallZ;
 const green=renders.filter(t=>t.color===0x76978d&&
   near(t.position.z,wz)&&near(t.scale.z,.025));
-assert.equal(a.stairwellInterior.windowApertures.length,4);
+assert.equal(a.stairwellInterior.windowApertures.length,5);
 assert.equal(a.stairwellInterior.greenBands.length,4);
 for(let floor=0;floor<4;floor++){
   const y=expectedLandings[floor]+.25;
@@ -107,7 +107,7 @@ for(let floor=0;floor<4;floor++){
     "green must NEVER cover glass");
 }
 // The fifth residential landing needs the original green dado too,
-// even though only four intermediate front-facing window levels exist.
+// the fifth upper-panel window row is cut above the four landing bands.
 const rearZ=a.completeStaircase.landing.minZ+.088;
 for(let residential=0;residential<BUILDING.floors;residential++){
   const floorY=BUILDING.firstFloor+residential*BUILDING.floorHeight;
@@ -117,7 +117,7 @@ for(let residential=0;residential<BUILDING.floors;residential++){
     `green plaster on rear wall missing at residential floor ${residential+1}`);
 }
 // Visibly rendered full-height vertical pipe, on a SOLID pier to the right
-// of windows. Four existing compact radiators remain on the side wall.
+// of windows. Only two window-mounted radiators remain on levels 2 and 4.
 const riser=a.heating.visibleWindowRiser;
 assert.ok(riser);
 assert.ok(riser.x>wx+ENTRY_GLAZING.offset+halfWidth+.18);
@@ -128,5 +128,7 @@ assert.ok(renders.some(t=>t.color===0x7f8989&&
   near(t.scale.x,.064)&&near(t.scale.z,.064)&&
   near(t.scale.y,riser.top-riser.bottom)),
   "the window-side heating pipe must be visible, not merely audit metadata");
-assert.equal(a.heating.radiators.length,4);
-console.log("MINI CITY upper-window/green/riser PASS: 32 real glass openings, top 4-5F row for every entrance, all green bands and full-height pipe");
+assert.equal(a.heating.radiators.length,2);
+assert.deepEqual(a.heating.radiators.map(r=>r.floorFrom),[2,4]);
+assert.ok(a.heating.radiators.every(r=>r.mountedOn==="window-riser"));
+console.log("MINI CITY upper-window/green/riser PASS: 40 real glass openings, top 4-5F row for every entrance, all green bands and full-height pipe");
