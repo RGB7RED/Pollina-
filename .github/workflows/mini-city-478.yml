@@ -25,7 +25,11 @@ jobs:
           node building-lab/test-building.mjs
           node play-lab/test-architecture-476.mjs
       - name: Stage 4.7.8 architecture acceptance
-        run: node play-lab/test-architecture-478.mjs
+        run: |
+          node play-lab/test-architecture-478.mjs
+          node play-lab/test-architecture-478-visual.mjs
+          node play-lab/test-architecture-4547.mjs
+          node play-lab/test-architecture-4548.mjs
       - name: Character walking from street through all five floors and back
         run: node play-lab/test-five-floors.mjs
       - name: Preserve apartment 17 and compact mobile studio
