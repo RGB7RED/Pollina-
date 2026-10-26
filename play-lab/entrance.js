@@ -74,10 +74,10 @@ export function planPlayableEntrance(building,pads){
       const halfY=firstFloor+i*storeyHeight+stair.halfRise;
       return rect("radiator-side-"+(i+1),
         x-stairHalf+.04,x-stairHalf+.40,
-        4.48-.70,4.48+.70,halfY-.06,halfY+.79);
+        6.08-.24,6.08+.24,halfY-.06,halfY+.79);
     }),
     rect("heating-riser",x-stairHalf+.12,x-stairHalf+.29,
-      4.48+.79,4.48+.97,foyerFloor,firstFloor+
+      6.08+.20,6.08+.31,foyerFloor,firstFloor+
         totalFloors*storeyHeight),
     ...Array.from({length:totalFloors},(_,i)=>{
       const level=firstFloor+i*storeyHeight;
