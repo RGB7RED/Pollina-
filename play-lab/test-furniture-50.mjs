@@ -117,6 +117,7 @@ for(const asset of INTERIOR_ASSETS){
   const item=catalog.entries.find(x=>x.id===asset.id);
   assert.ok(item,"not listed "+asset.id);
   assert.equal(item.quantity,layout.countById[asset.id]);
+  assert.equal(item.modelNumber,asset.modelNumber);
   assert.equal(item.inPlayLab,true);
   assert.equal(item.releaseReady,false);
   assert.equal(item.viewer,"interior-asset-lab/index.html?model="+asset.id);
