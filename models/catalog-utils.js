@@ -5,7 +5,10 @@ export const CATEGORIES=Object.freeze({
   building:"Здания",character:"Персонажи",environment:"Улицы и окружение",
   nature:"Растительность",street_furniture:"Городские предметы",
   door:"Двери",window:"Окна",heating:"Отопление",
-  lighting:"Освещение",utility:"Подъездное оборудование"
+  lighting:"Освещение",utility:"Подъездное оборудование",
+  interior_furniture:"Мебель квартиры",kitchen:"Кухня и техника",
+  bathroom:"Ванная и сантехника",hallway:"Прихожая",
+  decor:"Декор и интерьерный свет",interior_fixture:"Интерьерные детали"
 });
 export const STATUS=Object.freeze({
   development:"В разработке",testing:"На испытаниях",approved:"Принят для лаборатории"
@@ -17,7 +20,9 @@ export const KIND=Object.freeze({
 export const CATEGORY_ICON=Object.freeze({
   building:"🏠",character:"🚶",environment:"🛣️",
   nature:"🌳",street_furniture:"🪑",
-  door:"🚪",window:"🪟",heating:"♨️",lighting:"💡",utility:"🔌"
+  door:"🚪",window:"🪟",heating:"♨️",lighting:"💡",utility:"🔌",
+  interior_furniture:"🛋️",kitchen:"🍳",bathroom:"🛁",
+  hallway:"🧥",decor:"🪴",interior_fixture:"🪚"
 });
 function safePath(path,allowQuery=false){
   if(typeof path!=="string"||!path||path.startsWith("/")||path.includes("\\")||
