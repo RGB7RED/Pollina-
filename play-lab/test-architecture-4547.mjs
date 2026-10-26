@@ -58,6 +58,19 @@ assert.equal(instances.filter(t=>Math.abs(t.scale.x-.255)<eps&&
   Math.abs(t.scale.y-.37)<eps&&Math.abs(t.scale.z-.022)<eps).length,20,
   "20 meter windows on end-wall electrical panels");
 assert.equal(a.heating.radiators.length,4);
+assert.ok(a.heating.visibleWindowRiser,
+  "visible vertical heating pipe restored beside the window");
+const visibleRiser=a.heating.visibleWindowRiser;
+assert.ok(visibleRiser.top-visibleRiser.bottom>10);
+assert.ok(visibleRiser.x>x+.61+1.10/2+.20,
+  "pipe is on a solid pier, never across either glass sash");
+assert.ok(visibleRiser.x<x+e.stairHalf-.12);
+assert.ok(instances.some(t=>Math.abs(t.scale.x-.064)<eps&&
+  Math.abs(t.scale.z-.064)<eps&&
+  Math.abs(t.scale.y-(visibleRiser.top-visibleRiser.bottom))<eps&&
+  Math.abs(t.position.x-visibleRiser.x)<eps&&
+  Math.abs(t.position.z-visibleRiser.z)<eps),
+  "restored pipe must be a real rendered mesh");
 assert.equal(a.heating.riser.top,BUILDING.firstFloor+BUILDING.floors*BUILDING.floorHeight+BUILDING.roofClearance-.22);
 assert.ok(a.heating.riser.bottom<e.stair.firstFloor);
 assert.equal(instances.filter(t=>Math.abs(t.scale.x-.12)<eps&&
