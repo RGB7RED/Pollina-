@@ -23,7 +23,7 @@ const ROLES=Object.freeze({
     ["wardrobe",.17,.86,Math.PI/2],["wall_shelf",.73,.20],["books",.72,.18]],
   "Спальня":[
     ["double_bed",.49,.37],["bedside_table",.18,.80],
-    ["wardrobe",.82,.84],["dresser",.20,.62],["table_lamp",.18,.81],
+    ["wardrobe",.82,.84],["dresser",.13,.87,Math.PI/2],["table_lamp",.18,.81],
     ["painting",.55,.84],["rug",.54,.61]],
   "Гостиная":[
     ["sofa",.25,.25],["armchair",.77,.23],["coffee_table",.48,.53],
