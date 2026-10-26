@@ -94,8 +94,8 @@ assert.equal(audit.stairwellWindows.length,8);
 assert.deepEqual(audit.stairwellWindows.map(w=>w.floor),[1,1,2,2,3,3,4,4]);
 for(let i=0;i<8;i++){
   const w=audit.stairwellWindows[i];
-  const turn=stair.firstFloor+(Math.floor(i/2)+1)*stair.storeyRise;
-  assert.ok(Math.abs(w.bottom-turn-.68)<eps,"stairwell window sill matches the upper-floor facade row");
+  const turn=stair.firstFloor+(Math.floor(i/2)+.5)*stair.storeyRise;
+  assert.ok(Math.abs(w.bottom-turn)<eps,"lower sill flush with real intermediate landing");
   assert.ok(Math.abs(w.top-w.bottom-.91)<eps,"full-size window");
   assert.ok(w.transparent&&w.through,"real transparent pane");
   const mid=(w.top+w.bottom)/2;
