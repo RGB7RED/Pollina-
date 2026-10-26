@@ -58,8 +58,8 @@ assert.ok(stair.landing.depth>1.75);
 assert.equal(BUILDING.floors,5);
 assert.equal(BUILDING.entrances,4);
 assert.equal(house.stats.doorHoles,4);
-assert.equal(house.stats.windows,312);
-assert.equal(house.stats.windowHoles,312);
+assert.equal(house.stats.windows,320);
+assert.equal(house.stats.windowHoles,320);
 const shellTop=BUILDING.firstFloor+BUILDING.floorHeight*BUILDING.floors+BUILDING.roofClearance;
 assert.ok(stair.firstFloor+4*stair.storeyRise+2.19<shellTop,
   "fifth floor + full apartment door must stay inside the ORIGINAL house");
@@ -90,9 +90,9 @@ const railPieces=instances.filter(t=>t.color===0x646f72&&
 assert.equal(railPieces.length,27,"24 inner U-flight rails + three entry inner rails");
 assert.ok(railPieces.every(t=>Math.abs(t.position.x-x)<1.0),
   "no exposed handrail mounted against the two outer walls");
-assert.equal(audit.stairwellWindows.length,8);
-assert.deepEqual(audit.stairwellWindows.map(w=>w.floor),[1,1,2,2,3,3,4,4]);
-for(let i=0;i<8;i++){
+assert.equal(audit.stairwellWindows.length,10);
+assert.deepEqual(audit.stairwellWindows.map(w=>w.floor),[1,1,2,2,3,3,4,4,5,5]);
+for(let i=0;i<10;i++){
   const w=audit.stairwellWindows[i];
   const turn=stair.firstFloor+(Math.floor(i/2)+.5)*stair.storeyRise;
   assert.ok(Math.abs(w.bottom-turn)<eps,"lower sill flush with real intermediate landing");
@@ -103,7 +103,7 @@ for(let i=0;i<8;i++){
     p.u0<w.centreX&&p.u1>w.centreX&&p.y0<mid&&p.y1>mid),
     "no opaque brick behind the transparent glazing");
 }
-assert.equal(entry.buildingObstacles.length,25);
+assert.equal(entry.buildingObstacles.length,23);
 assert.equal(entry.groundHeight(x,5.25,0),0,"foyer remains at grade");
 assert.equal(entry.groundHeight(x,0,stair.firstFloor+stair.storeyRise),null,
   "upper central shaft cannot be walked on as an invisible floor");
