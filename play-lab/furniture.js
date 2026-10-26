@@ -20,7 +20,7 @@ function assignedUse(flat,name){
 const ROLES=Object.freeze({
   "Детская":[
     ["single_bed",.25,.31],["writing_desk",.73,.75],["chair",.72,.52],
-    ["wardrobe",.25,.87],["wall_shelf",.73,.20],["books",.72,.18]],
+    ["wardrobe",.17,.86,Math.PI/2],["wall_shelf",.73,.20],["books",.72,.18]],
   "Спальня":[
     ["double_bed",.49,.37],["bedside_table",.18,.80],
     ["wardrobe",.82,.84],["dresser",.20,.62],["table_lamp",.18,.81],
