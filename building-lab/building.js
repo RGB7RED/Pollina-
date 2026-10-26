@@ -675,8 +675,10 @@ export function buildApartmentHouse(THREE,config={}){
       // The original four radiators/riser remain physically instanced.
       // Mesh boxes form an octagonal-looking pipe, batched per material.
       const radiatorMountX=x-stairHalfWidth+.20;
-      const radiatorMountZ=4.48;
-      const radiatorRiser={x:radiatorMountX,z:radiatorMountZ+.87,
+      // Compact side-mounted radiator tucked into front-wall corner;
+      // the walking U-turn at Z≈5.0 remains unobstructed.
+      const radiatorMountZ=6.08;
+      const radiatorRiser={x:radiatorMountX,z:radiatorMountZ+.25,
         bottom:.76,top:shellTop-.22};
       const pipeY=(radiatorRiser.bottom+radiatorRiser.top)/2;
       const pipeH=radiatorRiser.top-radiatorRiser.bottom;
@@ -691,19 +693,19 @@ export function buildApartmentHouse(THREE,config={}){
         const radX=radiatorMountX,radZ=radiatorMountZ;
         // Side-wall placement: rotate the 1.32 m radiator footprint
         // into Z so its backplate sits against the left concrete wall.
-        box(.055,.56,1.24,mats.frameWhite,radX-.038,radY,radZ);
+        box(.055,.56,.46,mats.frameWhite,radX-.038,radY,radZ);
         for(const dy of [-.23,.23])
-          box(.10,.065,1.32,mats.frameGrey,radX+.055,radY+dy,radZ);
+          box(.10,.065,.48,mats.frameGrey,radX+.055,radY+dy,radZ);
         for(let j=0;j<10;j++){
-          const rz=radZ+(j-4.5)*.115;
-          box(.12,.53,.083,mats.frameWhite,radX+.08,radY,rz);
-          box(.126,.41,.035,mats.foyerMailbox,radX+.115,radY,rz);
+          const rz=radZ+(j-4.5)*.043;
+          box(.12,.53,.035,mats.frameWhite,radX+.08,radY,rz);
+          box(.126,.41,.025,mats.foyerMailbox,radX+.115,radY,rz);
         }
         // Supply and return turn along the side wall, not across glass.
         for(const dy of [-.19,.19]){
-          const length=radiatorRiser.z-(radZ+.62);
+          const length=radiatorRiser.z-(radZ+.21);
           box(.055,.055,length,mats.frameGrey,radX+.02,radY+dy,
-            radZ+.62+length/2);
+            radZ+.21+length/2);
         }
         radiators.push({floorFrom:i+1,floorTo:i+2,
           landingY,x:radX,y:radY,z:radZ,width:1.32,height:.59,
