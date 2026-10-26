@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import {INTERIOR_ASSET_BY_ID,buildIsolatedInteriorModel} from
-  "../models/interior-assets.js?v=50";
+  "../models/interior-assets.js?v=50b";
 const $=id=>document.getElementById(id);
 const id=new URL(location.href).searchParams.get("model");
 const item=INTERIOR_ASSET_BY_ID[id];
