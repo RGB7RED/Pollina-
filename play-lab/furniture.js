@@ -84,13 +84,48 @@ export function planFirstFloorFurniture(plan){
     const safeZ=Math.max(fd/2+edge,Math.min(sizeZ-fd/2-edge,sizeZ*v));
     if(sizeX<fw+2*edge||sizeZ<fd+2*edge)
       throw Error("Furnishing wider than "+room.flat+" "+room.name+" "+id);
-    const x=room.minX+safeX,z=room.minZ+safeZ;
+    let x=room.minX+safeX,z=room.minZ+safeZ;
+    // Search nearby shelf/wall locations to keep actual passages clear.
+    // Never silently resize rooms, move doors or push furniture into glass.
+    if(SOLIDS.has(id)&&!mounted&&!MOUNTED.has(id)){
+      const openings=plan.openings.filter(o=>
+        o.x>=room.minX-.10&&o.x<=room.maxX+.10&&
+        o.z>=room.minZ-.10&&o.z<=room.maxZ+.10);
+      const preferred={x,z};
+      const valid=(px,pz)=>{
+        const a={minX:px-fw/2,maxX:px+fw/2,minZ:pz-fd/2,maxZ:pz+fd/2};
+        if(a.minX<room.minX+.06||a.maxX>room.maxX-.06||
+          a.minZ<room.minZ+.06||a.maxZ>room.maxZ-.06)return false;
+        if(bounds.some(b=>b.flat===room.flat&&b.room===room.name&&
+          a.minX<b.maxX+.08&&a.maxX>b.minX-.08&&
+          a.minZ<b.maxZ+.08&&a.maxZ>b.minZ-.08))return false;
+        return !openings.some(d=>{
+          const dx=Math.max(a.minX-d.x,d.x-a.maxX,0);
+          const dz=Math.max(a.minZ-d.z,d.z-a.maxZ,0);
+          return Math.hypot(dx,dz)<.32;
+        });
+      };
+      if(!valid(x,z)){
+        let found=null,score=Infinity;
+        for(let ix=-18;ix<=18;ix++)for(let iz=-18;iz<=18;iz++){
+          const xx=x+ix*.13,zz=z+iz*.13;
+          if(!valid(xx,zz))continue;
+          const dist=(xx-preferred.x)**2+(zz-preferred.z)**2;
+          if(dist<score){found={x:xx,z:zz};score=dist;}
+        }
+        if(found){x=found.x;z=found.z;}
+        else throw Error("Cannot fit "+id+" safely in flat "+
+          room.flat+", room "+room.name);
+      }
+    }
     const record={id,x,z,y:plan.y,yaw,flat:room.flat,room:room.name,
       role:assignedUse(room.flat,room.name),modelNumber:spec.ordinal,
       mounted:mounted||MOUNTED.has(id)||RUGS.has(id),w:fw,d:fd};
     placements.push(record);countByFlat[room.flat]++;
     if(SOLIDS.has(id)&&!record.mounted)bounds.push({...record,
-      minX:x-fw/2,maxX:x+fw/2,minZ:z-fd/2,maxZ:z+fd/2});
+      name:"furniture-"+room.flat+"-"+id,
+      minX:x-fw/2,maxX:x+fw/2,minZ:z-fd/2,maxZ:z+fd/2,
+      minY:plan.y,maxY:plan.y+Math.max(.25,spec.h)});
     return record;
   }
   for(const room of plan.rooms){
