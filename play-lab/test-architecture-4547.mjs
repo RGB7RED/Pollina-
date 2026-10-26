@@ -73,9 +73,11 @@ for(let i=0;i<4;i++){
   assert.ok(collidesAt(rad.x+.10,rad.z,e.buildingObstacles,
     PLAYER_RADIUS,rad.landingY),
     "side-wall radiator keeps physical landing-height collision");
-  assert.ok(!collidesAt(x,BUILDING.frontFacade-.50,e.buildingObstacles,
-    PLAYER_RADIUS,rad.landingY),
-    "the view through centre of landing windows stays free of radiators");
+  assert.ok(!e.buildingObstacles.filter(o=>o.name.startsWith("radiator-side-"))
+    .some(o=>o.minX<x+PLAYER_RADIUS&&o.maxX>x-PLAYER_RADIUS&&
+      o.minZ<BUILDING.frontFacade-.50+PLAYER_RADIUS&&
+      o.maxZ>BUILDING.frontFacade-.50-PLAYER_RADIUS),
+    "window-facing area has no radiator obstruction; exterior wall still collides");
 }
 assert.ok(a.stairwellInterior.painted);
 assert.ok(a.stairwellInterior.noBrickFacing);
