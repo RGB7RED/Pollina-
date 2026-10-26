@@ -73,8 +73,10 @@ for(let i=0;i<4;i++){
   const band=a.stairwellInterior.greenBands[i];
   assert.ok(Math.abs(band.top-(landing+1.18))<eps);
   assert.ok(band.bottom<opening.bottom);
-  assert.ok(band.top<opening.bottom,
-    "original lower landing green paint stops before raised window");
+  assert.ok(Math.abs(opening.bottom-landing)<eps,
+    "window lower sill flush with the visible walking landing");
+  assert.ok(band.top>opening.top,
+    "green paint bands are cut away wherever real glazing starts");
   if(i>0)assert.ok(Math.abs(opening.bottom-
     a.stairwellInterior.windowApertures[i-1].bottom-2.42)<eps,
     "aligned window rows are exactly one storey apart");
