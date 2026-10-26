@@ -1,6 +1,6 @@
 // MINI CITY 5.0 — deterministic interior layout anchored to the ACTUAL 4.7.8 rooms.
 import {INTERIOR_ASSETS,INTERIOR_ASSET_BY_ID,
-  buildInteriorInstances} from "../models/interior-assets.js";
+  buildInteriorInstances} from "../models/interior-assets.js?v=50b";
 const SOLIDS=new Set([
   "sofa","armchair","single_bed","double_bed","wardrobe","dresser",
   "bedside_table","coffee_table","writing_desk","chair","tv_stand",
@@ -66,6 +66,10 @@ const MOUNTED=new Set(["television","wall_shelf","kitchen_wall","kettle",
   "table_lamp","wall_sconce","painting","clock","books","dishes",
   "floor_sign","doorbell","interior_door"]);
 const RUGS=new Set(["rug"]);
+// Smaller assets sit ON their actual host furniture, not on the floor.
+const ITEM_ELEVATION=Object.freeze({
+  television:.54,table_lamp:.48,kettle:.89,dishes:.89,books:1.45
+});
 const foot=(s,yaw)=>Math.abs(Math.sin(yaw))>.7?[s.d,s.w]:[s.w,s.d];
 // Furniture stays in one room, not through apartment partitions.
 // Every placement is deterministic to support per-apartment seed variation later.
@@ -126,8 +130,8 @@ export function planFirstFloorFurniture(plan){
         else return null; // Keep full navigation; omit an oversized duplicate in a narrow room.
       }
     }
-    const record={id,x,z,y:plan.y,yaw,flat:room.flat,room:room.name,
-      role:assignedUse(room.flat,room.name),modelNumber:spec.ordinal,
+    const record={id,x,z,y:plan.y+(ITEM_ELEVATION[id]||0),yaw,flat:room.flat,room:room.name,
+      role:assignedUse(room.flat,room.name),modelNumber:spec.modelNumber,
       mounted:mounted||MOUNTED.has(id)||RUGS.has(id),w:fw,d:fd};
     placements.push(record);countByFlat[room.flat]++;
     if(SOLIDS.has(id)&&!record.mounted)bounds.push({...record,
