@@ -60,17 +60,22 @@ assert.equal(instances.filter(t=>Math.abs(t.scale.x-.255)<eps&&
 assert.equal(a.heating.radiators.length,4);
 assert.equal(a.heating.riser.top,BUILDING.firstFloor+BUILDING.floors*BUILDING.floorHeight+BUILDING.roofClearance-.22);
 assert.ok(a.heating.riser.bottom<e.stair.firstFloor);
-assert.equal(instances.filter(t=>Math.abs(t.scale.x-.083)<eps&&
-  Math.abs(t.scale.y-.53)<eps&&Math.abs(t.scale.z-.12)<eps).length,40,
+assert.equal(instances.filter(t=>Math.abs(t.scale.x-.12)<eps&&
+  Math.abs(t.scale.y-.53)<eps&&Math.abs(t.scale.z-.083)<eps).length,40,
   "four 10-rib radiators near real windows");
 for(let i=0;i<4;i++){
   const w=a.stairwellWindows[i*2],rad=a.heating.radiators[i];
   assert.ok(Math.abs(w.bottom-rad.windowSillY)<eps);
   assert.ok(w.transparent&&w.through);
-  assert.ok(rad.y+rad.height/2<w.bottom-.07);
-  assert.ok(collidesAt(x,BUILDING.frontFacade-.50,e.buildingObstacles,
+  assert.equal(rad.mountedOn,"left-side-wall");
+  assert.ok(rad.x+0.20<w.centreX-w.width/2,
+    "side radiator stays entirely clear of the glass");
+  assert.ok(collidesAt(rad.x+.10,rad.z,e.buildingObstacles,
     PLAYER_RADIUS,rad.landingY),
-    "the radiator is a real obstacle at this landing only");
+    "side-wall radiator keeps physical landing-height collision");
+  assert.ok(!collidesAt(x,BUILDING.frontFacade-.50,e.buildingObstacles,
+    PLAYER_RADIUS,rad.landingY),
+    "the view through centre of landing windows stays free of radiators");
 }
 assert.ok(a.stairwellInterior.painted);
 assert.ok(a.stairwellInterior.noBrickFacing);
