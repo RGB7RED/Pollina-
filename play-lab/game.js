@@ -1,12 +1,12 @@
 import * as THREE from "three";
 import {GLTFLoader} from "three/addons/loaders/GLTFLoader.js";
-import {buildApartmentHouse} from "../building-lab/building.js?v=479-sill";
+import {buildApartmentHouse} from "../building-lab/building.js?v=478-green-riser-top";
 import {planFirstApartment,buildFirstApartment} from "./apartment.js";
 import {planFirstFloor,buildFirstFloor} from "./first-floor.js?v=478";
 import {applyFacadeFinishes} from "../building-lab/materials.js";
 import {ActorAnimator} from "./animation.js";
 import {planStreet,buildStreet} from "./street.js";
-import {planPlayableEntrance} from "./entrance.js?v=479-sill";
+import {planPlayableEntrance} from "./entrance.js?v=478-green-riser-top";
 import {DeveloperStudio} from "./studio.js?v=477";
 import {FreeSceneCamera} from "./free-camera.js";
 import {PlayerController,joystickValue,PLAYER_HEIGHT} from "./controller.js";

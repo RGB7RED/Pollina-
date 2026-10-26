@@ -1,5 +1,5 @@
 // MINI CITY 4.7.8 — level entrance + stair render/collision parity.
-import {STAIR_PROFILE,FOYER_GROUND} from "../building-lab/building.js?v=479-sill";
+import {STAIR_PROFILE,FOYER_GROUND} from "../building-lab/building.js?v=478-green-riser-top";
 // Collision geometry matches the first REAL facade opening and existing porch.
 export function planPlayableEntrance(building,pads){
   if(!building||!pads?.length)throw Error("Entrance requires real building and porch");

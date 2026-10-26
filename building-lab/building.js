@@ -686,6 +686,19 @@ export function buildApartmentHouse(THREE,config={}){
         radiatorRiser.x,pipeY,radiatorRiser.z);
       box(.047,pipeH,.076,mats.frameGrey,
         radiatorRiser.x,pipeY,radiatorRiser.z,0,Math.PI/4);
+      // Restore the original window-side vertical heating pipe, visible
+      // on EVERY stair level, beside (never across) the paired panes.
+      // Keep the compact radiator circuit on the left wall, where it
+      // cannot obstruct the staircase turnaround or transparent glass.
+      const visibleWindowRiser={
+        x:x+1.45,z:facadeInnerZ-.085,bottom:.76,top:shellTop-.22
+      };
+      const visiblePipeHeight=visibleWindowRiser.top-visibleWindowRiser.bottom;
+      const visiblePipeY=(visibleWindowRiser.top+visibleWindowRiser.bottom)/2;
+      box(.064,visiblePipeHeight,.064,mats.frameGrey,
+        visibleWindowRiser.x,visiblePipeY,visibleWindowRiser.z);
+      box(.047,visiblePipeHeight,.076,mats.frameGrey,
+        visibleWindowRiser.x,visiblePipeY,visibleWindowRiser.z,0,Math.PI/4);
       const radiators=[];
       for(let i=0;i<C.floors-1;i++){
         const landingY=baseFloor+i*storeyRise+rise;
@@ -712,7 +725,7 @@ export function buildApartmentHouse(THREE,config={}){
           mountedOn:"left-side-wall",windowSillY:landingY,
           clearance:0});
       }
-      audit.heating={riser:radiatorRiser,radiators,
+      audit.heating={riser:radiatorRiser,visibleWindowRiser,radiators,
         windowWallZ:facadeInnerZ,instanced:true};
       audit.firstStaircase={
         firstX,secondX,bottomZ:rearLandingEndZ,turnZ:halfLandingZ,
@@ -1097,9 +1110,13 @@ export function buildApartmentHouse(THREE,config={}){
     if(y1-y0<.005)continue;
     const midY=(y0+y1)/2;
     const windowOpen=windowIntervals.some(w=>midY>w.bottom&&midY<w.top);
-    // Cream reveal surrounds each aperture; lower dado remains on solid wall.
-    const lower=!windowOpen&&
-      (midY<1.20||greenBands.some(b=>midY>=b.bottom&&midY<b.top));
+    // Maintain the original green dado on ALL SOLID portions of the
+    // front wall, including the narrow strips BESIDE both window sashes.
+    // The ranges below cut the actual transparent holes independently;
+    // hiding green for the entire window-height band made whole floors
+    // look cream instead of the original stairwell paint scheme.
+    const lower=midY<1.20||
+      greenBands.some(b=>midY>=b.bottom&&midY<b.top);
     const mat=lower?mats.foyerLower:mats.foyerPaint;
     const doorwayOpen=midY>entryDoorVoid.bottom&&midY<entryDoorVoid.top;
     const ranges=windowOpen
