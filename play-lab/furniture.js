@@ -91,6 +91,15 @@ export function planFirstFloorFurniture(plan){
       const openings=plan.openings.filter(o=>
         o.x>=room.minX-.10&&o.x<=room.maxX+.10&&
         o.z>=room.minZ-.10&&o.z<=room.maxZ+.10);
+      // The four actual ENTRANCE doors sit on a separate stair-side wall,
+      // outside plan.openings. Reserve their internal approach as well.
+      if(room.name==="Прихожая"){
+        const door=plan.doors.find(d=>d.number===room.flat);
+        if(door)openings.push({
+          x:door.x+door.side*.28,z:door.z,
+          axis:"x",width:door.width,entrance:true
+        });
+      }
       const preferred={x,z};
       const valid=(px,pz)=>{
         const a={minX:px-fw/2,maxX:px+fw/2,minZ:pz-fd/2,maxZ:pz+fd/2};
@@ -102,7 +111,7 @@ export function planFirstFloorFurniture(plan){
         return !openings.some(d=>{
           const dx=Math.max(a.minX-d.x,d.x-a.maxX,0);
           const dz=Math.max(a.minZ-d.z,d.z-a.maxZ,0);
-          return Math.hypot(dx,dz)<.32;
+          return Math.hypot(dx,dz)<.47;
         });
       };
       if(!valid(x,z)){
