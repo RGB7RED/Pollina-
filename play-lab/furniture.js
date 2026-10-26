@@ -1,6 +1,6 @@
 // MINI CITY 5.0 — deterministic interior layout anchored to the ACTUAL 4.7.8 rooms.
 import {INTERIOR_ASSETS,INTERIOR_ASSET_BY_ID,
-  buildInteriorInstances} from "../models/interior-assets.js";
+  buildInteriorInstances} from "../models/interior-assets.js?v=50b";
 const SOLIDS=new Set([
   "sofa","armchair","single_bed","double_bed","wardrobe","dresser",
   "bedside_table","coffee_table","writing_desk","chair","tv_stand",
