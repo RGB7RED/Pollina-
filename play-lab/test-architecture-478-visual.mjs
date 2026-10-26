@@ -106,6 +106,16 @@ for(let floor=0;floor<4;floor++){
     t.position.y-t.scale.y/2<y&&t.position.y+t.scale.y/2>y),
     "green must NEVER cover glass");
 }
+// The fifth residential landing needs the original green dado too,
+// even though only four intermediate front-facing window levels exist.
+const rearZ=a.completeStaircase.landing.minZ+.088;
+for(let residential=0;residential<BUILDING.floors;residential++){
+  const floorY=BUILDING.firstFloor+residential*BUILDING.floorHeight;
+  assert.ok(renders.some(t=>t.color===0x76978d&&
+    near(t.position.x,wx)&&near(t.position.z,rearZ)&&
+    near(t.position.y,floorY+.59)&&near(t.scale.y,1.18)),
+    `green plaster on rear wall missing at residential floor ${residential+1}`);
+}
 // Visibly rendered full-height vertical pipe, on a SOLID pier to the right
 // of windows. Four existing compact radiators remain on the side wall.
 const riser=a.heating.visibleWindowRiser;
