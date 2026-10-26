@@ -1095,7 +1095,9 @@ export function buildApartmentHouse(THREE,config={}){
     if(y1-y0<.005)continue;
     const midY=(y0+y1)/2;
     const windowOpen=windowIntervals.some(w=>midY>w.bottom&&midY<w.top);
-    const lower=midY<1.20||greenBands.some(b=>midY>=b.bottom&&midY<b.top);
+    // Cream reveal surrounds each aperture; lower dado remains on solid wall.
+    const lower=!windowOpen&&
+      (midY<1.20||greenBands.some(b=>midY>=b.bottom&&midY<b.top));
     const mat=lower?mats.foyerLower:mats.foyerPaint;
     const doorwayOpen=midY>entryDoorVoid.bottom&&midY<entryDoorVoid.top;
     const ranges=windowOpen
