@@ -63,9 +63,9 @@ for(let i=0;i<8;i++){
     2.09+Math.floor(i/2)*2.42+1.21-.15:
     2.09+Math.floor(i/2)*2.42+1.21-.15))<eps);
 }
-assert.equal(a.stairwellInterior.finishedWindowReveals,8);
-assert.equal(a.stairwellInterior.windowApertures.length,4);
-assert.equal(a.stairwellWindows.length,8);
+assert.equal(a.stairwellInterior.finishedWindowReveals,10);
+assert.equal(a.stairwellInterior.windowApertures.length,5);
+assert.equal(a.stairwellWindows.length,10);
 const plasterZ=a.stairwellInterior.wallZ;
 for(let i=0;i<4;i++){
   const opening=a.stairwellInterior.windowApertures[i];
@@ -117,7 +117,7 @@ assert.ok(a.stairwellWindows.slice(0,2).every(w=>Math.abs(Math.abs(w.centreX-x)-
 assert.equal(a.completeStaircase.landing.depth,3.2699999999999996);
 assert.equal(a.completeStaircase.apartmentDoors.length,20);
 assert.equal(a.completeStaircase.electricPanels.length,5);
-assert.equal(a.heating.radiators.length,4);
+assert.equal(a.heating.radiators.length,2);
 assert.equal(entry.stair.backZ,-4.85);
 assert.equal(house.stats.entrances,4);
 assert.equal(BUILDING.floors,5);
