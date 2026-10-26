@@ -130,14 +130,14 @@ console.log("MINI CITY 4.7.5 PASS: rear second room reachable, neighbour flat se
 
 
 // Stage 4.7.8: first-entrance double sashes align exactly with all three other entrances.
-assert.equal(house.stats.windows,312);
-assert.equal(house.stats.windowHoles,312);
-assert.equal(audit.stairwellWindows.length,8);
-assert.equal(audit.stairwellPairedApertures.length,8);
-assert.equal(audit.stairwellInterior.finishedWindowReveals,8);
+assert.equal(house.stats.windows,320);
+assert.equal(house.stats.windowHoles,320);
+assert.equal(audit.stairwellWindows.length,10);
+assert.equal(audit.stairwellPairedApertures.length,10);
+assert.equal(audit.stairwellInterior.finishedWindowReveals,10);
 assert.equal(audit.stairwellInterior.innerHalfWidth,1.635);
 assert.ok(audit.stairwellInterior.innerHalfWidth<entry.stairHalf);
-for(let floor=0;floor<4;floor++){
+for(let floor=0;floor<5;floor++){
   const pair=audit.stairwellPairedApertures.slice(floor*2,floor*2+2);
   const midY=BUILDING.firstFloor+(floor+.5)*BUILDING.floorHeight;
   assert.deepEqual(pair.map(h=>Number((h.centre-entry.x).toFixed(2))),[-ENTRY_GLAZING.offset,ENTRY_GLAZING.offset]);
@@ -162,7 +162,7 @@ for(let floor=0;floor<4;floor++){
 // residential storey as well, NOT two decorative glass meshes.
 for(const bay of ENTRANCE_BAYS.slice(1)){
   const cx=centre(bay);
-  for(let f=1;f<BUILDING.floors;f++){
+  for(let f=1;f<=BUILDING.floors;f++){
     const bottom=BUILDING.firstFloor+(f-.5)*BUILDING.floorHeight;
     const pair=audit.holes.filter(h=>h.axis==="long"&&h.side===1&&
       Math.abs(h.bottom-bottom)<1e-6&&h.width===ENTRY_GLAZING.width&&
