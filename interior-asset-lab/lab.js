@@ -9,7 +9,7 @@ if(!item){
   throw Error("Unknown interior model: "+id);
 }
 $("title").textContent=item.name;
-$("info").textContent="№ "+String(item.ordinal).padStart(3,"0")+
+$("info").textContent="№ "+String(item.modelNumber).padStart(3,"0")+
  " · размер "+item.w.toFixed(2)+" × "+item.d.toFixed(2)+" × "+
  item.h.toFixed(2)+" м · процедурная модель MINI CITY";
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x91a2a4);
