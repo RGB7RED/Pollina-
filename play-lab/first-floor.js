@@ -41,7 +41,7 @@ export function planFirstFloor(building,entrance){
   const doors=[
     {number:4,side:-1,z:-2.42,type:"1к",quadrant:"front"},
     {number:3,side:-1,z:-4.00,type:"2к",quadrant:"rear"},
-    {number:1,side:1,z:-2.42,type:"3к",quadrant:"front"},
+    {number:1,side:1,z:-2.42,type:"1к",quadrant:"front"},
     {number:2,side:1,z:-4.00,type:"1к",quadrant:"rear"}
   ].map((d,i)=>({...d,x:x+d.side*half,y,width:1.04,
     variant:doorKinds[i],paletteIndex:i}));
@@ -172,40 +172,42 @@ export function planFirstFloor(building,entrance){
     // to +2.345. Both corridor boundaries must clear that full sash.
     const frontCrossBack=.80,frontBedrooms=2.60;
     const frontWetSplit=-.62;
-    wallX("front-private-hall-"+side,near,divider,frontCrossBack,[
-      {z:-1.80,width:.88},{z:.25,width:.88}
-    ]);
-    wallZ("front-kitchen-bath-"+side,frontWetSplit,wet0,wet1);
+    // Flat 1: the original kitchen and bath become ONE wide kitchen.
+    // Keep the hallway boundaries; replace its two small wet-room doors
+    // with one clear entrance to the enlarged kitchen.
+    wallX("front-private-hall-"+side,near,divider,frontCrossBack,
+      side>0?[{z:-1.10,width:1.08}]:[
+        {z:-1.80,width:.88},{z:.25,width:.88}
+      ]);
+    if(side<0)wallZ("front-kitchen-bath-"+side,frontWetSplit,wet0,wet1);
     wallZ("front-cross-hall-wet-"+side,frontCrossBack,wet0,wet1,
       [{x:(wet0+wet1)/2,width:.96}]);
     room(frontNo,"Прихожая",corridor0,corridor1,divider,frontCrossBack);
-    room(frontNo,"Кухня",wet0,wet1,divider,frontWetSplit);
-    room(frontNo,"Санузел",wet0,wet1,frontWetSplit,frontCrossBack);
+    if(side>0){
+      room(1,"Кухня",wet0,wet1,divider,frontCrossBack);
+    }else{
+      room(frontNo,"Кухня",wet0,wet1,divider,frontWetSplit);
+      room(frontNo,"Санузел",wet0,wet1,frontWetSplit,frontCrossBack);
+    }
     room(frontNo,"Коридор",left,right,frontCrossBack,frontBedrooms);
     if(side>0){
-      // Each of three independent bedrooms sits under one of the
-      // existing THREE front windows (bays 4,5,6). The cross hall has
-      // three matching doorways so bedrooms cannot force passage
-      // through each other.
-      // Equal thirds cut right through the facade windows. The actual
-      // three first-entrance window bays are 4, 5, 6: dividers belong
-      // exactly BETWEEN consecutive windows.
+      // Flat 1 retains all three original front window bays 4, 5, 6.
+      // The single new partition sits BETWEEN window bays 5 and 6.
       const bayX=n=>-building.length/2+1.85+
         (n+.5)*(building.length-3.7)/building.windowBays;
-      const s1=(bayX(4)+bayX(5))/2;
       const s2=(bayX(5)+bayX(6))/2;
-      if(!(left+.90<s1&&s1+1<s2&&s2+1<right))
-        throw Error("3-room dividers cannot fit between facade windows");
-      wallX("three-room-separation-A",s1,frontBedrooms,front);
-      wallX("three-room-separation-B",s2,frontBedrooms,front);
-      wallZ("three-bedrooms-access",frontBedrooms,left,right,[
-        {x:(left+s1)/2,width:.94},
-        {x:(s1+s2)/2,width:.94},
-        {x:(s2+right)/2,width:.94}
+      if(!(left+1.80<s2&&s2+1<right))
+        throw Error("Flat 1 bath partition cannot fit between facade windows");
+      // Combine former rooms 1+2 into one living room with both windows.
+      // Former room 3 becomes a spacious bath, with the wall between
+      // window bays 5/6 (never through a frame). Keep the corridor.
+      wallX("flat1-bath-partition",s2,frontBedrooms,front);
+      wallZ("flat1-room-bath-access",frontBedrooms,left,right,[
+        {x:(left+s2)/2,width:1.04},
+        {x:(s2+right)/2,width:.98}
       ]);
-      room(1,"Жилая комната 1",left,s1,frontBedrooms,front);
-      room(1,"Жилая комната 2",s1,s2,frontBedrooms,front);
-      room(1,"Жилая комната 3",s2,right,frontBedrooms,front);
+      room(1,"Жилая комната 1",left,s2,frontBedrooms,front);
+      room(1,"Санузел",s2,right,frontBedrooms,front);
     }else{
       wallZ("front-one-bedroom-access",frontBedrooms,left,right,[
         {x:at(1.62),width:1.04}
@@ -296,6 +298,7 @@ export function planFirstFloor(building,entrance){
       .filter(x=>x>=w.minX&&x<=w.maxX);
     for(const wall of segments){
       if(!wall.name.includes("three-room-separation")&&
+         !wall.name.includes("flat1-bath-partition")&&
          !wall.name.includes("rear-two-bedrooms-divider"))continue;
       for(const cx of windows)
         if(wall.minX<cx+.72&&wall.maxX>cx-.72 &&
@@ -321,7 +324,7 @@ export function planFirstFloor(building,entrance){
     segments,doorBlockers,back,front,divider,unfurnished:true,
     facadeLiningCount:facadeLining.length,
     windowConflicts,roofStyle:"flat-panel",
-    template:"Khrushchevka-reference-2k-1k-1k-3k", 
+    template:"Khrushchevka-reference-flat1-combined-kitchen-and-bath", 
     bounds:{back:building.backFacade,front:building.frontFacade},
     contains:(px,pz,py)=>Math.abs(py-y)<.24&&(
       wings.some(w=>px>=w.minX-.11&&px<=w.maxX+.11&&pz>=back&&pz<=front)||
@@ -329,13 +332,13 @@ export function planFirstFloor(building,entrance){
     obstacles:[...segments,...stairWallColliders],
     roomCount:n=>rooms.filter(r=>r.flat===n&&r.name.startsWith("Жилая комната")).length
   };
-  for(const [number,count] of [[1,3],[2,2],[3,2],[4,1]])
+  for(const [number,count] of [[1,1],[2,2],[3,2],[4,1]])
     if(data.roomCount(number)!==count)
       throw Error("Apartment "+number+" does not match reference");
   return data;
 }
 export function buildFirstFloor(THREE,plan){
-  const root=new THREE.Group();root.name="First floor · 4.7.5 rear annexe";
+  const root=new THREE.Group();root.name="First floor · flat 1 replan";
   const geometry=new THREE.BoxGeometry(1,1,1),dummy=new THREE.Object3D();
   const mats={
     wall:new THREE.MeshStandardMaterial({color:0xd5ccba,roughness:.95}),
