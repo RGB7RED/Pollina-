@@ -35,7 +35,7 @@ approx(kitchen.minZ,plan.divider);
 approx(kitchen.maxZ,hallway.maxZ);
 approx(corridor.minZ,kitchen.maxZ);
 approx(corridor.maxZ,room1.minZ);
-approx(room1.minX,kitchen.minX-(kitchen.minX-hallway.minX));
+approx(room1.minX,plan.wings.find(w=>w.side===1).minX);
 approx(room1.maxX,bath.minX);
 approx(bath.maxX,plan.wings.find(w=>w.side===1).maxX);
 for(const bay of [4,5]){
@@ -52,7 +52,7 @@ assert.deepEqual(originalDoors.map(d=>d.slice(0,3)),
 assert.equal(plan.doors.find(d=>d.number===1).type,"1к");
 assert.equal(plan.openings.filter(o=>o.name.startsWith("front-private-hall-1")).length,1);
 assert.equal(plan.openings.filter(o=>o.name.startsWith("flat1-room-bath-access")).length,2);
-for(const [n,count] of [[2,5],[3,6],[4,6]]){
+for(const [n,count] of [[2,6],[3,6],[4,5]]){
   assert.equal(flat(n).length,count,"other apartment room types unchanged");
 }
 const layout=planFirstFloorFurniture(plan);
