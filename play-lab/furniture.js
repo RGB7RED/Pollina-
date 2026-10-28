@@ -144,7 +144,14 @@ export function planFirstFloorFurniture(plan){
     const role=assignedUse(room.flat,room.name);
     const recipe=ROLES[role];
     if(!recipe)throw Error("No furnishing recipe for "+role);
-    for(const [id,u,v,angle=0] of recipe)put(room,id,u,v,angle);
+    for(const [id,u,v,angle=0] of recipe){
+      // Flat 1: move the bathtub from the bathroom entrance (z≈3.4)
+      // to the facade window (z≈5.47). The window and room dimensions
+      // are fixed; all other flats keep their original furnishing recipes.
+      if(room.flat===1&&room.name==="Санузел"&&id==="bathtub")
+        put(room,id,.50,.85,angle);
+      else put(room,id,u,v,angle);
+    }
     // Wall-mounted decorations must not block actual facade windows.
     if(role.startsWith("Гостиная")||role==="Спальня"||role==="Детская"){
       put(room,"curtains",.55,.91);
