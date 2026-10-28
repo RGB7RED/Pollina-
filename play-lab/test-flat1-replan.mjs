@@ -31,6 +31,19 @@ assert.ok(!plan.segments.some(s=>s.name.startsWith("three-room-separation-A")),
   "removed former rooms 1 and 2 dividing wall");
 assert.ok(plan.segments.some(s=>s.name==="flat1-bath-partition-tail"),
   "bath must remain separated from the new large room");
+// Follow-up acceptance: only flat 1 grows its hall toward the kitchen.
+approx(hallway.maxX-hallway.minX,2.10);
+approx(kitchen.minX,hallway.maxX);
+assert.ok(kitchen.maxX-kitchen.minX>4.50,"narrower kitchen must remain usable");
+const entryDoor=plan.doors.find(d=>d.number===1);
+approx(hallway.minX,entryDoor.x);
+const kitchenDoor=plan.openings.find(o=>o.name==="front-private-hall-1-door-0");
+assert.ok(kitchenDoor&&kitchenDoor.width>=1.04,"wide and clear kitchen entrance");
+approx(kitchenDoor.x,hallway.maxX);
+for(const other of [2,3,4]){
+  const otherHall=find(other,"Прихожая");
+  approx(otherHall.maxX-otherHall.minX,1.32);
+}
 approx(kitchen.minZ,plan.divider);
 approx(kitchen.maxZ,hallway.maxZ);
 approx(corridor.minZ,kitchen.maxZ);
@@ -57,6 +70,20 @@ for(const [n,count] of [[2,6],[3,6],[4,5]]){
 }
 const layout=planFirstFloorFurniture(plan);
 assert.equal(layout.roomCount,22);
+assert.equal(layout.placements.length,220,"keep all furnishings after hall resize");
+const tub=layout.placements.find(p=>p.flat===1&&p.room==="Санузел"&&p.id==="bathtub");
+assert.ok(tub,"bathtub must remain in the bathroom");
+approx(tub.x,bayX(6));
+assert.ok(tub.z>bath.minZ+(bath.maxZ-bath.minZ)*.80,
+  "bathtub must sit by the window, not at the entrance");
+assert.ok(tub.z+tub.d/2<=bath.maxZ-.06,
+  "bathtub must not cut through window glazing / facade lining");
+const bathDoor=plan.openings.find(o=>o.name==="flat1-room-bath-access-door-1");
+assert.ok(bathDoor,"bathroom entrance retained in its existing wall");
+assert.ok(tub.z-tub.d/2-bathDoor.z>2.0,
+  "unobstructed walk from bathroom doorway to the window-side bathtub");
+assert.ok(layout.solidBounds.some(b=>b.flat===1&&b.id==="bathtub"&&
+  b.minZ>bathDoor.z+2.0),"bath collision must follow its moved model");
 assert.ok(layout.placements.some(p=>p.flat===1&&p.room==="Санузел"&&p.id==="toilet"));
 assert.ok(layout.placements.some(p=>p.flat===1&&p.room==="Кухня"&&p.id==="stove"));
 assert.ok(layout.placements.every(p=>p.flat!==1||!["Жилая комната 2","Жилая комната 3"].includes(p.room)));
@@ -65,4 +92,4 @@ for(const bound of layout.solidBounds.filter(o=>o.flat===1)){
   assert.ok(room&&bound.minX>=room.minX-.001&&bound.maxX<=room.maxX+.001);
   assert.ok(bound.minZ>=room.minZ-.001&&bound.maxZ<=room.maxZ+.001);
 }
-console.log("FLAT 1 REPLAN PASS: one enlarged kitchen, 1 living room, 1 windowed bathroom; doors, outer windows, staircase and three other flats unchanged");
+console.log("FLAT 1 REPLAN PASS: 2.10m entrance hall, narrower kitchen, bathtub aligned with bathroom window, unchanged exterior, stairs and other flats");
