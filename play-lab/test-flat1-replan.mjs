@@ -70,7 +70,7 @@ for(const [n,count] of [[2,5],[3,6],[4,5]]){
 }
 const layout=planFirstFloorFurniture(plan);
 assert.equal(layout.roomCount,21);
-assert.equal(layout.placements.length,206,"keep flat 1 furnishing after flat 2 remodel");
+assert.equal(layout.placements.length,204,"flat 2 furniture moved to preserve first-floor traversal");
 const tub=layout.placements.find(p=>p.flat===1&&p.room==="Санузел"&&p.id==="bathtub");
 assert.ok(tub,"bathtub must remain in the bathroom");
 approx(tub.x,bayX(6));
