@@ -172,22 +172,30 @@ export function planFirstFloor(building,entrance){
     // to +2.345. Both corridor boundaries must clear that full sash.
     const frontCrossBack=.80,frontBedrooms=2.60;
     const frontWetSplit=-.62;
+    // Flat 1 ONLY: widen the entrance hall from 1.32 m to 2.10 m
+    // by moving the kitchen-facing partition 0.78 m toward the kitchen.
+    // The rear apartments still use the original "near" coordinate.
+    const frontNear=side>0?at(2.10):near;
+    const frontHall0=Math.min(inner,frontNear);
+    const frontHall1=Math.max(inner,frontNear);
+    const frontKitchen0=Math.min(outer,frontNear);
+    const frontKitchen1=Math.max(outer,frontNear);
     // Flat 1: the original kitchen and bath become ONE wide kitchen.
     // Keep the hallway boundaries; replace its two small wet-room doors
     // with one clear entrance to the enlarged kitchen.
-    wallX("front-private-hall-"+side,near,divider,frontCrossBack,
+    wallX("front-private-hall-"+side,frontNear,divider,frontCrossBack,
       side>0?[{z:-1.10,width:1.08}]:[
         {z:-1.80,width:.88},{z:.25,width:.88}
       ]);
-    if(side<0)wallZ("front-kitchen-bath-"+side,frontWetSplit,wet0,wet1);
-    wallZ("front-cross-hall-wet-"+side,frontCrossBack,wet0,wet1,
-      [{x:(wet0+wet1)/2,width:.96}]);
-    room(frontNo,"Прихожая",corridor0,corridor1,divider,frontCrossBack);
+    if(side<0)wallZ("front-kitchen-bath-"+side,frontWetSplit,frontKitchen0,frontKitchen1);
+    wallZ("front-cross-hall-wet-"+side,frontCrossBack,frontKitchen0,frontKitchen1,
+      [{x:(frontKitchen0+frontKitchen1)/2,width:.96}]);
+    room(frontNo,"Прихожая",frontHall0,frontHall1,divider,frontCrossBack);
     if(side>0){
-      room(1,"Кухня",wet0,wet1,divider,frontCrossBack);
+      room(1,"Кухня",frontKitchen0,frontKitchen1,divider,frontCrossBack);
     }else{
-      room(frontNo,"Кухня",wet0,wet1,divider,frontWetSplit);
-      room(frontNo,"Санузел",wet0,wet1,frontWetSplit,frontCrossBack);
+      room(frontNo,"Кухня",frontKitchen0,frontKitchen1,divider,frontWetSplit);
+      room(frontNo,"Санузел",frontKitchen0,frontKitchen1,frontWetSplit,frontCrossBack);
     }
     room(frontNo,"Коридор",left,right,frontCrossBack,frontBedrooms);
     if(side>0){
