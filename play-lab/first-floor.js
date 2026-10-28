@@ -135,16 +135,26 @@ export function planFirstFloor(building,entrance){
     // Keep the corridor BETWEEN these two structural cross-walls.
     const rearBedroomFront=-9.00,rearHallFront=-6.90,wetSplit=-5.22;
     const wetDoorKitchen=-6.12,wetDoorBathroom=-4.25;
-    wallX("rear-private-hall-"+side,near,rearHallFront,divider,[
-      {z:wetDoorKitchen,width:.90},
-      {z:wetDoorBathroom,width:.90}
-    ]);
+    // Flat 2: the old kitchen + toilet become one large bathroom. The
+    // hall retains a single 1.08m bathroom door, not two redundant doors.
+    // Corridor and entry door remain exactly where they were.
+    wallX("rear-private-hall-"+side,near,rearHallFront,divider,
+      side>0?[{z:-5.08,width:1.08}]:[
+        {z:wetDoorKitchen,width:.90},
+        {z:wetDoorBathroom,width:.90}
+      ]);
+    // A full-height wall separates the bath from the cross corridor;
+    // bathroom access is through the preserved private hallway.
     wallZ("rear-cross-hall-kitchen-"+side,rearHallFront,
-      wet0,wet1,[{x:(wet0+wet1)/2,width:.96}]);
-    wallZ("rear-kitchen-bath-"+side,wetSplit,wet0,wet1);
+      wet0,wet1,side>0?[]:[{x:(wet0+wet1)/2,width:.96}]);
+    if(side<0)wallZ("rear-kitchen-bath-"+side,wetSplit,wet0,wet1);
     room(rearNo,"Прихожая",corridor0,corridor1,rearHallFront,divider);
-    room(rearNo,"Кухня",wet0,wet1,rearHallFront,wetSplit);
-    room(rearNo,"Санузел",wet0,wet1,wetSplit,divider);
+    if(side>0){
+      room(2,"Санузел",wet0,wet1,rearHallFront,divider);
+    }else{
+      room(rearNo,"Кухня",wet0,wet1,rearHallFront,wetSplit);
+      room(rearNo,"Санузел",wet0,wet1,wetSplit,divider);
+    }
     // The cross hall occupies the full wing width for one metre and
     // connects to the private hall without going through the kitchen.
     room(rearNo,"Коридор",left,right,rearBedroomFront,rearHallFront);
@@ -161,7 +171,9 @@ export function planFirstFloor(building,entrance){
       wallZ("rear-bedroom-entry-"+side,rearBedroomFront,left,right,[
         {x:(left+right)/2,width:1.03}
       ]);
-      room(2,"Жилая комната 1",left,right,back,rearBedroomFront);
+      // Old living room 1 is now the kitchen. The existing three rear
+      // facade windows and the access door from the corridor stay put.
+      room(2,"Кухня",left,right,back,rearBedroomFront);
     }
     unit(rearNo,side,"rear",left,right,back,divider);
 
@@ -332,7 +344,7 @@ export function planFirstFloor(building,entrance){
     segments,doorBlockers,back,front,divider,unfurnished:true,
     facadeLiningCount:facadeLining.length,
     windowConflicts,roofStyle:"flat-panel",
-    template:"Khrushchevka-reference-flat1-combined-kitchen-and-bath", 
+    template:"Khrushchevka-reference-flat1-and-flat2-replanned", 
     bounds:{back:building.backFacade,front:building.frontFacade},
     contains:(px,pz,py)=>Math.abs(py-y)<.24&&(
       wings.some(w=>px>=w.minX-.11&&px<=w.maxX+.11&&pz>=back&&pz<=front)||
@@ -340,13 +352,13 @@ export function planFirstFloor(building,entrance){
     obstacles:[...segments,...stairWallColliders],
     roomCount:n=>rooms.filter(r=>r.flat===n&&r.name.startsWith("Жилая комната")).length
   };
-  for(const [number,count] of [[1,1],[2,2],[3,2],[4,1]])
+  for(const [number,count] of [[1,1],[2,1],[3,2],[4,1]])
     if(data.roomCount(number)!==count)
       throw Error("Apartment "+number+" does not match reference");
   return data;
 }
 export function buildFirstFloor(THREE,plan){
-  const root=new THREE.Group();root.name="First floor · flat 1 replan";
+  const root=new THREE.Group();root.name="First floor · flats 1+2 replan";
   const geometry=new THREE.BoxGeometry(1,1,1),dummy=new THREE.Object3D();
   const mats={
     wall:new THREE.MeshStandardMaterial({color:0xd5ccba,roughness:.95}),
