@@ -23,8 +23,8 @@ const hallway=find(1,"Прихожая");
 const corridor=find(1,"Коридор");
 assert.deepEqual(flat(1).map(r=>r.name),
   ["Прихожая","Кухня","Коридор","Жилая комната 1","Санузел"]);
-assert.deepEqual([1,2,3,4].map(n=>plan.roomCount(n)),[1,2,2,1]);
-assert.equal(plan.rooms.length,22);
+assert.deepEqual([1,2,3,4].map(n=>plan.roomCount(n)),[1,1,2,1]);
+assert.equal(plan.rooms.length,21);
 assert.ok(!plan.segments.some(s=>s.name.startsWith("front-kitchen-bath-1")),
   "removed old kitchen/bath dividing wall");
 assert.ok(!plan.segments.some(s=>s.name.startsWith("three-room-separation-A")),
@@ -65,12 +65,12 @@ assert.deepEqual(originalDoors.map(d=>d.slice(0,3)),
 assert.equal(plan.doors.find(d=>d.number===1).type,"1к");
 assert.equal(plan.openings.filter(o=>o.name.startsWith("front-private-hall-1")).length,1);
 assert.equal(plan.openings.filter(o=>o.name.startsWith("flat1-room-bath-access")).length,2);
-for(const [n,count] of [[2,6],[3,6],[4,5]]){
+for(const [n,count] of [[2,5],[3,6],[4,5]]){
   assert.equal(flat(n).length,count,"other apartment room types unchanged");
 }
 const layout=planFirstFloorFurniture(plan);
-assert.equal(layout.roomCount,22);
-assert.equal(layout.placements.length,220,"keep all furnishings after hall resize");
+assert.equal(layout.roomCount,21);
+assert.equal(layout.placements.length,204,"flat 2 furniture moved to preserve first-floor traversal");
 const tub=layout.placements.find(p=>p.flat===1&&p.room==="Санузел"&&p.id==="bathtub");
 assert.ok(tub,"bathtub must remain in the bathroom");
 approx(tub.x,bayX(6));

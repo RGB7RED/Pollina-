@@ -1,0 +1,36 @@
+name: MINI CITY — Flat 2 replan acceptance
+on:
+  push:
+    branches:
+      - feat/mini-city-flat2-layout-20261028
+  workflow_dispatch:
+jobs:
+  geometry-and-navigation:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Check JavaScript syntax
+        run: |
+          node --check play-lab/first-floor.js
+          node --check play-lab/furniture.js
+          node --check play-lab/game.js
+          node --check play-lab/test-flat1-replan.mjs
+          node --check play-lab/test-flat2-replan.mjs
+      - name: Verify both remodelled apartments and 36cm-radius traversal
+        run: |
+          node play-lab/test-flat1-replan.mjs
+          node play-lab/test-flat2-replan.mjs
+      - name: Verify 52 models and catalog quantities
+        run: |
+          node play-lab/test-furniture-50.mjs
+          node models/test-catalog.mjs
+      - name: Preserve facade, stairwell and the remaining floors
+        run: |
+          node play-lab/test-architecture-478.mjs
+          node play-lab/test-five-floors.mjs
+          node play-lab/test-apartment.mjs

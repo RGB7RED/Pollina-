@@ -145,11 +145,20 @@ export function planFirstFloorFurniture(plan){
     const recipe=ROLES[role];
     if(!recipe)throw Error("No furnishing recipe for "+role);
     for(const [id,u,v,angle=0] of recipe){
+      // Flat 2 has a 1.32m hallway. A cabinet and pouffe on opposite
+      // sides seal the 72cm player passage even when their boxes fit.
+      // Keep the shoe rack and mounted items; omit those two obstacles.
+      if(room.flat===2&&room.name==="Прихожая"&&
+        (id==="slim_cabinet"||id==="ottoman"))continue;
       // Flat 1: move the bathtub from the bathroom entrance (z≈3.4)
       // to the facade window (z≈5.47). The window and room dimensions
       // are fixed; all other flats keep their original furnishing recipes.
       if(room.flat===1&&room.name==="Санузел"&&id==="bathtub")
         put(room,id,.50,.85,angle);
+      // Flat 2 corridor: place the bookcase beyond the narrow entry
+      // throat, leaving a radius-.36m path to kitchen, bathroom, annexe.
+      else if(room.flat===2&&room.name==="Коридор"&&id==="bookcase")
+        put(room,id,.55,.70,angle);
       else put(room,id,u,v,angle);
     }
     // Wall-mounted decorations must not block actual facade windows.
