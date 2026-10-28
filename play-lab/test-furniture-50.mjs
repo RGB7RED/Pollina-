@@ -21,8 +21,8 @@ const layout=planFirstFloorFurniture(plan);
 
 assert.equal(x,entry.x);
 assert.equal(layout.flatCount,4);
-assert.equal(layout.roomCount,24,"all 24 existing rooms unchanged");
-assert.deepEqual([1,2,3,4].map(n=>plan.roomCount(n)),[3,2,2,1]);
+assert.equal(layout.roomCount,22,"flat 1 merges the two living rooms and kitchen/bath");
+assert.deepEqual([1,2,3,4].map(n=>plan.roomCount(n)),[1,2,2,1]);
 assert.equal(INTERIOR_ASSETS.length,52);
 assert.ok(layout.placements.length>=200,"furnished rather than sample props");
 assert.equal(layout.placements.length,
@@ -126,4 +126,4 @@ assert.equal(catalog.entries.length,80);
 const game=readFileSync(new URL("./game.js",import.meta.url),"utf8");
 assert.match(game,/buildFurnishedFirstFloor\(THREE,firstFloor\)/);
 assert.match(game,/entry\.buildingObstacles\.push\(\.\.\.furnished\.layout\.solidBounds\)/);
-console.log("MINI CITY 5.0 PASS: 52 real shared 3D models, 24 occupied rooms, door clearances, instanced draws, catalog quantities and 4 flats");
+console.log("MINI CITY 5.0 PASS: 52 shared models, 22 rooms after flat 1 remodel, door clearances, batching and catalog");
