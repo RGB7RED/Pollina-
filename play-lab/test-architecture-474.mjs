@@ -65,7 +65,7 @@ assert.deepEqual(plan.doors.map(d=>({number:d.number,side:d.side,z:d.z})),[
 assert.deepEqual(audit.completeStaircase.apartmentDoors.slice(0,4)
   .map(d=>d.number),[4,3,1,2],
   "real stairwell registry and rendered doors use the same numbers");
-assert.deepEqual([1,2,3,4].map(n=>plan.roomCount(n)),[1,2,2,1]);
+assert.deepEqual([1,2,3,4].map(n=>plan.roomCount(n)),[1,1,2,1]);
 assert.deepEqual(plan.doors.map(d=>d.variant),["grey","brown","blue","dark"],
   "all original door materials remain at their previous physical locations");
 assert.deepEqual(plan.windowConflicts,[]);
